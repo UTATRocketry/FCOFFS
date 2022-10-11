@@ -1,15 +1,28 @@
 from Pressurization_pkg.Node import Node
 from Pressurization_pkg.componentClass import *
+from Pressurization_pkg.Utilities import *
 
+fluid_N2O = Fluid(784.94,0.05598)
+fluid_C2H6O = Fluid(784.94,0.05598)
+
+# Nomenclature:
+# p_t        total pressure [Pa]
+# P          static pressure [Pa]
+# q          dynamic pressure [Pa]
 class PressureSystem:
 
-    def __init__(self, source, components):
+    def __init__(self, source, components, fluid):
         self.source = source
         self.components = components
         if len(components) < 1:
             raise IndexError('No component found. ')
-        self._connect()
-        self._update()
+        if fluid == 'N2O':
+            self.fluid = fluid_N2O
+        elif fluid == 'C2H6O':
+            self.fluid = fluid_C2H6O
+        else:
+            self.fluid = fluid
+        self._connect()._update()
 
     def _connect(self):
         comp_number = 1
@@ -22,17 +35,25 @@ class PressureSystem:
                 self.components[indx].name = 'COMP ' + str(comp_number)
                 comp_number += 1
             self.components[indx]._connect(self.components[indx-1])
+        return self
 
     def _update(self):
+        self.source._update_fluid(self.fluid)
+        self.source._update()
         for component in self.components:
-            component._compute()
+            component._update_fluid(self.fluid)
             component._update()
+        return self
 
-        self.outlet_P = self.components[-1].outlet.P
-        self.total_dP = self.source.outlet.P - self.outlet_P
-
-    def show(self):
-        print(self.source.outlet.P)
+    def show(self,pressure_unit='metric'):
+        print(' O ',self.source.name)
+        if pressure_unit == 'metric':
+            print(self.source.outlet.p_upstream,'Pa')
+        else:
+            print(pa2psi(self.source.outlet.p_upstream),'PSI')
         for component in self.components:
             print(' | ',component.name)
-            print(component.outlet.P)
+            if pressure_unit == 'metric':
+                print(component.outlet.p_upstream,'Pa')
+            else:
+                print(pa2psi(component.outlet.p_upstream),'PSI')

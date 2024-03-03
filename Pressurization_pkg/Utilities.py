@@ -1,4 +1,6 @@
 from CoolProp.CoolProp import PropsSI
+import numpy as np
+
 
 class Fluid:
     supported_fluids = {"N2","N2O","C2H6O"}
@@ -59,3 +61,10 @@ def inch2meter(inch):
 
 def meter2inch(meter):
     return meter * 39.37
+
+def rms(arr):
+    sum = 0
+    for num in arr:
+        sum += num**2
+    sum /= len(arr)
+    return np.sqrt(sum)

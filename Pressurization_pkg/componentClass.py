@@ -49,16 +49,11 @@ class componentClass:
 
     def update(self):
         self.node_in.update()
-        # mdot = self.node_in.state.mdot
-        # rho = self.node_in.state.rho
-        # u = mdot / rho / self.node_out.state.area
-        # p = self.node_in.state.p
-        # self.node_out.state.set(rho=rho,u=u,p=p)
         self.node_out.update()
         res1 = (self.node_in.state.rho - self.node_out.state.rho)/self.node_in.state.rho
         res2 = (self.node_in.state.u - self.node_out.state.u)/self.node_in.state.u
         res3 = (self.node_in.state.p - self.node_out.state.p)/self.node_in.state.p
-        return sqrt(res1**2 + res2**2 + res3**2)
+        return [res1, res2, res3]
 
 ## Striaght section of the pipe
 class Pipe(componentClass):
@@ -84,6 +79,7 @@ class Pipe(componentClass):
     def update(self):
         # find upstream condition
         self.node_in.update()
+        self.node_out.update()
         mdot = self.node_in.state.mdot
         rho_in = self.node_in.state.rho
         u_in = self.node_in.state.u
@@ -108,8 +104,10 @@ class Pipe(componentClass):
         p_out = p_in - dp
         rho_out = Fluid.density(self.fluid, T_in, p_out)
         u_out = mdot / rho_out / self.node_out.state.area
-        self.node_out.state.set(rho=rho_out,u=u_out,p=p_out)
-        self.node_out.update()
+        res1 = (rho_out - self.node_out.state.rho)/rho_out
+        res2 = (u_out - self.node_out.state.u)/u_out
+        res3 = (p_out - self.node_out.state.p)/p_out
+        return [res1, res2, res3]
 
 class Injector(componentClass):
     def __init__(self, parent_system, diameter_in, diameter_out, diameter_hole, num_hole, fluid, name='Injector'):

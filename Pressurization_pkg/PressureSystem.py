@@ -1,7 +1,7 @@
 from Pressurization_pkg.Node import *
 from Pressurization_pkg.componentClass import *
 from Pressurization_pkg.Utilities import *
-from scipy.optimize import newton
+from scipy.optimize import newton,fsolve
 
 # Nomenclature:
 
@@ -52,18 +52,30 @@ class PressureSystem:
                 self.w += [obj.state.rho, obj.state.u, obj.state.p]
         return self.w
 
+    def set_w(self,new_w):
+        i = 0
+        for obj in self.objects:
+            if obj.type == 'node':
+                obj.state.set(rho=new_w[i], u=new_w[i+1], p=new_w[i+2])
+                obj.update()
+                i += 3
+
+
     def solve(self):
         if self.inlet_BC=="PressureInlet" and self.outlet_BC=="MassOutlet":
-            # guess variable is inlet velocity; need to match outlet mdot
-            x0 = self.objects[-1].state.u
-            target = self.objects[-1].state.mdot
-            print("x0="+str(x0)+"\ntarget="+str(target))
+            target_pressure_in = self.objects[0].state.p
+            target_temperature_in = self.objects[0].state.T
+            target_mass_out = self.objects[-1].state.mdot
+            self.update_w()
             def func(x):
-                self.objects[0].state.set(u=x)
+                self.set_w(x)
+                res = [(self.objects[0].state.p-target_pressure_in)/target_pressure_in,(self.objects[0].state.T-target_temperature_in)/target_temperature_in]
                 for component in self.components:
-                    component.update()
-                print("Residual = "+str(abs(self.objects[-1].state.mdot - target)/target))
-                return self.objects[-1].state.mdot - target
+                    res += component.update()
+                res += [(self.objects[-1].state.mdot-target_mass_out)/target_mass_out]
+                print("Residual = "+str(rms(res)))
+                #self.output()
+                return res
         # elif self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
         #     # guess variable is inlet velocity; need to match outlet p
         #     if self.objects[0].state.u != None or self.objects[0].state.u != 0:
@@ -78,7 +90,7 @@ class PressureSystem:
         #             component.update()
         #         print("Residual = "+str(abs(self.objects[-1].state.p - target)/target))
         #         return self.objects[-1].state.p - target
-        newton(func,x0,full_output=True)
+        fsolve(func,self.w)
 
     #
     # def show(self,pressure_unit='metric'):

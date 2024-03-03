@@ -49,11 +49,11 @@ class componentClass:
 
     def update(self):
         self.node_in.update()
-        mdot = self.node_in.state.mdot
-        rho = self.node_in.state.rho
-        u = mdot / rho / self.node_out.state.area
-        p = self.node_in.state.p
-        self.node_out.state.set(rho=rho,u=u,p=p)
+        # mdot = self.node_in.state.mdot
+        # rho = self.node_in.state.rho
+        # u = mdot / rho / self.node_out.state.area
+        # p = self.node_in.state.p
+        # self.node_out.state.set(rho=rho,u=u,p=p)
         self.node_out.update()
 
 ## Striaght section of the pipe

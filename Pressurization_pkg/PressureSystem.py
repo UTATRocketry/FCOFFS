@@ -8,6 +8,7 @@ from scipy.optimize import newton
 class PressureSystem:
 
     def __init__(self,ref_T=293.15,ref_p=1.01e5):
+        self.w = []            # list of primitives on the nodes
         self.ref_T = ref_T
         self.ref_p = ref_p
 
@@ -44,6 +45,13 @@ class PressureSystem:
         for component in components:
             component.initialize()
 
+    def update_w(self):
+        self.w = []
+        for obj in self.objects:
+            if obj.type == 'node':
+                self.w += [obj.state.rho, obj.state.u, obj.state.p]
+        return self.w
+
     def solve(self):
         if self.inlet_BC=="PressureInlet" and self.outlet_BC=="MassOutlet":
             # guess variable is inlet velocity; need to match outlet mdot
@@ -56,20 +64,20 @@ class PressureSystem:
                     component.update()
                 print("Residual = "+str(abs(self.objects[-1].state.mdot - target)/target))
                 return self.objects[-1].state.mdot - target
-        elif self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
-            # guess variable is inlet velocity; need to match outlet p
-            if self.objects[0].state.u != None or self.objects[0].state.u != 0:
-                x0 = self.objects[0].state.u
-            else:
-                x0 = 1
-            target = self.objects[-1].state.p
-            print("x0="+str(x0)+"\ntarget="+str(target))
-            def func(x):
-                self.objects[0].state.set(u=x)
-                for component in self.components:
-                    component.update()
-                print("Residual = "+str(abs(self.objects[-1].state.p - target)/target))
-                return self.objects[-1].state.p - target
+        # elif self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
+        #     # guess variable is inlet velocity; need to match outlet p
+        #     if self.objects[0].state.u != None or self.objects[0].state.u != 0:
+        #         x0 = self.objects[0].state.u
+        #     else:
+        #         x0 = 1
+        #     target = self.objects[-1].state.p
+        #     print("x0="+str(x0)+"\ntarget="+str(target))
+        #     def func(x):
+        #         self.objects[0].state.set(u=x)
+        #         for component in self.components:
+        #             component.update()
+        #         print("Residual = "+str(abs(self.objects[-1].state.p - target)/target))
+        #         return self.objects[-1].state.p - target
         newton(func,x0,full_output=True)
 
     #

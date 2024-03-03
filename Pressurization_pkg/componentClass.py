@@ -55,6 +55,10 @@ class componentClass:
         # p = self.node_in.state.p
         # self.node_out.state.set(rho=rho,u=u,p=p)
         self.node_out.update()
+        res1 = (self.node_in.state.rho - self.node_out.state.rho)/self.node_in.state.rho
+        res2 = (self.node_in.state.u - self.node_out.state.u)/self.node_in.state.u
+        res3 = (self.node_in.state.p - self.node_out.state.p)/self.node_in.state.p
+        return sqrt(res1**2 + res2**2 + res3**2)
 
 ## Striaght section of the pipe
 class Pipe(componentClass):

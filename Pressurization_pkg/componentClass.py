@@ -1,21 +1,25 @@
 import numpy as np
 from Pressurization_pkg.Node import Node
-from numpy import log10, sqrt
+from Pressurization_pkg.State import State
+from Pressurization_pkg.Utilities import *
+from numpy import log10, sqrt, pi
 from scipy.optimize import brentq
+from CoolProp.CoolProp import PropsSI
+
 
 class componentClass:
 
-    # length [m]:      length of the straight pipe
-    # diameter [m]:    diameter of the source outlet
+    # diameter [m]:    diameter of the component at the connections
     # name []:         name of the component, if left blank will receive a label
     #                  of 'COMP #'
-    def __init__(self, length, diameter, name=None):
-        self.length = length
+    def __init__(self, parent_system, diameter, fluid, name="COMP_AUTO"):
+        self.parent_system = parent_system
         self.diameter = diameter
+        self.fluid = fluid
         self.name = name
-        self.fluid = None
-        self.inlet = None
-        self.outlet = Node()
+        self.type = 'component'
+        self.node_in = None
+        self.node_out = None
 
     def __str__(self):
         return self.name
@@ -23,39 +27,34 @@ class componentClass:
     def __repr__(self): #TODO
         return self.name
 
-    # upstream_component [obj]:  the component that is immediately upstream this
-    #                            component
-    def _connect(self, upstream_component):
-        self.inlet = upstream_component.outlet
-        return self
+    def set_connection(self, upstream, downstream):
+        if upstream != None:
+            if upstream.type == 'node':
+                self.node_in = upstream
+            elif upstream.type == 'component':
+                self.node_in = upstream.node_out
+            else:
+                raise Exception("class.type not in list")
+        if downstream != None:
+            if downstream.type == 'node':
+                self.node_out = downstream
+            elif downstream.type == 'component':
+                self.node_out = Node()
+            else:
+                raise Exception("class.type not in list")
 
-    def _update(self):
-        print('No update on',self.name)
-        return self
+    def initialize(self):
+        self.node_in.initialize(parent_system=self.parent_system,area=pi*self.diameter**2/4,fluid=self.fluid)
+        self.node_out.initialize(parent_system=self.parent_system,area=pi*self.diameter**2/4,fluid=self.fluid,rho=self.node_in.state.rho,u=self.node_in.state.u,p=self.node_in.state.p)
 
-    def _update_fluid(self, fluid):
-        self.fluid = fluid
-        return self
-
-## Starting point of the flow
-class Source(componentClass):
-    # diameter [m]:    diameter of the source outlet
-    # m_dot [kg/s]:    mass flow rate from the source
-    # p [Pa]:          static pressure from the source
-    def __init__(self, diameter, m_dot, p, name='Source'):
-        super().__init__(0, diameter,name)
-        self.outlet.set(m_dot,p_upstream=p)
-
-    def _connect(self,dummy_parameter=None):
-        if dummy_parameter != None:
-            print('Source cannot be connected to the downstream of', dummy_parameter)
-        return self
-
-    def _update(self):
-        v = self.outlet.m_dot / self.fluid.density / (np.pi * self.diameter**2 / 4)
-        q = self.fluid.density * v**2 / 2
-        self.outlet.set(p_t=self.outlet.p_upstream+q)
-        return self
+    def update(self):
+        self.node_in.update()
+        mdot = self.node_in.state.mdot
+        rho = self.node_in.state.rho
+        u = mdot / rho / self.node_out.state.area
+        p = self.node_in.state.p
+        self.node_out.state.set(rho=rho,u=u,p=p)
+        self.node_out.update()
 
 ## Striaght section of the pipe
 class Pipe(componentClass):
@@ -66,8 +65,9 @@ class Pipe(componentClass):
     #                  calculated from epsilon if not specified
     # epsilon [m]:     roughness of the pipe internal wall, a function of
     #                  material
-    def __init__(self, length, diameter, name=None, roughness=None, epsilon=None):
-        super().__init__(length, diameter,name)
+    def __init__(self, parent_system, diameter, fluid, name=None, length=0, roughness=None, epsilon=None):
+        super().__init__(parent_system, diameter,fluid,name)
+        self.length = length
         if roughness == None:
             if epsilon == None:
                 self.epsilon = 0.000025
@@ -77,17 +77,18 @@ class Pipe(componentClass):
         else:
             self.roughness = roughness
 
-    def _update(self):
-        # find upstream condition (downstream the prev node)
-        p_t_upstream = self.inlet.p_t
-        m_dot = self.inlet.m_dot
-        v = m_dot / self.fluid.density / (np.pi * self.diameter**2 / 4)
-        q = self.fluid.density * v**2 / 2
-        p_upstream = p_t_upstream - q
-        self.inlet.set(p_downstream=p_upstream)
+    def update(self):
+        # find upstream condition
+        self.node_in.update()
+        mdot = self.node_in.state.mdot
+        rho_in = self.node_in.state.rho
+        u_in = self.node_in.state.u
+        p_in = self.node_in.state.p
+        q_in = self.node_in.state.q
+        T_in =PropsSI('T', 'D', rho_in, 'P', p_in, self.fluid)
 
         # find friction factor
-        Re = v * self.diameter / self.fluid.kinematic_viscosity
+        Re = u_in * self.diameter / fluid_N2O.kinematic_viscosity
         def colebrook(f):
             return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
         def haaland(f):
@@ -97,13 +98,16 @@ class Pipe(componentClass):
         else:
             friction_factor = 64 / Re
 
-        # find downstream condition (upstream the next node)
+        # update downstream condition
         PLC = friction_factor * self.length / self.diameter
-        dp = PLC * q
-        self.outlet.set(m_dot, p_t=p_t_upstream-dp, p_upstream=p_upstream-dp)
+        dp = PLC * q_in
+        p_out = p_in - dp
+        rho_out =PropsSI('D', 'T', T_in, 'P', p_out, self.fluid)
+        u_out = mdot / rho_out / self.node_out.state.area
+        self.node_out.state.set(rho=rho_out,u=u_out,p=p_out)
+        self.node_out.update()
 
-        return self
-
+'''
 ## Bend section of the pipe
 class Bend(componentClass):
 
@@ -182,3 +186,4 @@ class BallValve(componentClass):
         self.outlet.set(m_dot, p_t=p_t_upstream-dp, p_upstream=p_upstream-dp)
 
         return self
+'''

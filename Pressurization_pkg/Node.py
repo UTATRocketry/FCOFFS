@@ -1,20 +1,60 @@
+from Pressurization_pkg.State import State
+from CoolProp.CoolProp import PropsSI
+
+
 class Node:
-    def __init__(self,m_dot=None,p_t=None):
-        self.m_dot = m_dot
-        self.p_t = p_t
-        self.p_upstream = None
-        self.p_downstream = None
+    def __init__(self,name="NODE_AUTO"):
+        self.name = name
+        self.type = 'node'
+        self.state = State()
+        self.initialized = False
 
     def __repr__(self):
-        return 'Node object with\n\tm_dot = '+str(self.m_dot)+' kg/s\n\tp = '+str(self.p_t)+' Pa\n\tp_upstream = '+str(self.p_upstream)+' Pa\n\tp_downstream = '+str(self.p_downstream)
+        return self.name
 
-    def set(self,m_dot=None,p_t=None,p_upstream=None,p_downstream=None):
-        if m_dot != None:
-            self.m_dot = m_dot
-        if p_t != None:
-            self.p_t = p_t
-        if p_upstream != None:
-            self.p_upstream = p_upstream
-        if p_downstream != None:
-            self.p_downstream = p_downstream
+    def update(self):
+        self.state.update()
 
+    def initialize(self,parent_system=None,area=None,fluid=None,rho=None,u=None,p=None):
+        if not self.initialized:
+            self.parent_system = parent_system
+            self.state.set(area,fluid,rho,u,p)
+            self.update()
+            self.initialized = True
+
+
+class PressureInlet(Node):
+    def __init__(self, p, T, name='PressureInlet'):
+        super().__init__(name=name)
+        self.p = p
+        self.T = T
+
+    def initialize(self,parent_system=None,area=None,fluid=None,rho=None,u=None,p=None):
+        if not self.initialized:
+            self.parent_system = parent_system
+            rho = PropsSI('D', 'T', self.T, 'P', self.p, fluid)
+            self.state.set(area,fluid,rho,0,self.p)
+            self.update()
+            self.initialized = True
+
+class MassOutlet(Node):
+    def __init__(self, mdot, name='MassOutlet'):
+        super().__init__(name=name)
+        self.mdot = mdot
+
+    def initialize(self,parent_system=None,area=None,fluid=None,rho=None,u=None,p=None):
+        if not self.initialized:
+            self.parent_system = parent_system
+            if rho != None:
+                rho = PropsSI('D', 'T', parent_system.ref_T, 'P', parent_system.ref_p, fluid)
+            p = self.parent_system.ref_p
+            u = self.mdot / rho / area
+            self.state.set(area,fluid,rho,u,p)
+            self.update()
+            self.initialized = True
+
+'''
+class Outlet(Node):
+    def __init__(self, name='Outlet'):
+        super().__init__(name=name)
+'''

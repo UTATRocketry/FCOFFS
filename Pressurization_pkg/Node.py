@@ -34,7 +34,7 @@ class PressureInlet(Node):
         if not self.initialized:
             self.parent_system = parent_system
             rho = Fluid.density(fluid,self.T,self.p)
-            u = 1
+            u = 5
             self.state.set(area,fluid,rho,u,self.p)
             self.update()
             self.initialized = True

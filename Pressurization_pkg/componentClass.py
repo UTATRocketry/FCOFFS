@@ -5,6 +5,7 @@ from Pressurization_pkg.Utilities import *
 from numpy import log10, sqrt, pi, log
 from scipy.optimize import brentq,fsolve,newton
 from CoolProp.CoolProp import PropsSI
+import warnings
 
 
 class componentClass:
@@ -125,22 +126,19 @@ class Injector(componentClass):
 
     def update(self):
         self.node_in.update()
-        mdot = self.node_in.state.mdot
+        self.node_out.update()
         p_i = self.node_in.state.p
         T_i = self.node_in.state.T
         p_o = self.node_out.state.p
-        def func(x):
-            self.parent_system.output()
-            print(T_i, p_i, x)
-            mass_flux_est = self.get_mass_flux(T_i,p_i,x)
-            mdot_est = mass_flux_est * (pi*self.diameter_hole**2/4) * self.num_hole
-            print(mdot, mdot_est)
-            return mdot - mdot_est
-        p_out = fsolve(func,p_o)[0]
-        rho_out = Fluid.density(self.fluid,T_i,p_out)
-        u_out = mdot / rho_out / self.node_out.state.area
-        self.node_out.state.set(rho=rho_out,u=u_out,p=p_out)
-        self.node_out.update()
+        mass_flux_est = self.get_mass_flux(T_i,p_i,p_o)
+        mdot_est = mass_flux_est * (pi*self.diameter_hole**2/4) * self.num_hole
+        rho_out = Fluid.density(self.fluid,T_i,p_o)
+        u_in = mdot_est / self.node_in.state.rho / self.node_in.state.area
+        u_out = mdot_est / rho_out / self.node_in.state.area
+        res1 = (rho_out - self.node_out.state.rho)/rho_out
+        res2 = (u_out - self.node_out.state.u)/u_out
+        res3 = (u_in - self.node_in.state.u)/u_in
+        return [res1, res2, res3]
 
     def get_omega(self, T_i, P_i):
         v_l = 1/PropsSI("D", "T", T_i, "Q", 0, self.fluid)
@@ -172,7 +170,9 @@ class Injector(componentClass):
         if P_o < eta_crit_low*P_i:
             eta = eta_crit_low
         else:
-            raise Exception("Combustion Chamber Pressure does not exceed critical pressure drop; flow is not choked")
+            print(T_i,P_i,P_o)
+            warnings.warn("Combustion Chamber Pressure does not exceed critical pressure drop; flow is not choked")
+            return 0.86 * sqrt(2 * abs(P_i-P_o) * self.node_in.state.rho)
         G_low = sqrt(P_i/v_l) * sqrt(2*(1-eta_sat) + 2*(omega_sat*eta_sat*log(eta_sat/eta) - (omega_sat-1)*(eta_sat-eta)))/(omega_sat*(eta_sat/eta - 1) + 1)
 
         G = (P_sat/P_i)*G_crit_sat + (1-P_sat/P_i)*G_low;

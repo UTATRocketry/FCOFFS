@@ -39,6 +39,8 @@ class PressureSystem:
             self.objects += [component,component.node_out]
         self.inlet_BC = inlet_BC
         self.outlet_BC = outlet_BC
+        if self.objects[0].BC_type != inlet_BC or self.objects[-1].BC_type != outlet_BC:
+            raise Exception("Boundary Condition setting mismatch")
         for component in components:
             component.initialize()
 
@@ -54,58 +56,22 @@ class PressureSystem:
                     component.update()
                 print("Residual = "+str(abs(self.objects[-1].state.mdot - target)/target))
                 return self.objects[-1].state.mdot - target
-            newton(func,x0,full_output=True)
+        elif self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
+            # guess variable is inlet velocity; need to match outlet p
+            if self.objects[0].state.u != None or self.objects[0].state.u != 0:
+                x0 = self.objects[0].state.u
+            else:
+                x0 = 1
+            target = self.objects[-1].state.p
+            print("x0="+str(x0)+"\ntarget="+str(target))
+            def func(x):
+                self.objects[0].state.set(u=x)
+                for component in self.components:
+                    component.update()
+                print("Residual = "+str(abs(self.objects[-1].state.p - target)/target))
+                return self.objects[-1].state.p - target
+        newton(func,x0,full_output=True)
 
-
-    # def _connect(self):
-    #     if self.components[0].name == None:
-    #         self.components[0].name = 'COMP0'
-    #     for indx in range(1,len(self.components)):
-    #         if self.components[indx].name == None:
-    #             self.components[indx].name = 'COMP' + str(indx)
-    #         if self.components[indx-1].type == 'node':
-    #             self.nodes.append(self.components[indx-1])
-    #             self.components[indx-1]._connect_downstream(self.components[indx])
-    #             self.components[indx]._connect_upstream(self.components[indx-1])
-    #         elif self.components[indx].type == 'node':
-    #             self.nodes.append(self.components[indx])
-    #             self.components[indx-1]._connect_downstream(self.components[indx])
-    #             self.components[indx]._connect_upstream(self.components[indx-1])
-    #         else:
-    #             node = Node(self.components[indx-1],self.components[indx],name='NODE' + str(indx))
-    #             self.nodes.append(node)
-    #             self.components[indx-1]._connect_downstream(node)
-    #             self.components[indx]._connect_upstream(node)
-    #
-    #     head = self.components[0]
-    #     self.components = [head]
-    #     while head.downstream != None:
-    #         head = head.downstream
-    #         self.components.append(head)
-    #
-    #     for item in self.components:
-    #         item.parent_system = self
-    #         item.initialize()
-    #
-    #     return self
-    #
-    # def _time_march(self):
-    #     pass
-    #
-    #
-    # def execute(self,t_max,dt):
-    #     self.t = 0
-    #     self.t_max = time
-    #     self.dt = dt
-    #
-    #
-    # def _update(self):
-    #     self.source._update_fluid(self.fluid)
-    #     self.source._update()
-    #     for component in self.components:
-    #         component._update_fluid(self.fluid)
-    #         component._update()
-    #     return self
     #
     # def show(self,pressure_unit='metric'):
     #     print(' O ',self.source.name)

@@ -1,59 +1,116 @@
-from Pressurization_pkg.Node import Node
+from Pressurization_pkg.Node import *
 from Pressurization_pkg.componentClass import *
 from Pressurization_pkg.Utilities import *
+from scipy.optimize import newton,fsolve,root
+import random
+import warnings
 
-fluid_N2O = Fluid(784.94,0.05598)
-fluid_C2H6O = Fluid(784.94,0.05598)
 
 # Nomenclature:
-# p_t        total pressure [Pa]
-# P          static pressure [Pa]
-# q          dynamic pressure [Pa]
+
 class PressureSystem:
 
-    def __init__(self, source, components, fluid):
-        self.source = source
-        self.components = components
+    def __init__(self,ref_T=293.15,ref_p=1.01e5):
+        self.w = []            # list of primitives on the nodes
+        self.ref_T = ref_T
+        self.ref_p = ref_p
+
+    def __repr__(self):
+        return str(self.objects)
+
+    def output(self):
+        print("Name\trho\tu\tp\tmdot")
+        for obj in self.objects:
+            if obj.type=='node':
+                print(obj.name + "\t" + str(obj.state.rho) + "\t" + str(obj.state.u) + "\t" + str(obj.state.p) + "\t" + str(obj.state.mdot))
+            else:
+                print(obj.name)
+        print()
+
+    def show_tree(self):
+        for i in range(len(self.objects)-1):
+            print(self.objects[i].name)
+            print(' | ')
+        print(self.objects[-1].name)
+        print()
+
+    def initialize(self,components,inlet_BC,outlet_BC):
         if len(components) < 1:
             raise IndexError('No component found. ')
-        if fluid == 'N2O':
-            self.fluid = fluid_N2O
-        elif fluid == 'C2H6O':
-            self.fluid = fluid_C2H6O
-        else:
-            self.fluid = fluid
-        self._connect()._update()
+        self.components = components
+        self.objects = [components[0].node_in]
+        for component in components:
+            self.objects += [component,component.node_out]
+        self.inlet_BC = inlet_BC
+        self.outlet_BC = outlet_BC
+        if self.objects[0].BC_type != inlet_BC or self.objects[-1].BC_type != outlet_BC:
+            warnings.warn("Boundary Condition setting mismatch")
+        for component in components:
+            component.initialize()
 
-    def _connect(self):
-        comp_number = 1
-        if self.components[0].name == None:
-            self.components[0].name = 'COMP ' + str(comp_number)
-            comp_number += 1
-        self.components[0]._connect(self.source)
-        for indx in range(1,len(self.components)):
-            if self.components[indx].name == None:
-                self.components[indx].name = 'COMP ' + str(comp_number)
-                comp_number += 1
-            self.components[indx]._connect(self.components[indx-1])
-        return self
+    def update_w(self):
+        self.w = []
+        if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
+            var1 = self.objects[0].state.u
+            var2 = self.objects[-1].state.rho
+            var3 = self.objects[-1].state.u
+            self.w = [var1]
+            for obj in self.objects[1:-1]:
+                if obj.type == 'node':
+                    self.w += [obj.state.rho, obj.state.u, obj.state.p]
+            self.w += [var2,var3]
+        return self.w
 
-    def _update(self):
-        self.source._update_fluid(self.fluid)
-        self.source._update()
-        for component in self.components:
-            component._update_fluid(self.fluid)
-            component._update()
-        return self
+    def set_w(self,new_w):
+        i = 0
+        if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
+            var1 = new_w[i]
+            i += 1
+            self.objects[0].state.u =  var1
+            self.objects[0].update()
+            for obj in self.objects[1:-1]:
+                if obj.type == 'node':
+                    obj.state.set(rho=new_w[i], u=new_w[i+1], p=new_w[i+2])
+                    obj.update()
+                    i += 3
+            var2 = new_w[i]
+            var3 = new_w[i+1]
+            self.objects[-1].state.rho =  var2
+            self.objects[-1].state.u =  var3
+            self.objects[-1].update()
+        # if self.inlet_BC=="PressureInlet" and self.outlet_BC=="MassOutlet":
+        #     var1 = new_w[i]
+        #     i += 1
+        #     self.objects[0].state.u =  var1 / self.objects[0].state.rho / self.objects[0].state.area
+        #     self.objects[0].update()
+        #     for obj in self.objects[1:-1]:
+        #         if obj.type == 'node':
+        #             obj.state.set(rho=new_w[i], u=new_w[i+1], p=new_w[i+2])
+        #             obj.update()
+        #             i += 3
+        #     var2 = new_w[i]
+        #     var3 = new_w[i+1]
+        #     self.objects[-1].state.p = var2
+        #     self.objects[-1].state.rho =  Fluid.density(self.objects[-1].state.fluid,var3,var2)
+        #     self.objects[-1].state.u =  self.objects[-1].state.mdot / self.objects[-1].state.rho / self.objects[-1].state.area
+        self.update_w()
 
-    def show(self,pressure_unit='metric'):
-        print(' O ',self.source.name)
-        if pressure_unit == 'metric':
-            print(self.source.outlet.p_upstream,'Pa')
-        else:
-            print(pa2psi(self.source.outlet.p_upstream),'PSI')
-        for component in self.components:
-            print(' | ',component.name)
-            if pressure_unit == 'metric':
-                print(component.outlet.p_upstream,'Pa')
-            else:
-                print(pa2psi(component.outlet.p_upstream),'PSI')
+
+
+
+    def solve(self):
+        if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
+            self.update_w()
+            def func(x):
+                #print(x)
+                self.set_w(x)
+                res = []
+                for component in self.components:
+                    res += component.update()
+                print("Residual = "+str(rms(res)))
+                #print(res)
+                #self.output()
+                return res
+
+        sol = root(func,self.w).x
+        print(sol)

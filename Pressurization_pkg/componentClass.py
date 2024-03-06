@@ -121,6 +121,8 @@ class Injector(componentClass):
         self.num_hole = num_hole
 
     def initialize(self):
+        if self.parent_system.outlet_BC != 'PressureOutlet':
+            warnings.warn("Outlet BC not well posed. ")
         self.node_in.initialize(parent_system=self.parent_system,area=pi*self.diameter_in**2/4,fluid=self.fluid)
         self.node_out.initialize(parent_system=self.parent_system,area=pi*self.diameter_out**2/4,fluid=self.fluid,rho=self.node_in.state.rho,u=self.node_in.state.u,p=self.node_in.state.p)
 
@@ -134,7 +136,7 @@ class Injector(componentClass):
         mdot_est = mass_flux_est * (pi*self.diameter_hole**2/4) * self.num_hole
         rho_out = Fluid.density(self.fluid,T_i,p_o)
         u_in = mdot_est / self.node_in.state.rho / self.node_in.state.area
-        u_out = mdot_est / rho_out / self.node_in.state.area
+        u_out = mdot_est / rho_out / self.node_out.state.area
         res1 = (rho_out - self.node_out.state.rho)/rho_out
         res2 = (u_out - self.node_out.state.u)/u_out
         res3 = (u_in - self.node_in.state.u)/u_in
@@ -178,85 +180,3 @@ class Injector(componentClass):
         G = (P_sat/P_i)*G_crit_sat + (1-P_sat/P_i)*G_low;
         return G
 
-
-
-'''
-## Bend section of the pipe
-class Bend(componentClass):
-
-    # length [m]:      length of the straight pipe
-    # diameter [m]:    diameter of the source outlet
-    # bend_radius [m]  radius of the pipe bend
-    # roughtness [N/A]:relative roughness of the pipe internal wall, will be
-    #                  calculated from epsilon if not specified
-    # epsilon [m]:     roughness of the pipe internal wall, a function of
-    #                  material
-    def __init__(self, length, diameter, bend_radius, name=None, roughness=None, epsilon=None):
-        super().__init__(length, diameter,name)
-        self.bend_radius = bend_radius
-        if roughness == None:
-            if epsilon == None:
-                self.epsilon = 0.000025
-            else:
-                self.epsilon = epsilon
-            self.roughness = self.epsilon / self.diameter
-        else:
-            self.roughness = roughness
-
-    def _update(self):
-        # find upstream condition (downstream the prev node)
-        p_t_upstream = self.inlet.p_t
-        m_dot = self.inlet.m_dot
-        v = m_dot / self.fluid.density / (np.pi * self.diameter**2 / 4)
-        q = self.fluid.density * v**2 / 2
-        p_upstream = p_t_upstream - q
-        self.inlet.set(p_downstream=p_upstream)
-
-        # find friction factor
-        Re = v * self.diameter / self.fluid.kinematic_viscosity
-        non_dim_num = Re * (self.bend_radius/(self.diameter/2))**2
-        if non_dim_num > 6:
-            friction_factor = 0.316/non_dim_num**0.2 * ((self.diameter/2)/self.bend_radius)**(-0.5)
-        elif non_dim_num > 0.034:
-            friction_factor = (0.029+0.304*non_dim_num**(-0.25)) * ((self.diameter/2)/self.bend_radius)**(-0.5)
-        else:
-            print('Bend',self.name,'should be approximated as a straight pipe.')
-
-        # find K value
-        K = 0.3 #TODO
-
-        # find downstream condition (upstream the next node)
-        PLC = friction_factor * self.length / self.diameter + K
-        dp = PLC * q
-        self.outlet.set(m_dot, p_t=p_t_upstream-dp, p_upstream=p_upstream-dp)
-
-        return self
-
-## Ball valves
-class BallValve(componentClass):
-
-    # length [m]:      length of the straight pipe
-    # diameter [m]:    diameter of the source outlet
-    # bend_radius [m]  radius of the pipe bend
-    # roughtness [N/A]:relative roughness of the pipe internal wall, will be
-    #                  calculated from epsilon if not specified
-    # epsilon [m]:     roughness of the pipe internal wall, a function of
-    #                  material
-    def __init__(self, length, diameter, PLC, name=None):
-        super().__init__(length, diameter,name)
-        self.PLC = PLC
-
-    def _update(self):
-        # find upstream condition (downstream the prev node)
-        p_t_upstream = self.inlet.p_t
-        m_dot = self.inlet.m_dot
-        v = m_dot / self.fluid.density / (np.pi * self.diameter**2 / 4)
-        q = self.fluid.density * v**2 / 2
-        p_upstream = p_t_upstream - q
-        self.inlet.set(p_downstream=p_upstream)
-
-        dp = self.PLC * q
-        self.outlet.set(m_dot, p_t=p_t_upstream-dp, p_upstream=p_upstream-dp)
-
-        return self
-'''

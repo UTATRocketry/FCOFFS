@@ -1,7 +1,9 @@
 from Pressurization_pkg.Node import *
 from Pressurization_pkg.componentClass import *
 from Pressurization_pkg.Utilities import *
-from scipy.optimize import newton,fsolve
+from scipy.optimize import newton,fsolve,root
+import random
+import warnings
 
 
 # Nomenclature:
@@ -42,67 +44,73 @@ class PressureSystem:
         self.inlet_BC = inlet_BC
         self.outlet_BC = outlet_BC
         if self.objects[0].BC_type != inlet_BC or self.objects[-1].BC_type != outlet_BC:
-            raise Exception("Boundary Condition setting mismatch")
+            warnings.warn("Boundary Condition setting mismatch")
         for component in components:
             component.initialize()
 
     def update_w(self):
         self.w = []
-        for obj in self.objects:
-            if obj.type == 'node':
-                self.w += [obj.state.rho, obj.state.u, obj.state.p]
+        if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
+            var1 = self.objects[0].state.u
+            var2 = self.objects[-1].state.rho
+            var3 = self.objects[-1].state.u
+            self.w = [var1]
+            for obj in self.objects[1:-1]:
+                if obj.type == 'node':
+                    self.w += [obj.state.rho, obj.state.u, obj.state.p]
+            self.w += [var2,var3]
         return self.w
 
     def set_w(self,new_w):
         i = 0
-        for obj in self.objects:
-            if obj.type == 'node':
-                obj.state.set(rho=new_w[i], u=new_w[i+1], p=new_w[i+2])
-                obj.update()
-                i += 3
+        if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
+            var1 = new_w[i]
+            i += 1
+            self.objects[0].state.u =  var1
+            self.objects[0].update()
+            for obj in self.objects[1:-1]:
+                if obj.type == 'node':
+                    obj.state.set(rho=new_w[i], u=new_w[i+1], p=new_w[i+2])
+                    obj.update()
+                    i += 3
+            var2 = new_w[i]
+            var3 = new_w[i+1]
+            self.objects[-1].state.rho =  var2
+            self.objects[-1].state.u =  var3
+            self.objects[-1].update()
+        # if self.inlet_BC=="PressureInlet" and self.outlet_BC=="MassOutlet":
+        #     var1 = new_w[i]
+        #     i += 1
+        #     self.objects[0].state.u =  var1 / self.objects[0].state.rho / self.objects[0].state.area
+        #     self.objects[0].update()
+        #     for obj in self.objects[1:-1]:
+        #         if obj.type == 'node':
+        #             obj.state.set(rho=new_w[i], u=new_w[i+1], p=new_w[i+2])
+        #             obj.update()
+        #             i += 3
+        #     var2 = new_w[i]
+        #     var3 = new_w[i+1]
+        #     self.objects[-1].state.p = var2
+        #     self.objects[-1].state.rho =  Fluid.density(self.objects[-1].state.fluid,var3,var2)
+        #     self.objects[-1].state.u =  self.objects[-1].state.mdot / self.objects[-1].state.rho / self.objects[-1].state.area
+        self.update_w()
+
+
 
 
     def solve(self):
-        if self.inlet_BC=="PressureInlet" and self.outlet_BC=="MassOutlet":
-            target_pressure_in = self.objects[0].state.p
-            target_temperature_in = self.objects[0].state.T
-            target_mass_out = self.objects[-1].state.mdot
+        if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
             self.update_w()
             def func(x):
+                #print(x)
                 self.set_w(x)
-                res = [(self.objects[0].state.p-target_pressure_in)/target_pressure_in,(self.objects[0].state.T-target_temperature_in)/target_temperature_in]
+                res = []
                 for component in self.components:
                     res += component.update()
-                res += [(self.objects[-1].state.mdot-target_mass_out)/target_mass_out]
                 print("Residual = "+str(rms(res)))
+                #print(res)
                 #self.output()
                 return res
-        # elif self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
-        #     # guess variable is inlet velocity; need to match outlet p
-        #     if self.objects[0].state.u != None or self.objects[0].state.u != 0:
-        #         x0 = self.objects[0].state.u
-        #     else:
-        #         x0 = 1
-        #     target = self.objects[-1].state.p
-        #     print("x0="+str(x0)+"\ntarget="+str(target))
-        #     def func(x):
-        #         self.objects[0].state.set(u=x)
-        #         for component in self.components:
-        #             component.update()
-        #         print("Residual = "+str(abs(self.objects[-1].state.p - target)/target))
-        #         return self.objects[-1].state.p - target
-        fsolve(func,self.w)
 
-    #
-    # def show(self,pressure_unit='metric'):
-    #     print(' O ',self.source.name)
-    #     if pressure_unit == 'metric':
-    #         print(self.source.outlet.p_upstream,'Pa')
-    #     else:
-    #         print(pa2psi(self.source.outlet.p_upstream),'PSI')
-    #     for component in self.components:
-    #         print(' | ',component.name)
-    #         if pressure_unit == 'metric':
-    #             print(component.outlet.p_upstream,'Pa')
-    #         else:
-    #             print(pa2psi(component.outlet.p_upstream),'PSI')
+        sol = root(func,self.w).x
+        print(sol)

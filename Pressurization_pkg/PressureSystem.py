@@ -18,14 +18,31 @@ class PressureSystem:
     def __repr__(self):
         return str(self.objects)
 
-    def output(self):
-        print("Name\trho\tu\tp\tmdot")
+    def output(self,verbose=True):
+        output_string = ""
+        items = ["name", "rho", "u", "p"]
+        for item in items:
+            output_string += item[:15] + " "*max(16-len(item),1)
+        output_string += "\n"
         for obj in self.objects:
-            if obj.type=='node':
-                print(obj.name + "\t" + str(obj.state.rho) + "\t" + str(obj.state.u) + "\t" + str(obj.state.p) + "\t" + str(obj.state.mdot))
-            else:
-                print(obj.name)
-        print()
+            for item in items:
+                try:
+                    val = getattr(obj, item)
+                except:
+                    try:
+                        val = getattr(obj.state, item)
+                    except:
+                        val = None
+                if val == None:
+                    val_string = " "
+                elif type(val) == str:
+                    val_string = val
+                else:
+                    val_string = "{:.9E}".format(val)
+                output_string += val_string + " "*max(16-len(val_string),1)
+            output_string += "\n"
+        if verbose: print("\n\n", output_string, "\n\n", sep='')
+        return output_string
 
     def show_tree(self):
         for i in range(len(self.objects)-1):

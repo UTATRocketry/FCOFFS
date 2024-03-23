@@ -10,10 +10,12 @@ import warnings
 
 class PressureSystem:
 
-    def __init__(self,ref_T=293.15,ref_p=1.01e5):
+    def __init__(self,ref_T=293.15,ref_p=1.01e5,transient=[0,0,0]):
         self.w = []            # list of primitives on the nodes
         self.ref_T = ref_T
         self.ref_p = ref_p
+        self.transient = transient   # [t_i, t_f, dt]
+        self.t = transient[0]
 
     def __repr__(self):
         return str(self.objects)
@@ -116,18 +118,22 @@ class PressureSystem:
 
 
     def solve(self):
-        if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
-            self.update_w()
-            def func(x):
-                #print(x)
-                self.set_w(x)
-                res = []
-                for component in self.components:
-                    res += component.update()
-                print("Residual = "+str(rms(res)))
-                #print(res)
-                #self.output()
-                return res
+        while True:
+            if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
+                self.update_w()
+                def func(x):
+                    #print(x)
+                    self.set_w(x)
+                    res = []
+                    for component in self.components:
+                        res += component.update()
+                    print("Residual = "+str(rms(res)))
+                    #print(res)
+                    #self.output()
+                    return res
 
-        sol = root(func,self.w).x
-        print(sol)
+            sol = root(func,self.w).x
+            print(sol)
+            self.t += self.transient[2]
+            if self.t > self.transient[1] or self.transient[2] == 0:
+                break

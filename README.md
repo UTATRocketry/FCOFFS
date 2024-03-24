@@ -1,6 +1,9 @@
-# Houbolt_Jr-PressurizationSystem
+# LiquidProp-PressurizationCode
+## Fully Coupled One-dimensional Framework for Fluid Simulations (FCOFFS)
 
-The initial research was documented in `Feed System and Injector Analysis.xlsx`. The Python code translated the Excel into an OOP code, and made a few corrections to the initial documentation. User should import the following packages into a fresh `.py` code. 
+FCOFFS is a 1D fluid simulation code that enables us to capture the behaviour of the rocket propellant feed system. 
+
+User should import the following packages into a fresh `.py` code. 
 
 	from Pressurization_pkg.Utilities import *
 	from Pressurization_pkg.componentClass import *

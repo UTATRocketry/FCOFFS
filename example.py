@@ -3,18 +3,18 @@ from FCOFFS.componentClass import *
 from FCOFFS.Node import *
 from FCOFFS.PressureSystem import PressureSystem
 
-PS = PressureSystem(ref_p=psi2pa(15))
+PS = PressureSystem(ref_p=(15, UnitPressure.psi))
 
-inlet = PressureInlet(psi2pa(780),295)
+inlet = PressureInlet((780, UnitPressure.psi), 295)
 node1 = Node("NODE1")
 node2 = Node("NODE2")
 node3 = Node("NODE3")
-outlet = PressureOutlet(psi2pa(315))
+outlet = PressureOutlet((315, UnitPressure.psi))
 
-pipe1 = Pipe(PS, inch2meter(0.8), "N2O", name="PIPE1",length=inch2meter(72))
-bend1 = Pipe(PS, inch2meter(0.8), "N2O", name="BEND1",length=inch2meter(2))
-pipe2 = Pipe(PS, inch2meter(0.8), "N2O", name="PIPE2",length=inch2meter(72))
-injector = Injector(PS, inch2meter(0.8), inch2meter(4), inch2meter(0.04),60,"N2O")
+pipe1 = Pipe(PS, (0.8, UnitLength.inch), "N2O", name="PIPE1", length=(72, UnitLength.inch))
+bend1 = Pipe(PS, (0.8, UnitLength.inch), "N2O", name="BEND1", length=(2, UnitLength.inch))
+pipe2 = Pipe(PS, (0.8, UnitLength.inch), "N2O", name="PIPE2", length=(72, UnitLength.inch))
+injector = Injector(PS, (0.8, UnitLength.inch), (4, UnitLength.inch), (0.04, UnitLength.inch), 60, "N2O")
 
 pipe1.set_connection(inlet,node1)
 bend1.set_connection(node1,node2)

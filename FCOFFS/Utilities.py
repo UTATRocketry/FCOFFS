@@ -1,6 +1,8 @@
 from CoolProp.CoolProp import PropsSI
 import numpy as np
 
+from enum import Enum
+
 
 class Fluid:
     supported_fluids = {"N2","N2O","C2H6O"}
@@ -28,19 +30,33 @@ class Fluid:
         if rho == None:
             rho = Fluid.density(fluid,T,p)
         return Fluid.dynamic_viscosity(fluid,rho,T,p) / rho
+    
 
 
-def psi2pa(psi):
-    return psi * 6894.4572931783
+class UnitPressure(Enum):
+    Pa = 1
+    psi = 6894.76
 
-def pa2psi(pa):
-    return pa / 6894.4572931783
 
-def inch2meter(inch):
-    return inch / 39.37
+class UnitLength(Enum):
+    m = 1
+    inch = 0.0254
 
-def meter2inch(meter):
-    return meter * 39.37
+
+def convert_to_si(quantity):
+    # Quantity: value or (value, unit)
+    # Returns value in SI units
+
+    if not isinstance(quantity, tuple):
+        return quantity
+    return quantity[0] * quantity[1].value
+
+
+def convert_from_si(quantity):
+    if not isinstance(quantity, tuple):
+        return quantity
+    return quantity[0] / quantity[1].value
+    
 
 def rms(arr):
     sum = 0

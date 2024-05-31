@@ -15,7 +15,7 @@ class componentClass:
     #                  of 'COMP #'
     def __init__(self, parent_system, diameter, fluid, name="COMP_AUTO"):
         self.parent_system = parent_system
-        self.diameter = diameter
+        self.diameter = convert_to_si(diameter)
         self.fluid = fluid
         self.name = name
         self.type = 'component'
@@ -67,7 +67,7 @@ class Pipe(componentClass):
     #                  material
     def __init__(self, parent_system, diameter, fluid, name=None, length=0, roughness=None, epsilon=None):
         super().__init__(parent_system, diameter,fluid,name)
-        self.length = length
+        self.length = convert_to_si(length)
         if roughness == None:
             if epsilon == None:
                 self.epsilon = 0.000025
@@ -115,9 +115,9 @@ class Injector(componentClass):
         if fluid not in ['N2O','CO2']:
             raise Exception("Fluid type not supported for injector")
         super().__init__(parent_system,diameter_hole,fluid,name)
-        self.diameter_in = diameter_in
-        self.diameter_out = diameter_out
-        self.diameter_hole = diameter_hole
+        self.diameter_in = convert_to_si(diameter_in)
+        self.diameter_out = convert_to_si(diameter_out)
+        self.diameter_hole = convert_to_si(diameter_hole)
         self.num_hole = num_hole
 
     def initialize(self):

@@ -3,7 +3,10 @@ Description
 '''
 
 from ..state.State import State
-from ..utilities.Utilities import *
+from ..fluids.Fluid import Fluid
+
+from ..utilities.utilities import *
+from ..utilities.units import *
 
 
 class Node:

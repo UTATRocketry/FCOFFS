@@ -7,7 +7,7 @@ import warnings
 
 from ..nodes.Node import *
 from ..components.componentClass import *
-from ..utilities.Utilities import *
+from ..utilities.utilities import *
 
 
 # Nomenclature:

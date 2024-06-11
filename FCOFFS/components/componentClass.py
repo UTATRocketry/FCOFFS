@@ -2,17 +2,18 @@
 Description
 '''
 
-import numpy as np
 from numpy import log10, sqrt, pi, log
 from scipy.optimize import brentq,fsolve
 from CoolProp.CoolProp import PropsSI
 import warnings
 
 from ..nodes.Node import Node
-from ..utilities.Utilities import *
+from ..fluids.Fluid import Fluid
+from ..utilities.utilities import *
+from ..utilities.units import *
 
-class componentClass:
 
+class ComponentClass:
     # diameter [m]:    diameter of the component at the connections
     # name []:         name of the component, if left blank will receive a label
     #                  of 'COMP #'
@@ -25,11 +26,14 @@ class componentClass:
         self.node_in = None
         self.node_out = None
 
+
     def __str__(self):
         return self.name
 
+
     def __repr__(self): #TODO
         return self.name
+
 
     def set_connection(self, upstream, downstream):
         if upstream != None:
@@ -47,9 +51,11 @@ class componentClass:
             else:
                 raise Exception("class.type not in list")
 
+
     def initialize(self):
         self.node_in.initialize(parent_system=self.parent_system,area=pi*self.diameter**2/4,fluid=self.fluid)
         self.node_out.initialize(parent_system=self.parent_system,area=pi*self.diameter**2/4,fluid=self.fluid,rho=self.node_in.state.rho,u=self.node_in.state.u,p=self.node_in.state.p)
+
 
     def update(self):
         self.node_in.update()
@@ -59,8 +65,9 @@ class componentClass:
         res3 = (self.node_in.state.p - self.node_out.state.p)/self.node_in.state.p
         return [res1, res2, res3]
 
+
 ## Striaght section of the pipe
-class Pipe(componentClass):
+class Pipe(ComponentClass):
 
     # length [m]:      length of the straight pipe
     # diameter [m]:    diameter of the source outlet
@@ -113,7 +120,8 @@ class Pipe(componentClass):
         res3 = (p_out - self.node_out.state.p)/p_out
         return [res1, res2, res3]
 
-class Injector(componentClass):
+
+class Injector(ComponentClass):
     def __init__(self, parent_system, diameter_in, diameter_out, diameter_hole, num_hole, fluid, name='Injector'):
         if fluid not in ['N2O','CO2']:
             raise Exception("Fluid type not supported for injector")
@@ -123,11 +131,13 @@ class Injector(componentClass):
         self.diameter_hole = convert_to_si(diameter_hole)
         self.num_hole = num_hole
 
+
     def initialize(self):
         if self.parent_system.outlet_BC != 'PressureOutlet':
             warnings.warn("Outlet BC not well posed. ")
         self.node_in.initialize(parent_system=self.parent_system,area=pi*self.diameter_in**2/4,fluid=self.fluid)
         self.node_out.initialize(parent_system=self.parent_system,area=pi*self.diameter_out**2/4,fluid=self.fluid,rho=self.node_in.state.rho,u=self.node_in.state.u,p=self.node_in.state.p)
+
 
     def update(self):
         self.node_in.update()
@@ -145,6 +155,7 @@ class Injector(componentClass):
         res3 = (u_in - self.node_in.state.u)/u_in
         return [res1, res2, res3]
 
+
     def get_omega(self, T_i, P_i):
         v_l = 1/PropsSI("D", "T", T_i, "Q", 0, self.fluid)
         v_g = 1/PropsSI("D", "T", T_i, "Q", 1, self.fluid)
@@ -155,6 +166,7 @@ class Injector(componentClass):
         h_g = PropsSI("H", "T", T_i, "Q", 1, self.fluid)
         h_lgi = h_g - h_l
         return c_li*T_i*P_i/v_i*(v_lgi/h_lgi)**2
+
 
     def get_mass_flux(self, T_i, P_i, P_o):
         P_sat = PropsSI("P", "T", T_i, "Q", 0, self.fluid)

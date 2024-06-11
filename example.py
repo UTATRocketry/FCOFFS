@@ -2,7 +2,9 @@
 Description
 '''
 
-from FCOFFS.utilities.Utilities import *
+from FCOFFS.utilities.utilities import *
+from FCOFFS.utilities.units import *
+
 from FCOFFS.components.componentClass import *
 from FCOFFS.nodes.Node import *
 from FCOFFS.pressureSystem.PressureSystem import PressureSystem

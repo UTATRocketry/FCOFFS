@@ -1,9 +1,14 @@
+'''
+Description
+'''
+
+from scipy.optimize import root
+import warnings
+
+
 from ..nodes.Node import *
 from ..components.componentClass import *
 from ..utilities.Utilities import *
-from scipy.optimize import newton,fsolve,root
-import random
-import warnings
 
 
 # Nomenclature:

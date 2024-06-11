@@ -1,3 +1,7 @@
+'''
+Description
+'''
+
 from FCOFFS.utilities.Utilities import *
 from FCOFFS.components.componentClass import *
 from FCOFFS.nodes.Node import *

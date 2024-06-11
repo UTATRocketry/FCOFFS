@@ -1,12 +1,15 @@
+'''
+Description
+'''
+
 import numpy as np
-from ..nodes.Node import Node
-from ..state.State import State
-from ..utilities.Utilities import *
 from numpy import log10, sqrt, pi, log
-from scipy.optimize import brentq,fsolve,newton
+from scipy.optimize import brentq,fsolve
 from CoolProp.CoolProp import PropsSI
 import warnings
 
+from ..nodes.Node import Node
+from ..utilities.Utilities import *
 
 class componentClass:
 

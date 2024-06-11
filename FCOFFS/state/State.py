@@ -2,9 +2,10 @@
 This class tracks the state of fluid at each node.
 '''
 
+import warnings
+
 from ..utilities.Utilities import *
 
-import warnings
 
 class State:
     def __init__(self,area=None,fluid=None,rho=None,u=None,p=None):

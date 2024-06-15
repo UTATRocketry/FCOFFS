@@ -1,5 +1,5 @@
 import numpy as np
-from FCOFFS.Node import Node
+from FCOFFS.Interface import Interface
 from FCOFFS.State import State
 from FCOFFS.Utilities import *
 from numpy import log10, sqrt, pi, log

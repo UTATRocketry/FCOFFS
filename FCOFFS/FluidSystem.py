@@ -1,4 +1,4 @@
-from FCOFFS.Node import *
+from FCOFFS.Interface import *
 from FCOFFS.componentClass import *
 from FCOFFS.Utilities import *
 from scipy.optimize import newton,fsolve,root

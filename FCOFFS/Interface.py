@@ -2,8 +2,8 @@ from FCOFFS.State import State
 from FCOFFS.Utilities import *
 
 
-class Node:
-    def __init__(self,name="NODE_AUTO"):
+class Interface:
+    def __init__(self,name="Interface_AUTO"):
         self.name = name
         self.type = 'node'
         self.state = State()

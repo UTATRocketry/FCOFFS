@@ -56,6 +56,7 @@ class componentClass:
         res3 = (self.node_in.state.p - self.node_out.state.p)/self.node_in.state.p
         return [res1, res2, res3]
 
+'''
 ## Striaght section of the pipe
 class Pipe(componentClass):
 
@@ -182,19 +183,19 @@ class Injector(componentClass):
 
 class Tank(componentClass):
     def __init__(self, parent_system, diameter, fluid, volume, name="Tank"):
-      
+
         super().__init__(parent_system, diameter, fluid, name)
-        self.volume = volume 
-        self.fluid_level = 0  
-        self.pressure = None  
-        self.temperature = None  
+        self.volume = volume
+        self.fluid_level = 0
+        self.pressure = None
+        self.temperature = None
 
     def __str__(self):
-        
+
         return f"{self.name}: Volume={self.volume} m^3, Fluid Level={self.fluid_level} m^3"
 
     def add_fluid(self, volume):
-        
+
         self.fluid_level += volume
         if self.fluid_level > self.volume:
             raise ValueError("Fluid level exceeds tank capacity")
@@ -220,5 +221,5 @@ class Tank(componentClass):
         super().update()
         self.update_properties()
         return []
-
+'''
 

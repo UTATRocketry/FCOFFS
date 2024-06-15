@@ -23,6 +23,7 @@ class Node:
             self.initialized = True
 
 
+'''
 class PressureInlet(Node):
     def __init__(self, p, T, name='PressureInlet'):
         super().__init__(name=name)
@@ -70,7 +71,7 @@ class MassOutlet(Node):
             self.state.set(area,fluid,rho,u,p)
             self.update()
             self.initialized = True
-
+'''
 '''
 class Outlet(Node):
     def __init__(self, name='Outlet'):

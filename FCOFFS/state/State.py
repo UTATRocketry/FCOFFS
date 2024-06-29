@@ -2,9 +2,12 @@
 This class tracks the state of fluid at each node.
 '''
 
-from FCOFFS.Utilities import *
-
 import warnings
+
+from ..fluids.Fluid import Fluid
+
+from ..utilities.utilities import *
+
 
 class State:
     def __init__(self,area=None,fluid=None,rho=None,u=None,p=None):

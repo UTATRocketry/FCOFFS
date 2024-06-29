@@ -1,9 +1,13 @@
-from FCOFFS.Node import *
-from FCOFFS.componentClass import *
-from FCOFFS.Utilities import *
-from scipy.optimize import newton,fsolve,root
-import random
+'''
+Description
+'''
+
+from scipy.optimize import root
 import warnings
+
+from ..nodes.Node import *
+from ..components.componentClass import *
+from ..utilities.utilities import *
 
 
 # Nomenclature:

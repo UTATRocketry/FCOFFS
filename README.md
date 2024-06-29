@@ -4,9 +4,9 @@ FCOFFS is a 1D fluid simulation code that enables us to capture the behaviour of
 
 User should import the following packages into a fresh `.py` code. 
 
-	from FCOFFS.Utilities import *
+	`from FCOFFS.Utilities import *
 	from FCOFFS.componentClass import *
-	from FCOFFS.PressureSystem import PressureSystem
+	from FCOFFS.PressureSystem import PressureSystem`
 
 The file should be saved immediately outside of the `FCOFFS` package. 
 
@@ -14,13 +14,13 @@ See `example.py` for a sample use case.
 
 # Solver Theory Guide
 
-A pressure system object includes a list of nodes and components: 
-- Node stores the state and properties of the fluids at the interfacial location between the two components connected to it.
-- Component contains equations that prescribe the behaviour of such component. This behaviour is translated into a function that evaluates the residual based on the two boundary node states.
+A pressure system object includes a list of interfaces and components: 
+- Interfaces stores the state and properties of the fluids at the interfacial location between the two components connected to it.
+- Component contains equations that prescribe the behaviour of such component. This behaviour is translated into a function that evaluates the residual based on the two boundary interface states.
 
-## Construction of Nodes and Components
+## Construction of Interfaces and Components
 
-Each nodal state can be represented by $w$, containing three primitives variables:
+Each interface state can be represented by $w$, containing three primitives variables:
 ```math
 w = \begin{bmatrix} \rho \\ u \\ p \end{bmatrix}
 ```
@@ -43,7 +43,7 @@ In this case, $r=0$ if and only if $w_1=w_2$.
 
 ## Solver Logic
 
-For a case with $n$ components, the solver takes an initial guess of all the nodal states (after initialization), and iteratively converges to a state where the residual vector is minimized. The nodal state can be represented by $W\in\mathbb{R}^{3n}$, while the residual vector is a vector with the same dimension $R\in\mathbb{R}^{3n}$. The reporting `Residual` value is the RMS of the residual vector. The solver boils down to finding the root of the function
+For a case with $n$ components, the solver takes an initial guess of all the interface states (after initialization), and iteratively converges to a state where the residual vector is minimized. The interface state can be represented by $W\in\mathbb{R}^{3n}$, while the residual vector is a vector with the same dimension $R\in\mathbb{R}^{3n}$. The reporting `Residual` value is the RMS of the residual vector. The solver boils down to finding the root of the function
 
 $$ F(W) = R $$
 
@@ -51,11 +51,11 @@ Both the behaviour of all components and the boundary conditions are all represe
 
 ## Example
 
-**Sample Problem**: PressureInlet - Pipe - Node1 - Injector - PressureOutlet
+**Sample Problem**: PressureInlet - Pipe - Interface1 - Injector - PressureOutlet
 
 **Mathematical Description**: 
 - Inlet: $`w_i = \begin{bmatrix} \rho_i \\ u_i \\ p_i \end{bmatrix}`$
-- Node1: $`w_n = \begin{bmatrix} \rho_n \\ u_n \\ p_n \end{bmatrix}`$
+- Interface1: $`w_n = \begin{bmatrix} \rho_n \\ u_n \\ p_n \end{bmatrix}`$
 - Outlet: $`w_o = \begin{bmatrix} \rho_o \\ u_o \\ p_o \end{bmatrix}`$
 - Pipe: $f_P(w_i,w_n)=r_P$
 - Injector: $f_I(w_n,w_o)=r_I$
@@ -96,7 +96,7 @@ A solution $W^\*$ is accepted when $F(W^\*) \approx 0$ within the specified tole
 3. Apply state limiter to improve stability. (i.e. pressure and temperature should be limited to within a reasonable range)
 
 ## Critical System Improvements
-1. Describe more components in the `componentClass`. Two-phase tank, pressurant tank, and flow controller (including regulator, critical orifice, venturi, etc.) should be the first ones to add.
+1. Describe more components in the `ComponentClass`. Two-phase tank, pressurant tank, and flow controller (including regulator, critical orifice, venturi, etc.) should be the first ones to add.
 2. Should also allow component behaviours to be described by charts in addition to equations.
 3. More robust input checks.
 4. More human-readable output.

@@ -5,11 +5,11 @@ Description
 from ..state.State import State
 from ..fluids.Fluid import Fluid
 
-from ..utilities.utilities import *
+from ..utilities import *
 from ..utilities.units import *
 
 
-class Node:
+class Interface:
     def __init__(self,name="NODE_AUTO"):
         self.name = name
         self.type = 'node'
@@ -30,7 +30,7 @@ class Node:
             self.initialized = True
 
 
-class PressureInlet(Node):
+class PressureInlet(Interface):
     def __init__(self, p, T, name='PressureInlet'):
         super().__init__(name=name)
         self.BC_type = "PressureInlet"
@@ -46,7 +46,7 @@ class PressureInlet(Node):
             self.update()
             self.initialized = True
 
-class PressureOutlet(Node):
+class PressureOutlet(Interface):
     def __init__(self, p, name='PressureOutlet'):
         super().__init__(name=name)
         self.BC_type = "PressureOutlet"
@@ -61,7 +61,7 @@ class PressureOutlet(Node):
             self.update()
             self.initialized = True
 
-class MassOutlet(Node):
+class MassOutlet(Interface):
     def __init__(self, mdot, name='MassOutlet'):
         super().__init__(name=name)
         self.BC_type = "MassOutlet"
@@ -77,9 +77,3 @@ class MassOutlet(Node):
             self.state.set(area,fluid,rho,u,p)
             self.update()
             self.initialized = True
-
-'''
-class Outlet(Node):
-    def __init__(self, name='Outlet'):
-        super().__init__(name=name)
-'''

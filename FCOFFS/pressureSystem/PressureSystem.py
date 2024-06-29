@@ -5,7 +5,7 @@ Description
 from scipy.optimize import root
 import warnings
 
-from ..nodes.Node import *
+from ..interfaces.interface import *
 from ..components.componentClass import *
 from ..utilities.utilities import *
 

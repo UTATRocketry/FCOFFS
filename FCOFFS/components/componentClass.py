@@ -7,7 +7,7 @@ from scipy.optimize import brentq,fsolve
 from CoolProp.CoolProp import PropsSI
 import warnings
 
-from ..nodes.Node import Node
+from ..interfaces.interface import Interface
 from ..fluids.Fluid import Fluid
 from ..utilities.utilities import *
 from ..utilities.units import *
@@ -47,7 +47,7 @@ class ComponentClass:
             if downstream.type == 'node':
                 self.node_out = downstream
             elif downstream.type == 'component':
-                self.node_out = Node()
+                self.node_out = Interface()
             else:
                 raise Exception("class.type not in list")
 
@@ -195,7 +195,7 @@ class Injector(ComponentClass):
         G = (P_sat/P_i)*G_crit_sat + (1-P_sat/P_i)*G_low;
         return G
 
-class Tank(componentClass):
+class Tank(ComponentClass):
     def __init__(self, parent_system, diameter, fluid, volume, name="Tank"):
       
         super().__init__(parent_system, diameter, fluid, name)

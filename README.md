@@ -1,5 +1,4 @@
-# LiquidProp-PressurizationCode
-## Fully Coupled One-dimensional Framework for Fluid Simulations (FCOFFS)
+# Fully Coupled One-dimensional Framework for Fluid Simulations (FCOFFS)
 
 FCOFFS is a 1D fluid simulation code that enables us to capture the behaviour of the rocket propellant feed system. 
 

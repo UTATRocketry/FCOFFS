@@ -7,7 +7,7 @@ from FCOFFS.utilities.units import *
 
 from FCOFFS.components.componentClass import *
 from FCOFFS.interfaces.interface import *
-from FCOFFS.pressureSystem.PressureSystem import PressureSystem
+from FCOFFS.pressureSystem.PressureSystem import *
 
 PS = PressureSystem(ref_p=(15, UnitPressure.psi))
 

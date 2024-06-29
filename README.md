@@ -4,11 +4,14 @@ FCOFFS is a 1D fluid simulation code that enables us to capture the behaviour of
 
 User should import the following packages into a fresh `.py` code. 
 
-	```
-	from FCOFFS.Utilities import *
-	from FCOFFS.componentClass import *
-	from FCOFFS.PressureSystem import PressureSystem
-	```
+```	
+from FCOFFS.utilities.utilities import *
+from FCOFFS.utilities.units import *
+
+from FCOFFS.components.componentClass import *
+from FCOFFS.interfaces.interface import *
+from FCOFFS.pressureSystem.PressureSystem import *
+```
 
 The file should be saved immediately outside of the `FCOFFS` package. 
 

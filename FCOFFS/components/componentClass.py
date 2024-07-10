@@ -60,9 +60,14 @@ class ComponentClass:
     def update(self):
         self.node_in.update()
         self.node_out.update()
-        res1 = (self.node_in.state.rho - self.node_out.state.rho)/self.node_in.state.rho
-        res2 = (self.node_in.state.u - self.node_out.state.u)/self.node_in.state.u
-        res3 = (self.node_in.state.p - self.node_out.state.p)/self.node_in.state.p
+        
+        #res1 = (self.node_in.state.rho - self.node_out.state.rho)/self.node_in.state.rho
+        #res2 = (self.node_in.state.u - self.node_out.state.u)/self.node_in.state.u
+        #res3 = (self.node_in.state.p - self.node_out.state.p)/self.node_in.state.p
+        res1 = resavg(self.node_in.state.rho, self.node_out.state.rho)
+        res2 = resavg(self.node_in.state.u, self.node_out.state.u)
+        res3 = resavg(self.node_in.state.p, self.node_out.state.p)
+        
         return [res1, res2, res3]
 
 
@@ -115,9 +120,14 @@ class Pipe(ComponentClass):
         p_out = p_in - dp
         rho_out = Fluid.density(self.fluid, T_in, p_out)
         u_out = mdot / rho_out / self.node_out.state.area
-        res1 = (rho_out - self.node_out.state.rho)/rho_out
-        res2 = (u_out - self.node_out.state.u)/u_out
-        res3 = (p_out - self.node_out.state.p)/p_out
+
+        #res1 = (rho_out - self.node_out.state.rho)/rho_out
+        #res2 = (u_out - self.node_out.state.u)/u_out
+        #res3 = (p_out - self.node_out.state.p)/p_out
+        res1 = resavg(rho_out, self.node_out.state.rho)
+        res2 = resavg(u_out, self.node_out.state.u)
+        res3 = resavg(p_out, self.node_out.state.p)
+
         return [res1, res2, res3]
 
 
@@ -150,9 +160,14 @@ class Injector(ComponentClass):
         rho_out = Fluid.density(self.fluid,T_i,p_o)
         u_in = mdot_est / self.node_in.state.rho / self.node_in.state.area
         u_out = mdot_est / rho_out / self.node_out.state.area
-        res1 = (rho_out - self.node_out.state.rho)/rho_out
-        res2 = (u_out - self.node_out.state.u)/u_out
-        res3 = (u_in - self.node_in.state.u)/u_in
+        
+        #res1 = (rho_out - self.node_out.state.rho)/rho_out
+        #res2 = (u_out - self.node_out.state.u)/u_out
+        #res3 = (u_in - self.node_in.state.u)/u_in
+        res1 = resavg(rho_out, self.node_out.state.rho)
+        res2 = resavg(u_out, self.node_out.state.u)
+        res3 = resavg(u_in, self.node_in.state.u)
+
         return [res1, res2, res3]
 
 
@@ -194,6 +209,7 @@ class Injector(ComponentClass):
 
         G = (P_sat/P_i)*G_crit_sat + (1-P_sat/P_i)*G_low;
         return G
+
 
 class Tank(ComponentClass):
     def __init__(self, parent_system, diameter, fluid, volume, name="Tank"):
@@ -237,3 +253,6 @@ class Tank(ComponentClass):
         return []
 
 
+def resavg(property_1, property_2):
+    # Residual of the form x1-x2/(avg(x1,x2)).
+    return 2*(property_1-property_2)/(property_1+property_2)

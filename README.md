@@ -101,11 +101,12 @@ A solution $W^\*$ is accepted when $F(W^\*) \approx 0$ within the specified tole
 3. Apply state limiter to improve stability. (i.e. pressure and temperature should be limited to within a reasonable range)
 
 ## Critical System Improvements
-1. Describe more components in the `ComponentClass`. Two-phase tank, pressurant tank, and flow controller (including regulator, critical orifice, venturi, etc.) should be the first ones to add.
-2. Should also allow component behaviours to be described by charts in addition to equations.
-3. More robust input checks.
-4. More human-readable output.
-5. More unit options. (i.e. choice of using Pa vs PSI)
+1. Change inlets/outlets to be components, not interfaces. Standardize interfaces.
+2. Describe more components in the `ComponentClass`. Two-phase tank, pressurant tank, and flow controller (including regulator, critical orifice, venturi, etc.) should be the first ones to add.
+3. Should also allow component behaviours to be described by charts in addition to equations.
+4. More robust input checks.
+5. More human-readable output.
+6. More unit options. (i.e. choice of using Pa vs PSI)
 
 ## Nice to haves
 1. Text inputs (c.f. create the pressuresystem in script)

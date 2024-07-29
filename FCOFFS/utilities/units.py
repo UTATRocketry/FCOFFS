@@ -28,7 +28,8 @@ def convert_from_si(quantity):
         return quantity
     return quantity[0] / quantity[1].value
 
-class UnitValue: 
+
+class UnitValue:  # could add more units and a create value button that returns a UNit Value object given a unit and value.
     UNITS = {"IMPERIAL": {
                            "DISTANCE": {"in": 0.0254, "mi": 1609.34, "yd": 0.9144, "ft": 0.3048}, 
                            "PRESSURE": {"psi": 6894.76, "psf": 47.8803}, 
@@ -56,24 +57,24 @@ class UnitValue:
             }
     
     @classmethod
-    def available_units(cls, system: str="", measurement_type: str="") -> str:
+    def available_units(cls, system: str="", dimension: str="") -> str:
         '''param:'''
         if system:
             if system not in UnitValue.UNITS.keys():
                 raise Exception(f"Unit system {system} invalid: Must be 'IMPERIAL' or 'METRIC'")
-            if measurement_type:
-                if measurement_type not in UnitValue.UNITS[system].keys():
-                    raise Exception(f"Measurement Type {measurement_type} invalid: Must be 'DISTANCE', 'PRESSURE', 'MASS', 'VELOCITY', 'DENSITY', 'VOLUME', 'AREA', 'TEMPERATURE', 'MASS FLOW RATE', 'ENERGY'")
-                return f"{system} {measurement_type}: {list(UnitValue.UNITS[system][measurement_type].keys())}"
+            if dimension:
+                if dimension not in UnitValue.UNITS[system].keys():
+                    raise Exception(f"Measurement Type {dimension} invalid: Must be 'DISTANCE', 'PRESSURE', 'MASS', 'VELOCITY', 'DENSITY', 'VOLUME', 'AREA', 'TEMPERATURE', 'MASS FLOW RATE', 'ENERGY'")
+                return f"{system} {dimension}: {list(UnitValue.UNITS[system][dimension].keys())}"
             else:
                 temp = ""
                 for key in UnitValue.UNITS[system].keys():
                     temp += f"{key}: {list(UnitValue.UNITS[system][key].keys())}\n"
                 return f"{system}:\n{temp}"
-        elif measurement_type:
-            if measurement_type not in UnitValue.UNITS["METRIC"].keys():
-                raise Exception(f"Measurement Type {measurement_type} invalid: Must be 'DISTANCE', 'PRESSURE', 'MASS', 'VELOCITY', 'DENSITY', 'VOLUME', 'AREA', 'TEMPERATURE', 'MASS FLOW RATE', 'ENERGY'")
-            return f"METRIC {measurement_type}: {list(UnitValue.UNITS['METRIC'][measurement_type].keys())}\nIMPERIAL {measurement_type}: {list(UnitValue.UNITS['IMPERIAL'][measurement_type].keys())}"
+        elif dimension:
+            if dimension not in UnitValue.UNITS["METRIC"].keys():
+                raise Exception(f"Measurement Type {dimension} invalid: Must be 'DISTANCE', 'PRESSURE', 'MASS', 'VELOCITY', 'DENSITY', 'VOLUME', 'AREA', 'TEMPERATURE', 'MASS FLOW RATE', 'ENERGY'")
+            return f"METRIC {dimension}: {list(UnitValue.UNITS['METRIC'][dimension].keys())}\nIMPERIAL {dimension}: {list(UnitValue.UNITS['IMPERIAL'][dimension].keys())}"
         else:
             temp = ""
             for key in UnitValue.UNITS["METRIC"].keys():
@@ -85,7 +86,7 @@ class UnitValue:
             res += temp
             return res
 
-    def __init__(self, system: str, measurement_type: str, unit: str, value: float=0) -> None:
+    def __init__(self, system: str, dimension: str, unit: str, value: float=0) -> None:
         self.value = value
         if system.lower() == "imperial":
             self.__system = "IMPERIAL"
@@ -94,52 +95,52 @@ class UnitValue:
         else:
             raise Exception(f"Unit system {system} invalid: Must be 'IMPERIAL' or 'METRIC'")
         
-        if measurement_type not in UnitValue.UNITS[self.__system]:
-            raise Exception(f"Measurement Type {measurement_type} invalid: Must be 'DISTANCE', 'PRESSURE', 'MASS', 'VELOCITY', 'DENSITY', 'VOLUME', 'AREA', 'TEMPERATURE', 'MASS FLOW RATE', 'ENERGY'")
-        self.__type = measurement_type
+        if dimension not in UnitValue.UNITS[self.__system]:
+            raise Exception(f"Measurement Type {dimension} invalid: Must be 'DISTANCE', 'PRESSURE', 'MASS', 'VELOCITY', 'DENSITY', 'VOLUME', 'AREA', 'TEMPERATURE', 'MASS FLOW RATE', 'ENERGY'")
+        self.__dimension = dimension
 
-        if unit not in UnitValue.UNITS[self.__system][self.__type]:
-            raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__type].keys())} for {self.__system} {self.__type}")
+        if unit not in UnitValue.UNITS[self.__system][self.__dimension]:
+            raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
         self.__unit = unit
 
     def convert_base_metric(self):
-        if self.__type != "TEMPERATURE":
-            self.value *= UnitValue.UNITS[self.__system][self.__type][self.__unit] # convert back to base metric unit
+        if self.__dimension != "TEMPERATURE":
+            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
             self.__system = "METRIC"
-            self.__unit = list(UnitValue.UNITS[self.__system][self.__type].keys())[0]
+            self.__unit = list(UnitValue.UNITS[self.__system][self.__dimension].keys())[0]
         else:
             self.__temperature_handler(self.__unit, "k")
             self.__system = "METRIC"
             self.__unit = "k"
 
     def __convert_system(self, unit: str = "") -> None:
-        self.value *= UnitValue.UNITS[self.__system][self.__type][self.__unit] # convert back to base metric unit
+        self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
         self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
         
         if unit:
-            if unit in UnitValue.UNITS[self.__system][self.__type].keys():
-                self.value /= UnitValue.UNITS[self.__system][self.__type][unit]
+            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
+                self.value /= UnitValue.UNITS[self.__system][self.__dimension][unit]
                 self.__unit = unit
             else:
                 sys = self.__system 
                 self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
-                self.value /= UnitValue.UNITS[self.__system][self.__type][self.__unit] # convert back to base metric unit
-                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[sys][self.__type].keys())} for {sys} {self.__type}")
-        else: # need to convert to other system and then change unit
+                self.value /= UnitValue.UNITS[self.__system][self.__dimension][self.__unit]
+                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[sys][self.__dimension].keys())} for {sys} {self.__dimension}")
+        else: 
             if self.__system != "METRIC":
-                self.value /= UnitValue.UNITS[self.__system][self.__type][list(UnitValue.UNITS[self.__system][self.__type].keys())[0]]
-            self.__unit = list(UnitValue.UNITS[self.__system][self.__type].keys())[0]
+                self.value /= UnitValue.UNITS[self.__system][self.__dimension][list(UnitValue.UNITS[self.__system][self.__dimension].keys())[0]]
+            self.__unit = list(UnitValue.UNITS[self.__system][self.__dimension].keys())[0]
         
     def __convert_unit(self, unit: str) -> None:
-        if unit in UnitValue.UNITS[self.__system][self.__type].keys():
-            self.value *= UnitValue.UNITS[self.__system][self.__type][self.__unit] # convert back to base metric unit
-            self.value /= UnitValue.UNITS[self.__system][self.__type][unit] 
+        if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
+            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
+            self.value /= UnitValue.UNITS[self.__system][self.__dimension][unit] 
             self.__unit = unit
         else:
-            raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__type].keys())} for {self.__system} {self.__type}")
+            raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
 
     def convert_to(self, change_system: bool, unit: str = "") -> None:
-        if self.__type == "TEMPERATURE":
+        if self.__dimension == "TEMPERATURE":
             self._convert_temp(change_system, unit)
         elif change_system is True:
             self.__convert_system(unit)
@@ -152,13 +153,13 @@ class UnitValue:
         return self.__unit
 
     def get_measurement_type(self) -> str:
-        return self.__type
+        return self.__dimension
 
     def get_system(self) -> str:
         return self.__system
 
     def __repr__(self) -> str:
-        return f"{self.__system} {self.__type}: {self.value} {self.__unit}"
+        return f"{self.__system} {self.__dimension}: {self.value} {self.__unit}"
 
     def __temperature_handler(self, old_unit: str, new_unit: str):
         if new_unit == "k":
@@ -177,20 +178,28 @@ class UnitValue:
             elif old_unit == "c":
                 self.value = (self.value / (5/9)) + 32
         
-    
     def _convert_temp(self, change_system: bool, unit: str=""):
         if change_system:
             self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
-            if unit in UnitValue.UNITS[self.__system][self.__type].keys():
+            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
                 self.__temperature_handler(self.__unit, unit)
                 self.__unit = unit
             else:
-                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__type].keys())} for {self.__system} {self.__type}")
+                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
         elif unit:
-            if unit in UnitValue.UNITS[self.__system][self.__type].keys():
+            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
                 self.__temperature_handler(self.__unit, unit)
                 self.__unit = unit
             else:
-                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__type].keys())} for {self.__system} {self.__type}")
+                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
         else:
             raise Exception("No conversion performed as change_system was false and unit was empty")
+
+
+def create_dimensioned_quantity(unit: str, value: float=0) -> UnitValue:
+    for system in UnitValue.UNITS.keys():
+        for dimension in UnitValue.UNITS[system].keys():
+            for u in UnitValue.UNITS[system][dimension].keys():
+                if u == unit:
+                    return UnitValue(system, dimension, u, value)
+    raise Exception("Invalid unit: this unit is not currently supported by the module")

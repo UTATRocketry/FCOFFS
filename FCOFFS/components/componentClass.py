@@ -7,35 +7,34 @@ from scipy.optimize import brentq,fsolve
 from CoolProp.CoolProp import PropsSI
 import warnings
 
+from ..pressureSystem import PressureSystem
 from ..interfaces.interface import Interface
-from ..fluids.Fluid import Fluid
-from ..utilities.utilities import *
+from ..fluids.fluid import Fluid
+from ..utilities.Utilities import *
 from ..utilities.units import *
 
 
-class ComponentClass:
+class ComponentClass: # we should consider adding a varibale to hold area so we aren't re doing the calculations
     # diameter [m]:    diameter of the component at the connections
     # name []:         name of the component, if left blank will receive a label
     #                  of 'COMP #'
-    def __init__(self, parent_system, diameter, fluid, name="COMP_AUTO"):
+    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, name: str="COMP_AUTO"):
         self.parent_system = parent_system
-        self.diameter = convert_to_si(diameter)
+        self.diameter = diameter
+        self.diameter.convert_base_metric()
         self.fluid = fluid
         self.name = name
         self.type = 'component'
         self.node_in = None
         self.node_out = None
 
-
     def __str__(self):
         return self.name
-
 
     def __repr__(self): #TODO
         return self.name
 
-
-    def set_connection(self, upstream, downstream):
+    def set_connection(self, upstream: Interface, downstream: Interface):
         if upstream != None:
             if upstream.type == 'node':
                 self.node_in = upstream
@@ -51,11 +50,9 @@ class ComponentClass:
             else:
                 raise Exception("class.type not in list")
 
-
     def initialize(self):
-        self.node_in.initialize(parent_system=self.parent_system,area=pi*self.diameter**2/4,fluid=self.fluid)
-        self.node_out.initialize(parent_system=self.parent_system,area=pi*self.diameter**2/4,fluid=self.fluid,rho=self.node_in.state.rho,u=self.node_in.state.u,p=self.node_in.state.p)
-
+        self.node_in.initialize(parent_system=self.parent_system, area=UnitValue("METRIC", "AREA", "m^2", pi*self.diameter.value**2/4), fluid=self.fluid)
+        self.node_out.initialize(parent_system=self.parent_system, area=UnitValue("METRIC", "AREA", "m^2", pi*self.diameter.value**2/4), fluid=self.fluid, rho=self.node_in.state.rho, u=self.node_in.state.u, p=self.node_in.state.p)
 
     def update(self):
         self.node_in.update()
@@ -75,15 +72,16 @@ class Pipe(ComponentClass):
     #                  calculated from epsilon if not specified
     # epsilon [m]:     roughness of the pipe internal wall, a function of
     #                  material
-    def __init__(self, parent_system, diameter, fluid, name=None, length=0, roughness=None, epsilon=None):
-        super().__init__(parent_system, diameter,fluid,name)
-        self.length = convert_to_si(length)
+    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, name: str=None, length: UnitValue=0, roughness: float|None=None, epsilon: float|None=None):
+        super().__init__(parent_system, diameter, fluid,name)
+        self.length = length
+        self.length.convert_base_metric()
         if roughness == None:
             if epsilon == None:
                 self.epsilon = 0.000025
             else:
                 self.epsilon = epsilon
-            self.roughness = self.epsilon / self.diameter
+            self.roughness = self.epsilon / self.diameter.value
         else:
             self.roughness = roughness
 
@@ -99,7 +97,7 @@ class Pipe(ComponentClass):
         T_in = self.node_in.state.T
 
         # find friction factor
-        Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid,rho_in)
+        Re = u_in * self.diameter.value / Fluid.kinematic_viscosity(self.fluid, rho_in)
         def colebrook(f):
             return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
         def haaland(f):
@@ -110,11 +108,11 @@ class Pipe(ComponentClass):
             friction_factor = 64 / Re
 
         # update downstream condition
-        PLC = friction_factor * self.length / self.diameter
+        PLC = friction_factor * self.length.value / self.diameter.value
         dp = PLC * q_in
         p_out = p_in - dp
         rho_out = Fluid.density(self.fluid, T_in, p_out)
-        u_out = mdot / rho_out / self.node_out.state.area
+        u_out = mdot / rho_out / self.node_out.state.area.value
         res1 = (rho_out - self.node_out.state.rho)/rho_out
         res2 = (u_out - self.node_out.state.u)/u_out
         res3 = (p_out - self.node_out.state.p)/p_out
@@ -122,22 +120,23 @@ class Pipe(ComponentClass):
 
 
 class Injector(ComponentClass):
-    def __init__(self, parent_system, diameter_in, diameter_out, diameter_hole, num_hole, fluid, name='Injector'):
+    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, diameter_out: UnitValue, diameter_hole: UnitValue, num_hole: int, fluid: str, name: str='Injector'):
         if fluid not in ['N2O','CO2']:
             raise Exception("Fluid type not supported for injector")
-        super().__init__(parent_system,diameter_hole,fluid,name)
-        self.diameter_in = convert_to_si(diameter_in)
-        self.diameter_out = convert_to_si(diameter_out)
-        self.diameter_hole = convert_to_si(diameter_hole)
+        super().__init__(parent_system, diameter_hole, fluid, name)
+        self.diameter_in = diameter_in
+        self.diameter_in.convert_base_metric()
+        self.diameter_out = diameter_out
+        self.diameter_out.convert_base_metric()
+        self.diameter_hole = diameter_hole
+        self.diameter_hole.convert_base_metric()
         self.num_hole = num_hole
-
 
     def initialize(self):
         if self.parent_system.outlet_BC != 'PressureOutlet':
             warnings.warn("Outlet BC not well posed. ")
-        self.node_in.initialize(parent_system=self.parent_system,area=pi*self.diameter_in**2/4,fluid=self.fluid)
-        self.node_out.initialize(parent_system=self.parent_system,area=pi*self.diameter_out**2/4,fluid=self.fluid,rho=self.node_in.state.rho,u=self.node_in.state.u,p=self.node_in.state.p)
-
+        self.node_in.initialize(parent_system=self.parent_system, area=UnitValue("METRIC", "AREA", "m^2", pi*self.diameter.value**2/4), fluid=self.fluid)
+        self.node_out.initialize(parent_system=self.parent_system, area=UnitValue("METRIC", "AREA", "m^2", pi*self.diameter.value**2/4), fluid=self.fluid, rho=self.node_in.state.rho, u=self.node_in.state.u, p=self.node_in.state.p)
 
     def update(self):
         self.node_in.update()
@@ -145,11 +144,11 @@ class Injector(ComponentClass):
         p_i = self.node_in.state.p
         T_i = self.node_in.state.T
         p_o = self.node_out.state.p
-        mass_flux_est = self.get_mass_flux(T_i,p_i,p_o)
-        mdot_est = mass_flux_est * (pi*self.diameter_hole**2/4) * self.num_hole
-        rho_out = Fluid.density(self.fluid,T_i,p_o)
-        u_in = mdot_est / self.node_in.state.rho / self.node_in.state.area
-        u_out = mdot_est / rho_out / self.node_out.state.area
+        mass_flux_est = self.get_mass_flux(T_i, p_i, p_o)
+        mdot_est = mass_flux_est * (pi*self.diameter_hole.value**2/4) * self.num_hole
+        rho_out = Fluid.density(self.fluid, T_i, p_o)
+        u_in = mdot_est / self.node_in.state.rho / self.node_in.state.area.value
+        u_out = mdot_est / rho_out / self.node_out.state.area.value
         res1 = (rho_out - self.node_out.state.rho)/rho_out
         res2 = (u_out - self.node_out.state.u)/u_out
         res3 = (u_in - self.node_in.state.u)/u_in
@@ -170,18 +169,18 @@ class Injector(ComponentClass):
 
     def get_mass_flux(self, T_i, P_i, P_o):
         P_sat = PropsSI("P", "T", T_i, "Q", 0, self.fluid)
-        omega = self.get_omega(T_i, P_i)
+        omega = self.get_omega(T_i, P_i) # unused?
         omega_sat = self.get_omega(T_i, P_sat)
-        eta_st = 2*omega_sat/(1+2*omega_sat)
+        eta_st = 2*omega_sat/(1+2*omega_sat) # unused?
 
         # G_crit,sat
         func = lambda eta_crit: eta_crit**2 + (omega_sat**2 - 2*omega_sat)*(1-eta_crit)**2 + 2*(omega_sat**2)*log(eta_crit) + 2*(omega_sat**2)*(1-eta_crit)
         eta_crit = fsolve(func,1)[0]
         v_l = 1/PropsSI("D", "T", T_i, "Q", 0, self.fluid)
-        G_crit_sat = eta_crit / sqrt(omega_sat) * sqrt(P_i * 1/v_l);
+        G_crit_sat = eta_crit / sqrt(omega_sat) * sqrt(P_i * 1/v_l)
 
         # G_low
-        eta_sat = P_sat / P_i;
+        eta_sat = P_sat / P_i
         func = lambda eta_crit_low: (omega_sat+(1/omega_sat)-2)/(2*eta_sat)*(eta_crit_low**2) - 2*(omega_sat-1)*eta_crit_low + omega_sat*eta_sat*log(eta_crit_low/eta_sat) + 3/2*omega_sat*eta_sat - 1
         eta_crit_low = fsolve(func,1)[0]
         if P_o < eta_crit_low*P_i:
@@ -192,32 +191,33 @@ class Injector(ComponentClass):
             return 0.86 * sqrt(2 * abs(P_i-P_o) * self.node_in.state.rho)
         G_low = sqrt(P_i/v_l) * sqrt(2*(1-eta_sat) + 2*(omega_sat*eta_sat*log(eta_sat/eta) - (omega_sat-1)*(eta_sat-eta)))/(omega_sat*(eta_sat/eta - 1) + 1)
 
-        G = (P_sat/P_i)*G_crit_sat + (1-P_sat/P_i)*G_low;
+        G = (P_sat/P_i)*G_crit_sat + (1-P_sat/P_i)*G_low
         return G
 
 class Tank(ComponentClass):
-    def __init__(self, parent_system, diameter, fluid, volume, name="Tank"):
+    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, volume: UnitValue, name: str="Tank"):
       
         super().__init__(parent_system, diameter, fluid, name)
-        self.volume = volume 
+        self.volume = volume
+        self.volume.convert_base_metric() 
         self.fluid_level = 0  
         self.pressure = None  
         self.temperature = None  
 
     def __str__(self):
         
-        return f"{self.name}: Volume={self.volume} m^3, Fluid Level={self.fluid_level} m^3"
+        return f"{self.name}: Volume={self.volume.value} m^3, Fluid Level={self.fluid_level} m^3"
 
     def add_fluid(self, volume):
         
         self.fluid_level += volume
-        if self.fluid_level > self.volume:
+        if self.fluid_level > self.volume.value: # why not just stop users from adding over instead of doing it and throwing error?
             raise ValueError("Fluid level exceeds tank capacity")
 
     def remove_fluid(self, volume):
 
-        self.fluid_level -= volume
-        if self.fluid_level < 0:
+        self.fluid_level -= volume 
+        if self.fluid_level < 0: #  same here why not just stop users from removing more instead of doing it and throwing error?
             raise ValueError("Cannot remove more fluid than the current level")
 
     def update_properties(self):
@@ -226,7 +226,7 @@ class Tank(ComponentClass):
 
     def initialize(self):
         # Initialize tank properties
-        super().initialize()
+        super().initialize() 
         # Additional initialization specific to the tank
         self.update_properties()
 

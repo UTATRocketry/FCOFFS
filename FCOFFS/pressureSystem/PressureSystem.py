@@ -7,28 +7,30 @@ import warnings
 
 from ..interfaces.interface import *
 from ..components.componentClass import *
-from ..utilities.utilities import *
+from ..utilities.Utilities import *
+from ..utilities.units import UnitValue
 
 
 # Nomenclature:
 
 class PressureSystem:
 
-    def __init__(self,ref_T=293.15,ref_p=1.01e5,transient=[0,0,0]):
+    def __init__(self, ref_T: float=293.15, ref_p: UnitValue=UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5), transient=[0,0,0]):
         self.w = []            # list of primitives on the nodes
         self.ref_T = ref_T
         self.ref_p = ref_p
+        self.ref_p.convert_base_metric()
         self.transient = transient   # [t_i, t_f, dt]
         self.t = transient[0]
 
     def __repr__(self):
         return str(self.objects)
 
-    def output(self,verbose=True):
+    def output(self, verbose: bool=True):
         output_string = ""
         items = ["name", "rho", "u", "p"]
         for item in items:
-            output_string += item[:15] + " "*max(16-len(item),1)
+            output_string += item[:15] + " "*max(16-len(item), 1)
         output_string += "\n"
         for obj in self.objects:
             for item in items:
@@ -45,7 +47,7 @@ class PressureSystem:
                     val_string = val
                 else:
                     val_string = "{:.9E}".format(val)
-                output_string += val_string + " "*max(16-len(val_string),1)
+                output_string += val_string + " "*max(16-len(val_string), 1)
             output_string += "\n"
         if verbose: print("\n\n", output_string, "\n\n", sep='')
         return output_string
@@ -57,7 +59,7 @@ class PressureSystem:
         print(self.objects[-1].name)
         print()
 
-    def initialize(self,components,inlet_BC,outlet_BC):
+    def initialize(self, components: list, inlet_BC: str, outlet_BC: str):
         if len(components) < 1:
             raise IndexError('No component found. ')
         self.components = components
@@ -84,7 +86,7 @@ class PressureSystem:
             self.w += [var2,var3]
         return self.w
 
-    def set_w(self,new_w):
+    def set_w(self, new_w):
         i = 0
         if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
             var1 = new_w[i]
@@ -136,7 +138,7 @@ class PressureSystem:
                     #self.output()
                     return res
 
-            sol = root(func,self.w).x
+            sol = root(func, self.w).x
             print(sol)
             self.t += self.transient[2]
             if self.t > self.transient[1] or self.transient[2] == 0:

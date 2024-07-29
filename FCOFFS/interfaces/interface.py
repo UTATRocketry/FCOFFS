@@ -2,15 +2,16 @@
 Description
 '''
 
+from ..pressureSystem import PressureSystem
 from ..state.State import State
-from ..fluids.Fluid import Fluid
+from ..fluids.fluid import Fluid
 
 from ..utilities import *
 from ..utilities.units import *
 
 
 class Interface:
-    def __init__(self,name="NODE_AUTO"):
+    def __init__(self, name: str="NODE_AUTO"):
         self.name = name
         self.type = 'node'
         self.state = State()
@@ -22,10 +23,10 @@ class Interface:
     def update(self):
         self.state.update()
 
-    def initialize(self,parent_system=None,area=None,fluid=None,rho=None,u=None,p=None):
+    def initialize(self, parent_system: PressureSystem=None, area: UnitValue=None, fluid: str=None, rho: float=None, u: float=None, p: float=None):
         if not self.initialized:
             self.parent_system = parent_system
-            self.state.set(area,fluid,rho,u,p)
+            self.state.set(area, fluid, rho, u, p)
             self.update()
             self.initialized = True
 
@@ -71,8 +72,8 @@ class MassOutlet(Interface):
         if not self.initialized:
             self.parent_system = parent_system
             if rho != None:
-                rho = Fluid.density(fluid,parent_system.ref_T,parent_system.ref_p)
-            p = self.parent_system.ref_p
+                rho = Fluid.density(fluid,parent_system.ref_T, parent_system.ref_p.value)
+            p = self.parent_system.ref_p.value # should these not be self.p and self.u
             u = self.mdot / rho / area
             self.state.set(area,fluid,rho,u,p)
             self.update()

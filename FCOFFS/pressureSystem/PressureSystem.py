@@ -6,7 +6,6 @@ from scipy.optimize import root
 import warnings
 
 from ..interfaces.interface import *
-from ..components.componentClass import *
 from ..utilities.Utilities import *
 from ..utilities.units import UnitValue
 

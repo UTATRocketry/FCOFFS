@@ -10,7 +10,7 @@ from ..utilities.Utilities import *
 
 
 class State:
-    def __init__(self, area: UnitValue=None, fluid: str=None, rho: float=None, u: float=None, p: float=None) -> None:
+    def __init__(self, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None) -> None:
         self.area = area         # connection area, typically should not change
         self.fluid = fluid       # fluid type in string
         self.rho = rho           # primitive property; density
@@ -22,7 +22,7 @@ class State:
 
     def update(self) -> None:
         # Update other fluid properties based on the primitives
-        self.mdot = self.rho * self.u * self.area.value
+        self.mdot = self.rho * self.u * self.area 
         self.q = self.rho * self.u**2 / 2
         self.T = Fluid.temp(self.fluid, self.rho, self.p)
 

@@ -9,7 +9,7 @@ from FCOFFS.components import *
 from FCOFFS.interfaces.interface import *
 from FCOFFS.pressureSystem.PressureSystem import *
 
-PS = PressureSystem(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psi", 15)) #UnitValue("IMPERIAL", "PRESSURE", "psi", 15)
+PS = PressureSystem(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psi", 15)) 
 
 inlet = PressureInlet((780, UnitPressure.psi), 295) # look at chnaging units for these later
 interface1 = Interface("INTER1")

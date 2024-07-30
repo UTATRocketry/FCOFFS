@@ -42,10 +42,16 @@ class UnitValue:  # could add more units and a create value button that returns 
                            "MASS FLOW RATE": {"lb/s": 0.453592, "ton/s": 907.1847, "st/s": 6.35029, "oz": 0.0283495, "lb/min": 0.00755987},
                            "ENERGY": {"ftlb": 1.35582, "kcal": 4184, "cal": 4.184},
                            "TIME": {"s": 1, "h": 3600, "min": 60, "ms": 0.001},
-                           "MOMENTUM": {"slug/fts": 47.8803, "lb/fts": 1.4881639}, 
+                           "MOMENTUM": {"slugft/s": 4.449670915354, "lbft/s": 0.1383}, 
                            "FREQUENCY": {"rpm": 0.016667},
                            "ACCELERATION": {"ft/s^2": 0.3048},
-                           "FORCE": {"lbf": 4.44822} 
+                           "FORCE": {"lbf": 4.44822},
+                           "ENERGY PER UNIT MASS": {"ft^2/s^2": 0.09290304}, 
+                           "MASS PER UNIT LENGTH": {"lb/ft": 1.48816, "oz/in": 1.11612},
+                           "MASS PER AREA": {"lb/ft^2": 4.88243},
+                           "VOLUMETRIC FLOW RATE": {"ft^3/s": 0.0283168, "gal/s": 0.00378541},
+                           "DYNAMIC VISCOCITY": {"lb/fts": 1.488163943568},
+                           "IDK": {"lb/ft^2s": 4.88243} 
                          }, 
              "METRIC": {
                          "DISTANCE": {"m": 1, "km": 1000, "cm": 0.01, "mm": 0.001}, 
@@ -62,7 +68,13 @@ class UnitValue:  # could add more units and a create value button that returns 
                          "MOMENTUM": {"kgm/s": 1, "Ns": 1}, 
                          "FREQUENCY": {"/s": 1, "Hz": 1},
                          "ACCELERATION": {"m/s^2": 1, "g": 9.80665},
-                         "FORCE": {"kgm/s^2": 1, "N": 1, "gcm/s^2": 0.00001}
+                         "FORCE": {"kgm/s^2": 1, "N": 1, "gcm/s^2": 0.00001},
+                         "ENERGY PER UNIT MASS": {"m^2/s^2": 1},
+                         "MASS PER LENGTH": {"kg/m": 1, "kg/cm": 100, "g/cm": 0.1},
+                         "MASS PER AREA": {"kg/m^2": 1, "g/cm^2": 10},
+                         "VOLUMETRIC FLOW RATE": {"m^3/s": 1, "cm^3/s": 0.000001},
+                         "DYNAMIC VISCOCITY": {"kg/ms": 1, "g/cms":0.1},
+                         "IDK": {"kg/m^2s": 1}
                         }
             }
     
@@ -367,9 +379,16 @@ class UnitValue:  # could add more units and a create value button that returns 
                 for units in temp:
                     if b:
                         denom += units
+                        b = False
                     else:
                         numer += units
-                return UnitValue(self.__system, self.__dimension, numer + denom, d / self.value)
+                        b = True
+                new_unit = numer + denom
+                for dimension in UnitValue.UNITS["METRIC"].keys():
+                    for unit in UnitValue.UNITS[self.__system][dimension].keys():
+                        if len(unit) == len(new_unit) and sorted(unit) == sorted(new_unit):
+                            return UnitValue("METRIC", dimension, unit, d / self.value)
+                raise Exception(f"Unit {new_unit} currently not supported")
             except:
                 raise TypeError(f"Invalid operation / between types: UnitValue and {type(d)}")
 
@@ -418,10 +437,14 @@ class UnitValue:  # could add more units and a create value button that returns 
                 new_unit = numer + denom if denom != "/" else numer
             else:
                 for key in units.keys():
-                    if units[key] > 0:
-                        denom += f"{key}^{units[key]*p}"
-                    elif units[key] < 0:
-                        numer += f"{key}^{-1*units[key]*p}"
+                    if units[key] == 1:
+                        denom += key
+                    elif units[key] > 1:
+                        denom += f"{key}^{-1*units[key]*p}"
+                    elif units[key] == -1:
+                        numer += key
+                    elif units[key] < -1:
+                        numer += f"{key}^{units[key]*p}"
                 new_unit = numer + denom if denom != "/" else numer
             for dimension in UnitValue.UNITS["METRIC"].keys():
                 for unit in UnitValue.UNITS[self.__system][dimension].keys():
@@ -477,6 +500,12 @@ class UnitValue:  # could add more units and a create value button that returns 
             if self.value == other.value and self.__unit == other.__unit:
                 return True
         return False
+    
+    def __repr__(self) -> str:
+        return f"{self.value} {self.__unit}"
+    
+    def __str__(self) -> str:
+        return f"{self.value} {self.__unit}"
 
     def convert_base_metric(self):
         if self.__dimension != "TEMPERATURE":
@@ -523,6 +552,7 @@ class UnitValue:  # could add more units and a create value button that returns 
             self.__convert_unit(unit)
         else:
             raise Exception("No conversion performed as change_system was false and unit was empty")
+        return self
 
     @property
     def get_unit(self) -> str:
@@ -535,9 +565,6 @@ class UnitValue:  # could add more units and a create value button that returns 
     @property
     def get_system(self) -> str:
         return self.__system
-
-    def __repr__(self) -> str:
-        return f"{self.value} {self.__unit}"
 
     def __temperature_handler(self, old_unit: str, new_unit: str):
         if new_unit == "k":
@@ -583,7 +610,9 @@ def create_dimensioned_quantity(unit: str, value: float=0) -> UnitValue:
     raise Exception("Invalid unit: this unit is not currently supported by the module")
 
 
+# Examples of use
 if __name__ == "__main__":
+    d = UnitValue("METRIC", "DISTANCE", "m", 5) # this and the line belwo are equivalent, just the top one requires more manual knowledge of path to unit
     d1 = create_dimensioned_quantity("m", 5)
     d2 = create_dimensioned_quantity("cm", 200)
     d3 = create_dimensioned_quantity("ft", 10)
@@ -601,4 +630,7 @@ if __name__ == "__main__":
     mom = m2*v1
     print(mom)
     print(mom*v1)
-    
+    t = create_dimensioned_quantity("s", 2)
+    frequency = t**-1
+    f = 1 / t
+    print(frequency, f.convert_to(False, "Hz"))

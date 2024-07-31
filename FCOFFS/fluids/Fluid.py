@@ -6,7 +6,7 @@ from CoolProp.CoolProp import PropsSI
 from ..utilities.units import UnitValue
 
 class Fluid:
-    supported_fluids = {"N2", "N2O", "C2H6O"}
+    supported_fluids = {"N2", "N2O", "C2H6O"} # why is this here
 
     # density [kg/m3]
     # dynamic_viscosity [Pa-s]
@@ -19,17 +19,18 @@ class Fluid:
         return UnitValue("METRIC", "TEMPERATURE", "k", t)
 
     def pressure(fluid: str, rho: UnitValue, T: UnitValue) -> UnitValue:
-        return PropsSI('P', 'D', rho.value, 'T', T.value, fluid)
+        p = PropsSI('P', 'D', rho.value, 'T', T.value, fluid)
+        return UnitValue("METRIC", "PRESSURE", "kg/ms^2", p)
 
-    def dynamic_viscosity(fluid: str, rho: UnitValue=None, T: UnitValue=None, p: UnitValue=None) -> UnitValue: # why do we have other varaibles here
+    def dynamic_viscosity(fluid: str, rho: UnitValue=None, T: UnitValue=None, p: UnitValue=None) -> UnitValue: # Eventuatly we want to calculate this 
         if fluid=="N2O":
-            return 0.0000552
+            return UnitValue("METRIC", "DYNAMIC VISCOCITY", "kg/ms", 0.0000552)
         elif fluid=="C2H6O":
-            return 0.001198
+            return UnitValue("METRIC", "DYNAMIC VISCOCITY", "kg/ms", 0.001198)
         else:
             raise Exception("Fluid " + fluid + " not supported")
 
-    def kinematic_viscosity(fluid: str, rho: UnitValue|None=None, T: UnitValue=None, p: UnitValue=None) -> float:
+    def kinematic_viscosity(fluid: str, rho: UnitValue|None=None, T: UnitValue=None, p: UnitValue=None) -> UnitValue:
         if rho == None:
             rho = Fluid.density(fluid, T, p)
         return Fluid.dynamic_viscosity(fluid, rho, T, p) / rho

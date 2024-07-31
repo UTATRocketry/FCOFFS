@@ -29,8 +29,8 @@ class Injector(ComponentClass):
     def initialize(self):
         if self.parent_system.outlet_BC != 'PressureOutlet':
             warnings.warn("Outlet BC not well posed. ")
-        self.node_in.initialize(parent_system=self.parent_system, area=UnitValue("METRIC", "AREA", "m^2", pi*self.diameter.value**2/4), fluid=self.fluid)
-        self.node_out.initialize(parent_system=self.parent_system, area=UnitValue("METRIC", "AREA", "m^2", pi*self.diameter.value**2/4), fluid=self.fluid, rho=self.node_in.state.rho, u=self.node_in.state.u, p=self.node_in.state.p)
+        self.node_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
+        self.node_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.node_in.state.rho, u=self.node_in.state.u, p=self.node_in.state.p)
 
     def update(self):
         self.node_in.update()
@@ -38,18 +38,18 @@ class Injector(ComponentClass):
         p_i = self.node_in.state.p
         T_i = self.node_in.state.T
         p_o = self.node_out.state.p
-        mass_flux_est = self.get_mass_flux(T_i, p_i, p_o)
-        mdot_est = mass_flux_est * (pi*self.diameter_hole.value**2/4) * self.num_hole
+        mass_flux_est = UnitValue("METRIC", "MASS FLUX", "kg/m^2s", self.get_mass_flux(T_i, p_i, p_o))
+        mdot_est = mass_flux_est * (pi*self.diameter_hole**2/4) * self.num_hole
         rho_out = Fluid.density(self.fluid, T_i, p_o)
-        u_in = mdot_est / self.node_in.state.rho / self.node_in.state.area.value
-        u_out = mdot_est / rho_out / self.node_out.state.area.value
+        u_in = mdot_est / self.node_in.state.rho / self.node_in.state.area
+        u_out = mdot_est / rho_out / self.node_out.state.area
         res1 = (rho_out - self.node_out.state.rho)/rho_out
         res2 = (u_out - self.node_out.state.u)/u_out
         res3 = (u_in - self.node_in.state.u)/u_in
         return [res1, res2, res3]
 
 
-    def get_omega(self, T_i, P_i):
+    def get_omega(self, T_i: float, P_i: float):
         v_l = 1/PropsSI("D", "T", T_i, "Q", 0, self.fluid)
         v_g = 1/PropsSI("D", "T", T_i, "Q", 1, self.fluid)
         v_lgi = v_g - v_l
@@ -62,28 +62,28 @@ class Injector(ComponentClass):
 
 
     def get_mass_flux(self, T_i, P_i, P_o):
-        P_sat = PropsSI("P", "T", T_i, "Q", 0, self.fluid)
-        omega = self.get_omega(T_i, P_i) # unused?
-        omega_sat = self.get_omega(T_i, P_sat)
+        P_sat = PropsSI("P", "T", T_i.value, "Q", 0, self.fluid)
+        omega = self.get_omega(T_i.value, P_i.value) # unused?
+        omega_sat = self.get_omega(T_i.value, P_sat)
         eta_st = 2*omega_sat/(1+2*omega_sat) # unused?
 
         # G_crit,sat
         func = lambda eta_crit: eta_crit**2 + (omega_sat**2 - 2*omega_sat)*(1-eta_crit)**2 + 2*(omega_sat**2)*log(eta_crit) + 2*(omega_sat**2)*(1-eta_crit)
         eta_crit = fsolve(func,1)[0]
-        v_l = 1/PropsSI("D", "T", T_i, "Q", 0, self.fluid)
-        G_crit_sat = eta_crit / sqrt(omega_sat) * sqrt(P_i * 1/v_l)
+        v_l = 1/PropsSI("D", "T", T_i.value, "Q", 0, self.fluid)
+        G_crit_sat = eta_crit / sqrt(omega_sat) * sqrt(P_i.value * 1/v_l)
 
         # G_low
-        eta_sat = P_sat / P_i
+        eta_sat = P_sat / P_i.value
         func = lambda eta_crit_low: (omega_sat+(1/omega_sat)-2)/(2*eta_sat)*(eta_crit_low**2) - 2*(omega_sat-1)*eta_crit_low + omega_sat*eta_sat*log(eta_crit_low/eta_sat) + 3/2*omega_sat*eta_sat - 1
         eta_crit_low = fsolve(func,1)[0]
-        if P_o < eta_crit_low*P_i:
+        if P_o < eta_crit_low*P_i.value:
             eta = eta_crit_low
         else:
             print(T_i,P_i,P_o)
             warnings.warn("Combustion Chamber Pressure does not exceed critical pressure drop; flow is not choked")
-            return 0.86 * sqrt(2 * abs(P_i-P_o) * self.node_in.state.rho)
-        G_low = sqrt(P_i/v_l) * sqrt(2*(1-eta_sat) + 2*(omega_sat*eta_sat*log(eta_sat/eta) - (omega_sat-1)*(eta_sat-eta)))/(omega_sat*(eta_sat/eta - 1) + 1)
+            return 0.86 * sqrt(2 * abs(P_i.value-P_o) * self.node_in.state.rho)
+        G_low = sqrt(P_i.value/v_l) * sqrt(2*(1-eta_sat) + 2*(omega_sat*eta_sat*log(eta_sat/eta) - (omega_sat-1)*(eta_sat-eta)))/(omega_sat*(eta_sat/eta - 1) + 1)
 
-        G = (P_sat/P_i)*G_crit_sat + (1-P_sat/P_i)*G_low
+        G = (P_sat/P_i.value)*G_crit_sat + (1-P_sat/P_i.value)*G_low
         return G

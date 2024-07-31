@@ -2,14 +2,10 @@
 Description
 '''
 
-from numpy import log10, sqrt, pi, log
-from scipy.optimize import brentq,fsolve
-from CoolProp.CoolProp import PropsSI
-import warnings
+from numpy import pi
 
 from ..pressureSystem import PressureSystem
 from ..interfaces.interface import Interface
-from ..fluids.fluid import Fluid
 from ..utilities.Utilities import *
 from ..utilities.units import *
 
@@ -51,10 +47,10 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
                 raise Exception("class.type not in list")
 
     def initialize(self):
-        self.node_in.initialize(parent_system=self.parent_system, area=UnitValue("METRIC", "AREA", "m^2", pi*self.diameter.value**2/4), fluid=self.fluid)
-        self.node_out.initialize(parent_system=self.parent_system, area=UnitValue("METRIC", "AREA", "m^2", pi*self.diameter.value**2/4), fluid=self.fluid, rho=self.node_in.state.rho, u=self.node_in.state.u, p=self.node_in.state.p)
+        self.node_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
+        self.node_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.node_in.state.rho, u=self.node_in.state.u, p=self.node_in.state.p)
 
-    def update(self):
+    def update(self): 
         self.node_in.update()
         self.node_out.update()
         res1 = (self.node_in.state.rho - self.node_out.state.rho)/self.node_in.state.rho

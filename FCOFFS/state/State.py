@@ -26,10 +26,10 @@ class State:
         self.q = self.rho * self.u**2 / 2
         self.T = Fluid.temp(self.fluid, self.rho, self.p)
 
-    def set(self, area: UnitValue=None, fluid: str=None, rho: float=None, u: float=None, p: float=None) -> None:
+    def set(self, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None) -> None:
         if area != None:
             self.area = area
-            if self.area != None and area.value != self.area.value: # why is their a secon check if  None twice
+            if self.area != None and area != self.area: # why is their a secon check if  None twice
                 warnings.warn("The area changed from " + str(self.area.value) + " to " + str(area.value))
         if fluid != None: self.fluid = fluid
         if rho != None: self.rho = rho

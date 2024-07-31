@@ -44,7 +44,7 @@ class Pipe(ComponentClass):
         T_in = self.node_in.state.T
 
         # find friction factor
-        Re = u_in * self.diameter.value / Fluid.kinematic_viscosity(self.fluid, rho_in)
+        Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
         def colebrook(f):
             return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
         def haaland(f):
@@ -55,11 +55,11 @@ class Pipe(ComponentClass):
             friction_factor = 64 / Re
 
         # update downstream condition
-        PLC = friction_factor * self.length.value / self.diameter.value
+        PLC = friction_factor * self.length / self.diameter
         dp = PLC * q_in
         p_out = p_in - dp
         rho_out = Fluid.density(self.fluid, T_in, p_out)
-        u_out = mdot / rho_out / self.node_out.state.area.value
+        u_out = mdot / rho_out / self.node_out.state.area
         res1 = (rho_out - self.node_out.state.rho)/rho_out
         res2 = (u_out - self.node_out.state.u)/u_out
         res3 = (p_out - self.node_out.state.p)/p_out

@@ -19,7 +19,7 @@ class Tank(ComponentClass):
 
     def __str__(self):
         
-        return f"{self.name}: Volume={self.volume.value} m^3, Fluid Level={self.fluid_level} m^3"
+        return f"{self.name}: Volume={self.volume} m^3, Fluid Level={self.fluid_level} m^3"
 
     def add_fluid(self, volume):
         

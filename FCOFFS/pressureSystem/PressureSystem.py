@@ -14,7 +14,7 @@ from ..utilities.units import UnitValue
 
 class PressureSystem:
 
-    def __init__(self, ref_T: float=293.15, ref_p: UnitValue=UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5), transient=[0,0,0]):
+    def __init__(self, ref_T: UnitValue=UnitValue("METRIC", "TEMPERATURE", "k", 293.15), ref_p: UnitValue=UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5), transient=[0,0,0]):
         self.w = []            # list of primitives on the nodes
         self.ref_T = ref_T
         self.ref_p = ref_p
@@ -45,7 +45,7 @@ class PressureSystem:
                 elif type(val) == str:
                     val_string = val
                 else:
-                    val_string = "{:.9E}".format(val)
+                    val_string = str(val)
                 output_string += val_string + " "*max(16-len(val_string), 1)
             output_string += "\n"
         if verbose: print("\n\n", output_string, "\n\n", sep='')

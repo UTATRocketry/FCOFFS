@@ -11,11 +11,11 @@ from FCOFFS.pressureSystem.PressureSystem import *
 
 PS = PressureSystem(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psi", 15)) 
 
-inlet = PressureInlet((780, UnitPressure.psi), 295) # look at chnaging units for these later
+inlet = PressureInlet(UnitValue("IMPERIAL", "PRESSURE", "psi", 780), UnitValue("METRIC", "TEMPERATURE", "k", 295)) 
 interface1 = Interface("INTER1")
 interface2 = Interface("INTER2")
 interface3 = Interface("INTER3")
-outlet = PressureOutlet((315, UnitPressure.psi))
+outlet = PressureOutlet(UnitValue("IMPERIAL", "PRESSURE", "psi", 315))
 
 pipe1 = pipe.Pipe(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="PIPE1", length=UnitValue("IMPERIAL", "DISTANCE", "in", 72))
 bend1 = pipe.Pipe(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="BEND1", length=UnitValue("IMPERIAL", "DISTANCE", "in", 2))

@@ -75,13 +75,13 @@ class PressureSystem:
     def update_w(self):
         self.w = []
         if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
-            var1 = self.objects[0].state.u
-            var2 = self.objects[-1].state.rho
-            var3 = self.objects[-1].state.u
+            var1 = self.objects[0].state.u.value
+            var2 = self.objects[-1].state.rho.value
+            var3 = self.objects[-1].state.u.value
             self.w = [var1]
             for obj in self.objects[1:-1]:
                 if obj.type == 'node':
-                    self.w += [obj.state.rho, obj.state.u, obj.state.p]
+                    self.w += [obj.state.rho.value, obj.state.u.value, obj.state.p.value]
             self.w += [var2,var3]
         return self.w
 
@@ -90,17 +90,17 @@ class PressureSystem:
         if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":
             var1 = new_w[i]
             i += 1
-            self.objects[0].state.u =  var1
+            self.objects[0].state.u =  UnitValue("METRIC", "VELOCITY", "m/s", var1)
             self.objects[0].update()
             for obj in self.objects[1:-1]:
                 if obj.type == 'node':
-                    obj.state.set(rho=new_w[i], u=new_w[i+1], p=new_w[i+2])
+                    obj.state.set(rho=UnitValue("METRIC", "DENSITY", "kg/m^3", new_w[i]), u=UnitValue("METRIC", "VELOCITY", "m/s", new_w[i+1]), p=UnitValue("METRIC", "PRESSURE", "kg/ms^2", new_w[i+2]))
                     obj.update()
                     i += 3
             var2 = new_w[i]
             var3 = new_w[i+1]
-            self.objects[-1].state.rho =  var2
-            self.objects[-1].state.u =  var3
+            self.objects[-1].state.rho =  UnitValue("METRIC", "DENSITY", "kg/m^3", var2)
+            self.objects[-1].state.u =  UnitValue("METRIC", "VELOCITY", "m/s", var3)
             self.objects[-1].update()
         # if self.inlet_BC=="PressureInlet" and self.outlet_BC=="MassOutlet":
         #     var1 = new_w[i]

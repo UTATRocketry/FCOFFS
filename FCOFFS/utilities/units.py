@@ -5,30 +5,6 @@ It currently suports numbers of the unit type 'DISTANCE', 'PRESSURE', 'MASS', 'V
 Typically used units are supported and more can be added upon request.
 '''
 
-from enum import Enum
-
-class UnitPressure(Enum):
-    Pa = 1
-    psi = 6894.76
-
-
-class UnitLength(Enum):
-    m = 1
-    inch = 0.0254
-
-
-def convert_to_si(quantity):
-    if not isinstance(quantity, tuple):
-        return quantity
-    return quantity[0] * quantity[1].value
-
-
-def convert_from_si(quantity):
-    if not isinstance(quantity, tuple):
-        return quantity
-    return quantity[0] / quantity[1].value
-
-
 class UnitValue: 
     """
     Represents a value with dimension/units.
@@ -47,7 +23,7 @@ class UnitValue:
                            "DENSITY": {"lb/in^3": 27679.9, "lb/ft^3": 16.0185, "lb/yd^3": 0.593276},
                            "VOLUME": {"gal": 0.00378541, "yd^3": 0.764555, "ft^3": 0.0283168, "in^3": 0.0000163871}, 
                            "AREA": {"in^2": 0.00064516, "mi^2": 2590000, "yd^2": 0.836127, "ft^2": 0.092903},
-                           "TEMPERATURE": {"f": None},
+                           "TEMPERATURE": {"f": None, "R":None},
                            "MASS FLOW RATE": {"lb/s": 0.453592, "ton/s": 907.1847, "st/s": 6.35029, "oz": 0.0283495, "lb/min": 0.00755987},
                            "ENERGY": {"ftlb": 1.35582, "kcal": 4184, "cal": 4.184},
                            "TIME": {"s": 1, "h": 3600, "min": 60, "ms": 0.001},
@@ -203,7 +179,7 @@ class UnitValue:
 
         Returns:
             None: This function updates the units dictionary in place.
-        """
+        """ # check for dot
         i = 0
         while i < len(unit_str):
             if unit_str[i] == "/":
@@ -219,11 +195,23 @@ class UnitValue:
                     i += 1
             elif unit_str[i] == "^":
                 if i > 1 and unit_str[i-2] == "k":
+                    if i + 2 < len(unit_str) and unit_str[i+2] == ".":
+                        key = unit_str[i-1]
+                        if key not in units: units[key] = 0
+                        units[key] += opp * float(unit_str[i+1:i+4]) - opp 
+                        i += 4
+                        continue
                     key = unit_str[i-2:i]
                     if key not in units:
                         units[key] = 0
                     units[key] += opp * int(unit_str[i+1]) - opp
                     i += 2
+                    continue
+                elif i + 2 < len(unit_str) and unit_str[i+2] == ".":
+                    key = unit_str[i-1]
+                    if key not in units: units[key] = 0
+                    units[key] += opp * float(unit_str[i+1:i+4]) - opp 
+                    i += 4
                     continue
                 key = unit_str[i-1]
                 if key not in units:
@@ -252,13 +240,13 @@ class UnitValue:
             denom = "/"
             for key in units.keys():
                 if units[key] > 1:
-                    numer += f"{key}^{units[key]}"
+                    numer += f"{key}^{units[key]}" if units[key] % 1 != 0 else f"{key}^{int(units[key])}"
                 elif units[key] == 1:
                     numer += key
                 elif units[key] == -1:
                     denom += key
                 elif units[key] < -1:
-                    denom += f"{key}^{-1*units[key]}"
+                    denom += f"{key}^{-1*units[key]}" if units[key] % 1 != 0 else f"{key}^{-1*int(units[key])}"
 
             new_unit = numer + denom if denom != "/" else numer
             if new_unit == "":
@@ -296,13 +284,13 @@ class UnitValue:
             denom = "/"
             for key in units.keys():
                 if units[key] > 1:
-                    numer += f"{key}^{units[key]}"
+                    numer += f"{key}^{units[key]}" if units[key] % 1 != 0 else f"{key}^{int(units[key])}"
                 elif units[key] == 1:
                     numer += key
                 elif units[key] == -1:
                     denom += key
                 elif units[key] < -1:
-                    denom += f"{key}^{-1*units[key]}"
+                    denom += f"{key}^{-1*units[key]}" if units[key] % 1 != 0 else f"{key}^{-1*int(units[key])}"
 
             new_unit = numer + denom if denom != "/" else numer
             if new_unit == "": 
@@ -338,13 +326,13 @@ class UnitValue:
             denom = "/"
             for key in units.keys():
                 if units[key] > 1:
-                    numer += f"{key}^{units[key]}"
+                    numer += f"{key}^{units[key]}" if units[key] % 1 != 0 else f"{key}^{int(units[key])}"
                 elif units[key] == 1:
                     numer += key
                 elif units[key] == -1:
                     denom += key
                 elif units[key] < -1:
-                    denom += f"{key}^{-1*units[key]}"
+                    denom += f"{key}^{-1*units[key]}" if units[key] % 1 != 0 else f"{key}^{int(units[key])}"
 
             new_unit = numer + denom if denom != "/" else numer
             if new_unit == "": 
@@ -402,20 +390,28 @@ class UnitValue:
             denom = "/"
             if p > 0:
                 for key in units.keys():
-                    if units[key] > 0:
-                        numer += f"{key}^{int(units[key]*p)}"
+                    if abs(units[key]*p) == 1:
+                        numer += key 
+                    elif abs(units[key]*p) < 1:
+                        numer += f"{key}^{units[key]*p}"
+                    elif units[key] > 0:
+                        numer += f"{key}^{units[key]*p}" if units[key] % 1 != 0 or units[key]*p % 1 != 0 else f"{key}^{int(units[key]*p)}"
                     elif units[key] < 0:
-                        denom += f"{key}^{int(-1*units[key]*p)}"
+                        denom += f"{key}^{-1*units[key]*p}" if units[key] % 1 != 0 or units[key]*p % 1 != 0 else f"{key}^{-1*int(units[key]*p)}"
             else:
                 for key in units.keys():
-                    if units[key] == 1:
-                        denom += key if p == -1 else f"{key}^{int(-1*units[key]*p)}"
+                    if abs(units[key]*p) == 1:
+                        denom += key
+                    elif abs(units[key]*p) < 1:
+                        denom += f"{key}^{units[key]*p}"
+                    elif units[key] == 1:
+                        denom += key if p == -1 else f"{key}^{-1*units[key]*p}"
                     elif units[key] > 1:
-                        denom += f"{key}^{int(-1*units[key]*p)}"
+                        denom += f"{key}^{-1*units[key]*p}" if units[key] % 1 != 0 or units[key]*p % 1 != 0 else f"{key}^{-1*int(units[key]*p)}"
                     elif units[key] == -1:
-                        numer += key if p == -1 else f"{key}^{int(units[key]*p)}"
+                        numer += key if p == -1 else f"{key}^{units[key]*p}"
                     elif units[key] < -1:
-                        numer += f"{key}^{int(units[key]*p)}"
+                        numer += f"{key}^{units[key]*p}" if units[key] % 1 != 0 or units[key]*p % 1 != 0 else f"{key}^{int(units[key]*p)}"
 
             new_unit = numer + denom if denom != "/" else numer
             for dimension, units_dict in UnitValue.UNITS["METRIC"].items():
@@ -477,78 +473,84 @@ class UnitValue:
             return UnitValue(self.__system, self.__dimension, self.__unit, s.value - self.value)
         if isinstance(s, (int, float)):
             Warning("Subtracting dimensionless value by value with dimensions, thus assumed same dimension")
-            return UnitValue(self.__system, self.__dimension, self.__unit, s - self.value)           
+            return UnitValue(self.__system, self.__dimension, self.__unit, s - self.value) 
+
+    def __abs__(self):
+        return UnitValue(self.__system, self.__dimension, self.__unit, abs(self.value))         
 
     def __eq__(self, other) -> bool:
         """
         Checks if UnitValue object is equal to other.
         """
         if isinstance(other, UnitValue):
-            return self.value == other.value and self.__unit == other.__unit
+            a = self.__cpy().convert_base_metric()
+            b = other.__cpy().convert_base_metric()
+            return a.value == b.value and a.__unit == b.__unit
         elif isinstance(other, (int, float)):
             return self.value == other
         return False
 
     def __ne__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            return self.value != other.value and self.__unit != other.__unit
+            a = self.__cpy().convert_base_metric()
+            b = other.__cpy().convert_base_metric()
+            return a.value != b.value and a.__unit != b.__unit
         elif isinstance(other, (int, float)):
             return self.value != other
         return True
     
     def __lt__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            return self.value < other.value
+            a = self.__cpy().convert_base_metric()
+            b = other.__cpy().convert_base_metric()
+            return a.value < b.value
         elif isinstance(other, (int, float)):
             return self.value < other
         raise TypeError(f"Cannot compare type UnitValue and type {type(other)}")
     
-    def __lt__(self, other) -> bool:
+    def __le__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            return self.value <= other.value
+            a = self.__cpy().convert_base_metric()
+            b = other.__cpy().convert_base_metric()
+            return a.value <= b.value
         elif isinstance(other, (int, float)):
             return self.value <= other
         raise TypeError(f"Cannot compare type UnitValue and type {type(other)}")
     
     def __gt__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            return self.value > other.value
+            a = self.__cpy().convert_base_metric()
+            b = other.__cpy().convert_base_metric()
+            return a.value > b.value
         elif isinstance(other, (int, float)):
             return self.value > other
         raise TypeError(f"Cannot compare type UnitValue and type {type(other)}")
     
     def __ge__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            return self.value >= other.value
+            a = self.__cpy().convert_base_metric()
+            b = other.__cpy().convert_base_metric()
+            return a.value >= b.value
         elif isinstance(other, (int, float)):
             return self.value >= other
         raise TypeError(f"Cannot compare type UnitValue and type {type(other)}")
+    
+    def __float__(self) -> float:
+        return float(self.value)
+    
+    def __int__(self) -> int:
+        return int(self.value)
+    
+    def __round__(self, ndigits: int=0):
+        self.value = round(self.value, ndigits)
+        return self
     
     def __repr__(self) -> str:
         return f"{self.value} {self.__unit}"
     
     def __str__(self) -> str:
         return f"{self.value} {self.__unit}"
-
-    def convert_base_metric(self):
-        """
-        Convert the current value to it's base SI/Metric unit.
-        
-        Returns:
-            UnitValue: The UnitValue object with the converted units.
-        """
-        if self.__system is None:
-            return
-        elif self.__dimension != "TEMPERATURE":
-            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
-            self.__system = "METRIC"
-            self.__unit = list(UnitValue.UNITS[self.__system][self.__dimension].keys())[0]
-        else:
-            self.__temperature_handler(self.__unit, "k")
-            self.__system = "METRIC"
-            self.__unit = "k"
-        return self
-
+    
     def __convert_system(self, unit: str = "") -> None:
         self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
         self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
@@ -575,6 +577,75 @@ class UnitValue:
         else:
             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
 
+    def __cpy(self):
+        return UnitValue(self.__system, self.__dimension, self.__unit, self.value)
+    
+    def __temperature_handler(self, old_unit: str, new_unit: str): # add Rankine
+        if new_unit == "k":
+            if old_unit == "c":
+                self.value += 273.15
+            elif old_unit == "f":
+                self.value = (self.value - 32) * (5/9) + 273.15
+            elif old_unit == "R":
+                self.value *= 5/9
+        elif new_unit == "c":
+            if old_unit == "k":
+                self.value -= 273.15
+            elif old_unit == "f":
+                self.value = (self.value - 32) * (5/9)
+            elif old_unit == "R":
+                self.value = (self.value - 491.67) * (5/9)
+        elif new_unit == "f":
+            if old_unit == "k":
+                self.value = ((self.value -273.15) / (5/9)) + 32
+            elif old_unit == "c":
+                self.value = (self.value / (5/9)) + 32 
+            elif old_unit == "R":
+                self.value -= 459.67
+        elif new_unit == "R":
+            if old_unit == "c":
+                self.value = self.value * (9/5) + 491.67
+            elif old_unit == "f":
+                self.value += 459.67
+            elif old_unit == "k":
+                self.value *= 1.8
+        
+    def __convert_temp(self, change_system: bool, unit: str=""):
+        if change_system:
+            self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
+            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
+                self.__temperature_handler(self.__unit, unit)
+                self.__unit = unit
+            else:
+                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
+        elif unit:
+            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
+                self.__temperature_handler(self.__unit, unit)
+                self.__unit = unit
+            else:
+                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
+        else:
+            raise Exception("No conversion performed as change_system was false and unit was empty")
+
+    def convert_base_metric(self):
+        """
+        Convert the current value to it's base SI/Metric unit.
+        
+        Returns:
+            UnitValue: The UnitValue object with the converted units.
+        """
+        if self.__system is None:
+            return
+        elif self.__dimension != "TEMPERATURE":
+            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
+            self.__system = "METRIC"
+            self.__unit = list(UnitValue.UNITS[self.__system][self.__dimension].keys())[0]
+        else:
+            self.__temperature_handler(self.__unit, "k")
+            self.__system = "METRIC"
+            self.__unit = "k"
+        return self
+    
     def convert_to(self, change_system: bool, unit: str = ""):
         """
         Convert the current value to a new unit.
@@ -600,7 +671,7 @@ class UnitValue:
         else:
             raise Exception("No conversion performed as change_system was false and unit was empty")
         return self
-
+    
     @property
     def get_unit(self) -> str:
         return self.__unit
@@ -612,40 +683,6 @@ class UnitValue:
     @property
     def get_system(self) -> str:
         return self.__system
-
-    def __temperature_handler(self, old_unit: str, new_unit: str): # add Rankine
-        if new_unit == "k":
-            if old_unit == "c":
-                self.value += 273.15
-            elif old_unit == "f":
-                self.value = (self.value - 32) * (5/9) + 273.15
-        elif new_unit == "c":
-            if old_unit == "k":
-                self.value -= 273.15
-            elif old_unit == "f":
-                self.value = (self.value - 32) * (5/9)
-        elif new_unit == "f":
-            if old_unit == "k":
-                self.value = ((self.value -273.15) / (5/9)) + 32
-            elif old_unit == "c":
-                self.value = (self.value / (5/9)) + 32 
-        
-    def __convert_temp(self, change_system: bool, unit: str=""):
-        if change_system:
-            self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
-            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
-                self.__temperature_handler(self.__unit, unit)
-                self.__unit = unit
-            else:
-                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
-        elif unit:
-            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
-                self.__temperature_handler(self.__unit, unit)
-                self.__unit = unit
-            else:
-                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
-        else:
-            raise Exception("No conversion performed as change_system was false and unit was empty")
 
 
 def create_dimensioned_quantity(unit: str, value: float=0) -> UnitValue:
@@ -685,7 +722,10 @@ if __name__ == "__main__":
     rho = m1 / new
     print(m1 / new)
     print(rho * d1**3)
-    print(d1**0.5)
+    temp = d1**0.5
+    print(temp**2)
+    temp1 = d2**1.5
+    print(temp * temp1)
     print(d1 - d2, d2 + d1)
     print("Testing enery")
     v1 = create_dimensioned_quantity("m/s", 100)

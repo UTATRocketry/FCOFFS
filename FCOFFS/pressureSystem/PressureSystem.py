@@ -21,6 +21,8 @@ class PressureSystem:
         self.ref_p.convert_base_metric()
         self.transient = transient   # [t_i, t_f, dt]
         self.t = transient[0]
+        self.components = []
+
 
     def __repr__(self):
         return str(self.objects)
@@ -64,7 +66,7 @@ class PressureSystem:
         self.components = components
         self.objects = [components[0].node_in]
         for component in components:
-            self.objects += [component,component.node_out]
+            self.objects += [component, component.node_out]
         self.inlet_BC = inlet_BC
         self.outlet_BC = outlet_BC
         if self.objects[0].BC_type != inlet_BC or self.objects[-1].BC_type != outlet_BC:
@@ -131,7 +133,8 @@ class PressureSystem:
                     self.set_w(x)
                     res = []
                     for component in self.components:
-                        res += component.update()
+                        component.update()
+                        res += component.eval()
                     print("Residual = "+str(rms(res)))
                     #print(res)
                     #self.output()

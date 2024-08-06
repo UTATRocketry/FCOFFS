@@ -53,6 +53,8 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
     def update(self): 
         self.node_in.update()
         self.node_out.update()
+
+    def eval(self):
         res1 = (self.node_in.state.rho - self.node_out.state.rho)/self.node_in.state.rho
         res2 = (self.node_in.state.u - self.node_out.state.u)/self.node_in.state.u
         res3 = (self.node_in.state.p - self.node_out.state.p)/self.node_in.state.p

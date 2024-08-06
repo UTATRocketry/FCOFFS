@@ -35,6 +35,8 @@ class Injector(ComponentClass):
     def update(self):
         self.node_in.update()
         self.node_out.update()
+
+    def eval(self):
         p_i = self.node_in.state.p
         T_i = self.node_in.state.T
         p_o = self.node_out.state.p

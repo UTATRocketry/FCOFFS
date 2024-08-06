@@ -33,9 +33,11 @@ class Pipe(ComponentClass):
             self.roughness = roughness
 
     def update(self):
-        # find upstream condition
         self.node_in.update()
         self.node_out.update()
+
+    def eval(self):
+        # find upstream condition
         mdot = self.node_in.state.mdot
         rho_in = self.node_in.state.rho
         u_in = self.node_in.state.u

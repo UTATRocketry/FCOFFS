@@ -646,12 +646,11 @@ class UnitValue:
             self.__unit = "k"
         return self
     
-    def convert_to(self, change_system: bool, unit: str = ""):
+    def to(self, unit:str):
         """
         Convert the current value to a new unit.
 
         Args:
-            new_system (bool): Whether to change the measurement system.
             unit (str): The unit to convert to.
         
         Returns:
@@ -663,21 +662,23 @@ class UnitValue:
         if self.__system is None:
             raise Exception(f"Invalid unit {self.__unit}: this unit is not currently supported by the module")
         elif self.__dimension == "TEMPERATURE":
-            self.__convert_temp(change_system, unit)
-        elif change_system is True:
-            self.__convert_system(unit)
-        elif unit:
-            self.__convert_unit(unit)
+            if unit in UnitValue.UNITS[self.__system][self.__dimension]:
+                self.__convert_temp(False, unit)
+            else:
+                self.__convert_temp(True, unit) 
         else:
-            raise Exception("No conversion performed as change_system was false and unit was empty")
+            if unit in UnitValue.UNITS[self.__system][self.__dimension]:
+                self.__convert_unit(unit)
+            else:
+                self.__convert_system(unit)
         return self
-    
+
     @property
     def get_unit(self) -> str:
         return self.__unit
 
     @property
-    def get_measurement_type(self) -> str:
+    def get_dimension(self) -> str:
         return self.__dimension
 
     @property
@@ -707,42 +708,3 @@ def create_dimensioned_quantity(unit: str, value: float=0) -> UnitValue:
                 return UnitValue(system, dimension, unit, value)
     Warning("Creating unit not recongized by module")
     return UnitValue(None, None, unit, value)
-    
-
-
-# Examples of use
-if __name__ == "__main__":
-    d = UnitValue("METRIC", "DISTANCE", "m", 5) # this and the line belwo are equivalent, just the top one requires more manual knowledge of path to unit
-    d1 = create_dimensioned_quantity("m", 5)
-    d2 = create_dimensioned_quantity("cm", 200)
-    d3 = create_dimensioned_quantity("ft", 10)
-    new = d1*d3*d2
-    print(new)
-    m1 = create_dimensioned_quantity("g", 1000)
-    rho = m1 / new
-    print(m1 / new)
-    print(rho * d1**3)
-    temp = d1**0.5
-    print(temp**2)
-    temp1 = d2**1.5
-    print(temp * temp1)
-    print(d1 - d2, d2 + d1)
-    print("Testing enery")
-    v1 = create_dimensioned_quantity("m/s", 100)
-    m2 = create_dimensioned_quantity("kg", 5)
-    mom = m2*v1
-    print(mom)
-    print(mom*v1)
-    t = create_dimensioned_quantity("s", 2)
-    frequency = t**-1
-    f = 1 / t
-    print(frequency, f.convert_to(False, "Hz"))
-
-    m3 = create_dimensioned_quantity("kg", 10)
-    print((2*m3 - m2) / m2)
-
-    a = create_dimensioned_quantity("m^6", 2)
-    b = create_dimensioned_quantity("m", 5)
-    c = b**-5
-    print(a, b, c)
-    print(a**-0.5)

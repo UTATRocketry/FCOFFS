@@ -5,6 +5,7 @@ It currently suports numbers of the unit type 'DISTANCE', 'PRESSURE', 'MASS', 'V
 Typically used units are supported and more can be added upon request.
 '''
 
+
 class UnitValue: 
     """
     Represents a value with dimension/units.
@@ -65,7 +66,7 @@ class UnitValue:
                         }
             }
     
-    SPELLING = {"m": {"meter": None, "metre": None, "mtr": None, "mtr.": None, "m ": None},
+    SPELLING = {"m": {"meter": None, "metre": None, "mtr": None, "mtr.": None, "m ": None, "meters": None, "metres": None},
                 "km": {"kilometer": None, "kilometre": None, "kmeter": None, "klometer": None, "kilo meter": None, "k meter": None, "kmtr": None, "km ": None},
                 "cm": {"centimeter": None, "centimetre": None, "cmeter": None, "centemeter": None, "centi meter": None, "c meter": None, "cmtr": None, "cn": None, "cm ": None},
                 "mm": {"millimeter": None, "millimetre": None, "mmeter": None, "milimeter": None, "milli meter": None, "m meter": None, "mmtr": None, "mn": None, "mm ": None},
@@ -86,10 +87,10 @@ class UnitValue:
                 "ft": {"foot": None, "fot": None, "foor": None, "foot ": None, "foott": None},
                 "yd": {"yard": None, "yardd": None, "yarrd": None, "yad": None, "yard ": None, "yarrd": None},
                 "mi": {"mile": None, "milee": None, "mile ": None, "mil": None, "mille": None},
-                "lb": {"pound": None, "poundd": None, "pound ": None, "pounnd": None},
+                "lb": {"pound": None, "poundd": None, "pound ": None, "pounnd": None, "lbs": None, "pounds": None},
                 "gal": {"gallon": None, "galln": None, "gallon ": None, "gllon": None, "galllon": None},
-                "oz": {"ounce": None, "ounze": None, "ounce ": None, "ounc": None, "ouncce": None, "ounc ": None},
-                "st": {"stone": None, "stn": None, "st ": None, "stone ": None},
+                "oz": {"ounce": None, "ounze": None, "ounce ": None, "ounc": None, "ouncce": None, "ounc ": None, "ozs": None},
+                "st": {"stone": None, "stn": None, "st ": None, "stone ": None, "sts": None},
                 "ft^2": {"square foot": None, "sq foot": None, "sqft": None, "square feet": None, "ft2": None},
                 "ft^3": {"cubic foot": None, "cu ft": None, "cubic feet": None, "ft3": None, "cft": None}
                 }
@@ -166,6 +167,15 @@ class UnitValue:
         if unit not in UnitValue.UNITS[self.__system][self.__dimension]:
             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
         self.__unit = unit
+
+    def __call__(self) -> float:
+        """
+        Get the value of the unit.
+
+        Returns:
+            float: The magnitude of the dimensioned quatity
+        """
+        return self.value
     
     @staticmethod
     def __process_unit(unit_str: str, units: str, opp: int) -> None:
@@ -697,8 +707,8 @@ def create_dimensioned_quantity(unit: str, value: float=0) -> UnitValue:
     Returns:
         UnitValue: A UnitValue object with the specified unit and value.
     """
-    for u, spelings in UnitValue.SPELLING.items():
-        if unit in spelings:
+    for u, spellings in UnitValue.SPELLING.items():
+        if unit in spellings:
             unit = u
             break
 
@@ -708,3 +718,8 @@ def create_dimensioned_quantity(unit: str, value: float=0) -> UnitValue:
                 return UnitValue(system, dimension, unit, value)
     Warning("Creating unit not recongized by module")
     return UnitValue(None, None, unit, value)
+
+if __name__ == "__main__":
+    m = create_dimensioned_quantity("kg", 5)
+    m.to("lb")
+    print(m(), m.value) # same ways to get the value

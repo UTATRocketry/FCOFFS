@@ -7,6 +7,7 @@ from scipy.optimize import fsolve
 from CoolProp.CoolProp import PropsSI
 import warnings
 
+from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..pressureSystem import PressureSystem
 from ..fluids.fluid import Fluid
@@ -36,18 +37,25 @@ class Injector(ComponentClass):
         self.node_in.update()
         self.node_out.update()
 
-    def eval(self):
-        p_i = self.node_in.state.p
-        T_i = self.node_in.state.T
-        p_o = self.node_out.state.p
-        mass_flux_est = UnitValue("METRIC", "MASS FLUX", "kg/m^2s", self.get_mass_flux(T_i, p_i, p_o))
+    def eval(self, new_states: tuple[State, State]|None=None):
+        if new_states is None:
+            state_in = self.node_in.state
+            state_out = self.node_out.state
+        else:
+            state_in = new_states[0]
+            state_out = new_states[1]
+
+        p_i = state_in.p
+        T_i = state_in.T
+        p_o = state_out.p
+        mass_flux_est = UnitValue("METRIC", "MASS FLUX", "kg/m^2s", self.get_mass_flux(T_i, p_i, p_o, state_in.rho))
         mdot_est = mass_flux_est * (pi*self.diameter_hole**2/4) * self.num_hole
         rho_out = Fluid.density(self.fluid, T_i, p_o)
-        u_in = mdot_est / self.node_in.state.rho / self.node_in.state.area
-        u_out = mdot_est / rho_out / self.node_out.state.area
-        res1 = (rho_out - self.node_out.state.rho)/rho_out
-        res2 = (u_out - self.node_out.state.u)/u_out
-        res3 = (u_in - self.node_in.state.u)/u_in
+        u_in = mdot_est / state_in.rho / state_in.area
+        u_out = mdot_est / rho_out / state_out.area
+        res1 = (rho_out - state_out.rho)/rho_out
+        res2 = (u_out - state_out.u)/u_out
+        res3 = (u_in - state_in.u)/u_in
         return [res1, res2, res3]
 
 
@@ -63,7 +71,7 @@ class Injector(ComponentClass):
         return c_li*T_i*P_i/v_i*(v_lgi/h_lgi)**2
 
 
-    def get_mass_flux(self, T_i, P_i, P_o):
+    def get_mass_flux(self, T_i, P_i, P_o, rho_in):
         P_sat = PropsSI("P", "T", T_i.value, "Q", 0, self.fluid)
         omega = self.get_omega(T_i.value, P_i.value) # unused?
         omega_sat = self.get_omega(T_i.value, P_sat)
@@ -79,12 +87,12 @@ class Injector(ComponentClass):
         eta_sat = P_sat / P_i.value
         func = lambda eta_crit_low: (omega_sat+(1/omega_sat)-2)/(2*eta_sat)*(eta_crit_low**2) - 2*(omega_sat-1)*eta_crit_low + omega_sat*eta_sat*log(eta_crit_low/eta_sat) + 3/2*omega_sat*eta_sat - 1
         eta_crit_low = fsolve(func,1)[0]
-        if P_o < eta_crit_low*P_i.value:
+        if P_o < eta_crit_low*P_i:
             eta = eta_crit_low
         else:
             print(T_i,P_i,P_o)
             warnings.warn("Combustion Chamber Pressure does not exceed critical pressure drop; flow is not choked")
-            return 0.86 * sqrt(2 * abs(P_i.value-P_o) * self.node_in.state.rho)
+            return 0.86 * sqrt(2 * abs(P_i.value-P_o.value) * rho_in.value)
         G_low = sqrt(P_i.value/v_l) * sqrt(2*(1-eta_sat) + 2*(omega_sat*eta_sat*log(eta_sat/eta) - (omega_sat-1)*(eta_sat-eta)))/(omega_sat*(eta_sat/eta - 1) + 1)
 
         G = (P_sat/P_i.value)*G_crit_sat + (1-P_sat/P_i.value)*G_low

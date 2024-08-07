@@ -4,6 +4,7 @@ Description
 
 from numpy import pi
 
+from ..state.State import *
 from ..pressureSystem import PressureSystem
 from ..interfaces.interface import Interface
 from ..utilities.Utilities import *
@@ -54,8 +55,15 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
         self.node_in.update()
         self.node_out.update()
 
-    def eval(self):
-        res1 = (self.node_in.state.rho - self.node_out.state.rho)/self.node_in.state.rho
-        res2 = (self.node_in.state.u - self.node_out.state.u)/self.node_in.state.u
-        res3 = (self.node_in.state.p - self.node_out.state.p)/self.node_in.state.p
+    def eval(self, new_states: tuple[State, State]|None=None):
+        if new_states is None:
+            state_in = self.node_in.state
+            state_out = self.node_out.state
+        else:
+            state_in = new_states[0]
+            state_out = new_states[1]
+
+        res1 = (state_in.rho - state_out.rho)/state_in.rho
+        res2 = (state_in.u - state_out.u)/state_in.u
+        res3 = (state_in.p - state_out.p)/state_in.p
         return [res1, res2, res3]

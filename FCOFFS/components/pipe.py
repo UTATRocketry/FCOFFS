@@ -5,6 +5,7 @@ Description
 from numpy import log10, sqrt
 from scipy.optimize import brentq
 
+from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..pressureSystem import PressureSystem
 from ..fluids.fluid import Fluid
@@ -36,14 +37,20 @@ class Pipe(ComponentClass):
         self.node_in.update()
         self.node_out.update()
 
-    def eval(self):
+    def eval(self, new_states: tuple[State, State]|None=None):
+        if new_states is None:
+            state_in = self.node_in.state
+            state_out = self.node_out.state
+        else:
+            state_in = new_states[0]
+            state_out = new_states[1]
         # find upstream condition
-        mdot = self.node_in.state.mdot
-        rho_in = self.node_in.state.rho
-        u_in = self.node_in.state.u
-        p_in = self.node_in.state.p
-        q_in = self.node_in.state.q
-        T_in = self.node_in.state.T
+        mdot = state_in.mdot
+        rho_in = state_in.rho
+        u_in = state_in.u
+        p_in = state_in.p
+        q_in = state_in.q
+        T_in = state_in.T
 
         # find friction factor
         Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
@@ -61,8 +68,8 @@ class Pipe(ComponentClass):
         dp = PLC * q_in
         p_out = p_in - dp
         rho_out = Fluid.density(self.fluid, T_in, p_out)
-        u_out = mdot / rho_out / self.node_out.state.area
-        res1 = (rho_out - self.node_out.state.rho)/rho_out
-        res2 = (u_out - self.node_out.state.u)/u_out
-        res3 = (p_out - self.node_out.state.p)/p_out
+        u_out = mdot / rho_out / state_out.area
+        res1 = (rho_out - state_out.rho)/rho_out
+        res2 = (u_out - state_out.u)/u_out
+        res3 = (p_out - state_out.p)/p_out
         return [res1, res2, res3]

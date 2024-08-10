@@ -42,7 +42,7 @@ class UnitValue:
                          }, 
              "METRIC": {
                          "DISTANCE": {"m": 1, "km": 1000, "cm": 0.01, "mm": 0.001}, 
-                         "PRESSURE": {"kg/ms^2": 1, "MPa": 1000000, "bar": 100000, "kPa": 1000, "hPa": 100, "Pa": 1}, 
+                         "PRESSURE": {"kg/ms^2": 1, "MPa": 1000000, "atm": 101325, "bar": 100000, "kPa": 1000, "hPa": 100, "Pa": 1}, 
                          "MASS": {"kg": 1, "tonne": 1000, "g": 0.001}, 
                          "VELOCITY": {"m/s": 1, "km/s": 1000, "km/h": 0.277778, "cm/s": 0.01, "mm/s": 0.001}, 
                          "DENSITY": {"kg/m^3": 1, "t/m^3": 1000, "g/m^3": 0.001},

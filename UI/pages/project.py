@@ -3,13 +3,17 @@ from customtkinter import *
 import pickle
 
 from FCOFFS.pressureSystem import PressureSystem
-from ..widgets import unit_entry
+from FCOFFS.components import *
+from FCOFFS.utilities import units
+from ..widgets import unit_entry, pipe_tab, injector_tab
+from ..utilities import pop_ups
 
 class ProjectPage(CTkFrame):
     def __init__(self, master: CTk, PS: PressureSystem.PressureSystem, **kwargs):
         super().__init__(master, **kwargs)
 
         self.PS = PS
+        self.interfaces = []
 
         self.grid_columnconfigure((0, 1, 2, 3), weight=1)
         self.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
@@ -17,7 +21,7 @@ class ProjectPage(CTkFrame):
         self.top_bar_frm = CTkFrame(self)
         self.top_bar_frm.grid_columnconfigure((0, 1, 2), weight=1)
         self.top_bar_frm.grid_rowconfigure((0), weight=1)
-        self.program_name = CTkLabel(self.top_bar_frm, text=" Fully Coupled One-Dimensional Framewokrk for Fluid Simultions   |", font=("Arial", 24))
+        self.program_name = CTkLabel(self.top_bar_frm, text=" Fully Coupled One-Dimensional Framewokrk for Fluid Simultions", font=("Arial", 24))
         self.project_name = CTkLabel(self.top_bar_frm, text=f"Project: {PS.name} ", font=("Arial", 22))
         self.button_frm = CTkFrame(self)
         self.button_frm.grid_columnconfigure((0, 1), weight=1)
@@ -45,30 +49,71 @@ class ProjectPage(CTkFrame):
         self.reference_temperature.grid(row=1, column=1, padx=(5, 10), pady=(5, 5), sticky="ns")
         self.reference_pressure_lbl.grid(row=2, column=0, padx=(10, 5), pady=(5, 5), sticky="e")
         self.reference_pressure.grid(row=2, column=1, padx=(5, 10), pady=(5, 5), sticky="ns")
-        self.reference_set_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=(10, 10), sticky="ns")
+        self.reference_set_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=(10, 10))
         self.reference_frm.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 
         self.add_component_frm = CTkFrame(self)
         self.add_component_frm.grid_columnconfigure((0, 1), weight=1)
-        self.add_component_frm.grid_rowconfigure((0, 1, 2, 3), weight=1)
-        self.component_lbl = CTkLabel(self.add_component_frm, text="System Components", font=("Arial", 16), anchor="center")
-        self.num_components_lbl =  CTkLabel(self.add_component_frm, text=f"Number of Components: {len(self.PS.components)}", font=("Arial", 12))
+        self.add_component_frm.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
         self.add_component_lbl = CTkLabel(self.add_component_frm, text="Add Component", font=("Arial", 16), anchor="center")
-        self.new_component_opt = CTkOptionMenu(self.add_component_frm, font=("Arial", 14), values=["Pipe", "Injector"])
-        self.add_component_btn = CTkButton(self.add_component_frm, text="ADD", font=("Arial", 14), command=self.add_component)
-        self.component_lbl.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
-        self.num_components_lbl.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsw")
-        self.add_component_lbl.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
-        self.new_component_opt.grid(row=3, column=0, padx=(10, 5), pady=(5, 10), sticky="nsew")
-        self.add_component_btn.grid(row=3, column=1, padx=(0, 10), pady=(5, 10), sticky="nsew")
+        self.new_component_name_lbl = CTkLabel(self.add_component_frm, text="New Component Name:", font=("Arial", 12))
+        self.new_component_name_ent = CTkEntry(self.add_component_frm, font=("Arial", 12), placeholder_text="Name")
+        self.new_component_type_lbl = CTkLabel(self.add_component_frm, text="New Component Type:", font=("Arial", 12))
+        self.new_component_opt = CTkOptionMenu(self.add_component_frm, font=("Arial", 12), values=["Pipe", "Injector"])
+        self.new_component_index_lbl = CTkLabel(self.add_component_frm, text="New Component Position:", font=("Arial", 12))
+        self.new_component_index_opt = CTkOptionMenu(self.add_component_frm, font=("Arial", 12), values=[str(i) for i in range(len(self.PS.components) + 1)])
+        self.add_component_btn = CTkButton(self.add_component_frm, text="ADD", font=("Arial", 12), command=self.add_component)
+        self.add_component_lbl.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew") 
+        self.new_component_name_lbl.grid(row=1, column=0, padx=(10, 5), pady= (5, 5), sticky="nse")
+        self.new_component_name_ent.grid(row=1, column=1, padx=(5, 10), pady=(5, 5), sticky="nsew")
+        self.new_component_type_lbl.grid(row=2, column=0, padx=(10, 5), pady= (5, 5), sticky="nse")
+        self.new_component_opt.grid(row=2, column=1, padx=(5, 10), pady=(5, 5), sticky="ew")
+        self.new_component_index_lbl.grid(row=3, column=0, padx=(10, 5), pady=(5, 5), sticky="nse")
+        self.new_component_index_opt.grid(row=3, column=1, padx=(5, 10), pady=(5, 5), sticky="ew")
+        self.add_component_btn.grid(row=4, column=0, columnspan=2, padx=10, pady=(10, 10))
         self.add_component_frm.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
+
+        self.components = CTkFrame(self)
+        self.components_tabview = CTkTabview(self.components)
+        for component in self.PS.components:
+            tab = self.components_tabview.add(component.name)
+            if isinstance(component, pipe.Pipe):
+                frm = pipe_tab.PipeTab(tab, self, component)
+                frm.pack(padx=5, pady=5, fill="both", expand=True)
+            elif isinstance(component, injector.Injector):
+                pass
+        self.components_tabview.pack(padx=5, pady=5, fill="both", expand=True)
+        self.components.grid(row=1, column=2, columnspan=3, padx=5, pady=5, sticky="nsew")
 
     def set_ps_reference(self):
         self.PS.ref_p = self.reference_pressure.unit
         self.PS.ref_T = self.reference_temperature.unit
 
-    def add_component(self):
-        pass
+    def add_component(self) -> None:
+        component_type = self.new_component_opt.get()
+        component_name = self.new_component_name_ent.get()
+
+        if not component_name:
+            pop_ups.gui_error("Component Name Cannot be Nothing")
+            return
+
+        match component_type:
+            case "Pipe":
+                p = pipe.Pipe(self.PS, units.UnitValue("METRIC", "DISTANCE", "m", 1), "N2O", component_name, units.UnitValue("METRIC", "DISTANCE", "m", 1))
+                tab = self.components_tabview.insert(int(self.new_component_index_opt.get()), component_name)
+                frm = pipe_tab.PipeTab(tab, self, p)
+                frm.pack(padx=5, pady=5, fill="both", expand=True)
+                self.PS.components.insert(int(self.new_component_index_opt.get()), p)
+                self.new_component_index_opt.configure(values=[str(i) for i in range(len(self.PS.components) + 1)])
+                frm._change_move_options()
+            case "Injector":
+                inj = injector.Injector(self.PS, units.UnitValue("METRIC", "DISTANCE", "m", 1), units.UnitValue("METRIC", "DISTANCE", "m", 1), units.UnitValue("METRIC", "DISTANCE", "m", 1), 1, "N2O", component_name)
+                tab = self.components_tabview.insert(int(self.new_component_index_opt.get()), component_name)
+                frm = injector_tab.InjectorTab(tab, self, inj)
+                frm.pack(padx=5, pady=5, fill="both", expand=True)
+                self.PS.components.insert(int(self.new_component_index_opt.get()), inj)
+                self.new_component_index_opt.configure(values=[str(i) for i in range(len(self.PS.components) + 1)])
+                frm._change_move_options()
 
     def save_project(self):
         path = os.path.join(os.getcwd(), "UI", "Saved Projects")

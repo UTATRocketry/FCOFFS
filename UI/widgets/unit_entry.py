@@ -1,16 +1,18 @@
 from typing import Any
-import customtkinter as CTk
+from customtkinter import *
 
 from FCOFFS.utilities import units
+from ..utilities.pop_ups import gui_error
 
-class UnitEntry(CTk.CTkFrame):
+class UnitEntry(CTkFrame):
     def __init__(self, master: Any, dimension: str, value: Any = 0, **kwargs):
         super().__init__(master, **kwargs)
 
         self.dimension = dimension
 
         if dimension not in units.UnitValue.UNITS["METRIC"]:
-            raise Exception(f"Dimension not valid must be one of the following: {units.UnitValue.UNITS['METRIC']}")
+            gui_error(f"Dimension not valid must be one of the following: {units.UnitValue.UNITS['METRIC']}")
+            return
         
         unit = list(units.UnitValue.UNITS["METRIC"][dimension].keys())
         unit += list(units.UnitValue.UNITS["IMPERIAL"][dimension].keys())
@@ -18,15 +20,15 @@ class UnitEntry(CTk.CTkFrame):
         self.grid_rowconfigure((0), weight=1)
         self.grid_columnconfigure((0, 1), weight=1)
 
-        self.value_ent = CTk.CTkEntry(self, placeholder_text="Value", font=("Arial", 12), width=120)
-        self.unit_opt = CTk.CTkOptionMenu(self, font=("Arial", 12), values=unit, width=100, command=self.__convert)
-        self.value_ent.grid(row=0, column=0, padx=(10, 3), pady=5, sticky="ns")
-        self.unit_opt.grid(row=0, column=1, padx=(0, 10), pady=5, sticky="ns")
+        self.value_ent = CTkEntry(self, placeholder_text="Value", font=("Arial", 12), width=90)
+        self.unit_opt = CTkOptionMenu(self, font=("Arial", 12), values=unit, width=85, command=self.__convert)
+        self.value_ent.grid(row=0, column=0, padx=(10, 3), pady=5)
+        self.unit_opt.grid(row=0, column=1, padx=(0, 10), pady=5)
 
         self.__set(value)
 
     def __set(self, value: Any) -> None:
-        self.value_ent.delete(0, CTk.END)
+        self.value_ent.delete(0, END)
         if isinstance(value, units.UnitValue):
             self.value_ent.insert(0, value())
             self.unit_opt.set(value.get_unit)
@@ -36,7 +38,7 @@ class UnitEntry(CTk.CTkFrame):
         elif isinstance(value, int) or isinstance(value, float):
             self.value_ent.insert(0, str(value))
         else:
-            raise Exception(f"Invalid type for setting UnitEntry Box, must be type str or UnitValue, but was type {type(value)}")
+            gui_error(f"Invalid type for setting UnitEntry Box, must be type str or UnitValue, but was type {type(value)}")
         
     def __convert(self, choice):
         if self.cur_unit:
@@ -47,10 +49,14 @@ class UnitEntry(CTk.CTkFrame):
 
     @property
     def unit(self) -> units.UnitValue:
-        if self.unit_opt.get() in units.UnitValue.UNITS["METRIC"][self.dimension]:
-            self.cur_unit = units.UnitValue("METRIC", self.dimension, self.unit_opt.get(), float(self.value_ent.get()))
-        else:
-            self.cur_unit = units.UnitValue("IMPERIAL", self.dimension, self.unit_opt.get(), float(self.value_ent.get()))
+        try:
+            if self.unit_opt.get() in units.UnitValue.UNITS["METRIC"][self.dimension]:
+                self.cur_unit = units.UnitValue("METRIC", self.dimension, self.unit_opt.get(), float(self.value_ent.get()))
+            else:
+                self.cur_unit = units.UnitValue("IMPERIAL", self.dimension, self.unit_opt.get(), float(self.value_ent.get()))
+        except:
+            gui_error("Invalid Input Value, Must be a number, not a string")
+            return units.UnitValue(None, None, "", 0)
         return self.cur_unit
         
   

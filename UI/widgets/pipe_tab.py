@@ -55,7 +55,6 @@ class PipeTab(ComponentTab):
         self.move_btn.grid(row=0, column=0, padx=(5, 10), pady=(5, 5))
         self.move_frm.grid(row=4, column=0, columnspan=2, padx=(10, 5), pady=(10, 10))
         self.move_opt.set("Choose New Index")
-        super
 
     def __set(self) -> None:
         name = self.component_name_ent.get()

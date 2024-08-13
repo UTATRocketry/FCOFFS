@@ -7,7 +7,8 @@ class ComponentTab(CTkFrame):
     def __init__(self, master: CTkFrame, OverarchingMaster: CTkFrame, component: componentClass.ComponentClass, **kwargs):
         super().__init__(master, **kwargs)
 
-        self.PS = component.parent_system
+        if issubclass(type(component), componentClass.ComponentClass): # temporary fox for now
+            self.PS = component.parent_system
         self.component = component
         self.Master = OverarchingMaster
 

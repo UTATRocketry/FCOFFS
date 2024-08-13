@@ -123,8 +123,6 @@ class PressureSystem:
         self.update_w()
 
 
-
-
     def solve(self):
         while True:
             if self.inlet_BC=="PressureInlet" and self.outlet_BC=="PressureOutlet":

@@ -7,43 +7,45 @@ from ..utilities.units import UnitValue
 from math import pi
 
 class InletOutlet(ComponentClass):
-    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, input_quantities: tuple[UnitValue, UnitValue]=(), output_quantities: tuple[UnitValue]=(), name: str=None) -> None:
+    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, input_quantities: tuple[UnitValue, UnitValue], output_quantities: UnitValue, name: str=None) -> None:
         super().__init__(parent_system, diameter, fluid,name)
         
-        func_dict = {"PRESSURE": self.__pressure_residual, "MASS": self.__density_residual, "VELOCITY": self.__velocity_residual, "TEMPERATURE": self.__temperature_residual}
+        func_dict = {"PRESSURE": self.__pressure_residual, "MASS": self.__density_residual, "VELOCITY": self.__velocity_residual, "TEMPERATURE": self.__temperature_residual, "MASS": self.__mass_residual}
 
-        if len(input_quantities) != 2 or len(output_quantities) != 1:
+        if len(input_quantities) != 2:
             raise Exception("Over/Under Constrained Problem, Provide only three intialization quantities")
-
-        self.quantities = list(input_quantities) + list(output_quantities)
+        
+        input_quantities[0].convert_base_metric()
+        input_quantities[1].convert_base_metric()
+        output_quantities.convert_base_metric()
+        self.quantities = list(input_quantities) + [output_quantities]
         try:
             self.res_funcs = [func_dict[self.quantities[0].get_dimension], func_dict[self.quantities[1].get_dimension], func_dict[self.quantities[2].get_dimension]]
         except Exception as e:
             raise Exception("Program is cureently not configured to handle that dimension for inlet and outlet")
         
-        if self.quantities[0].get_dimension == self.quantities[2].get_dimension:
-            self.BC_type = self.quantities[0].get_dimension
-        elif self.quantities[1].get_dimension == self.quantities[2].get_dimension:
-            self.BC_type = self.quantities[1].get_dimension
-        else:
-            raise Exception("Inlet and Outlet must share a set quantity dimension")
-
+        self.Inlet_type = self.quantities[0].get_dimension
+        self.Outlet_type = self.quantities[2].get_dimension
         self.set_constant_constituents()
 
 
-    def __pressure_residual(self, quantity: UnitValue, type: str["Inlet", "Outlet"]) -> float:
+    def __pressure_residual(self, quantity: UnitValue, type: str) -> float:
         val = self.interface_out.state.p if type == "Inlet" else self.interface_in.state.p
         return (quantity - val)/val
     
-    def __density_residual(self, quantity: UnitValue, type: str["Inlet", "Outlet"]) -> float:
+    def __density_residual(self, quantity: UnitValue, type: str) -> float:
         val = self.interface_out.state.rho if type == "Inlet" else self.interface_in.state.rho
         return (quantity - val)/val
+    
+    def __mass_residual(self, quantity: UnitValue, type: str) -> float:
+        val = self.interface_out.state.mdot if type == "Inlet" else self.interface_in.state.mdot
+        return (quantity - val)/val
 
-    def __velocity_residual(self, quantity: UnitValue, type: str["Inlet", "Outlet"]) -> float: # this may be redundant and not needed
+    def __velocity_residual(self, quantity: UnitValue, type: str) -> float: # this may be redundant and not needed
         val = self.interface_out.state.u if type == "Inlet" else self.interface_in.state.u
         return (quantity - val)/val
 
-    def __temperature_residual(self, quantity: UnitValue, type: str["Inlet", "Outlet"]) -> float: 
+    def __temperature_residual(self, quantity: UnitValue, type: str) -> float: 
         val = self.interface_out.state.T if type == "Inlet" else self.interface_in.state.T
         return (quantity - val)/val
 
@@ -63,17 +65,20 @@ class InletOutlet(ComponentClass):
                 raise Exception("Must provide two paramaters of either Pressure, density or temperature")
 
         if self.p is None:
-            self.p = Fluid.pressure(self.fluid, self.rho.value, self.T.value)
+            self.p = Fluid.pressure(self.fluid, self.rho, self.T)
         elif self.rho is None:
-            self.rho = Fluid.density(self.fluid, self.T.value, self.p.value)
+            self.rho = Fluid.density(self.fluid, self.T, self.p)
 
         self.u_out = UnitValue("METRIC", "VELOCITY", "m/s", 5)
-        if self.BC_type == "PRESSURE":
+        if self.Outlet_type == "PRESSURE":
             self.p_out = self.quantities[2]
-            self.rho_out = Fluid.density(self.fluid, self.parent_system.ref_T.value, self.p_out.value)
-        elif unit.get_dimension == "DENSITY":
+            self.rho_out = Fluid.density(self.fluid, self.parent_system.ref_T, self.p_out)
+        elif self.Outlet_type == "DENSITY":
             self.rho_out = self.quantities[2]
-            self.p_out = Fluid.pressure(self.fluid, self.rho_out.value, self.parent_system.ref_T.value)
+            self.p_out = Fluid.pressure(self.fluid, self.rho_out, self.parent_system.ref_T)
+        elif self.Outlet_type == "MASS":
+            self.p_out = self.parent_system.ref_p
+            self.rho_out = Fluid.density(self.fluid, self.parent_system.ref_T, self.p_out)
         
 
     def initialize(self):

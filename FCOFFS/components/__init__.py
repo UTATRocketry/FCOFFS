@@ -1,1 +1,1 @@
-__all__ = ["componentClass", "pipe", "tank", "injector"]
+__all__ = ["componentClass", "pipe", "tank", "injector", "quasi_component"]

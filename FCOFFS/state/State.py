@@ -4,7 +4,7 @@ This class tracks the state of fluid at each node.
 
 import warnings
 
-from ..fluids.fluid import Fluid
+from ..fluids.Fluid import Fluid
 from ..utilities.units import UnitValue
 from ..utilities.Utilities import *
 

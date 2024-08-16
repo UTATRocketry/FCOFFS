@@ -65,9 +65,9 @@ class PressureSystem:
         if len(components) < 1:
             raise IndexError('No component found. ')
         self.components = components
-        self.objects = [components[0].node_in]
+        self.objects = [components[0].interface_in]
         for component in components:
-            self.objects += [component, component.node_out]
+            self.objects += [component, component.interface_out]
         self.inlet_BC = inlet_BC
         self.outlet_BC = outlet_BC
         if self.objects[0].BC_type != inlet_BC or self.objects[-1].BC_type != outlet_BC:
@@ -83,7 +83,7 @@ class PressureSystem:
             var3 = self.objects[-1].state.u.value
             self.w = [var1]
             for obj in self.objects[1:-1]:
-                if obj.type == 'node':
+                if obj.type == 'interface':
                     self.w += [obj.state.rho.value, obj.state.u.value, obj.state.p.value]
             self.w += [var2,var3]
         return self.w
@@ -96,7 +96,7 @@ class PressureSystem:
             self.objects[0].state.u =  UnitValue("METRIC", "VELOCITY", "m/s", var1)
             self.objects[0].update()
             for obj in self.objects[1:-1]:
-                if obj.type == 'node':
+                if obj.type == 'interface':
                     obj.state.set(rho=UnitValue("METRIC", "DENSITY", "kg/m^3", new_w[i]), u=UnitValue("METRIC", "VELOCITY", "m/s", new_w[i+1]), p=UnitValue("METRIC", "PRESSURE", "kg/ms^2", new_w[i+2]))
                     obj.update()
                     i += 3

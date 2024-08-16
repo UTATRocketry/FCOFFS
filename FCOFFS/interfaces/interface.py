@@ -4,16 +4,16 @@ Description
 
 from ..pressureSystem import PressureSystem
 from ..state.State import State
-from ..fluids.fluid import Fluid
+from ..fluids.Fluid import Fluid
 
 from ..utilities import *
 from ..utilities.units import *
 
 
 class Interface:
-    def __init__(self, name: str="NODE_AUTO"):
+    def __init__(self, name: str="INTERFACE_AUTO"):
         self.name = name
-        self.type = 'node'
+        self.type = 'interface'
         self.state = State()
         self.initialized = False
 

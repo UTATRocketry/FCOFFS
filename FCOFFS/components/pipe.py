@@ -8,7 +8,7 @@ from scipy.optimize import brentq
 from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..pressureSystem import PressureSystem
-from ..fluids.fluid import Fluid
+from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 
 ## Striaght section of the pipe
@@ -34,13 +34,13 @@ class Pipe(ComponentClass):
             self.roughness = roughness
 
     def update(self):
-        self.node_in.update()
-        self.node_out.update()
+        self.interface_in.update()
+        self.interface_out.update()
 
-    def eval(self, new_states: tuple[State, State]|None=None):
+    def eval(self, new_states: tuple[State, State]|None=None) -> list:
         if new_states is None:
-            state_in = self.node_in.state
-            state_out = self.node_out.state
+            state_in = self.interface_in.state
+            state_out = self.interface_out.state
         else:
             state_in = new_states[0]
             state_out = new_states[1]

@@ -22,8 +22,8 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
         self.fluid = fluid
         self.name = name
         self.type = 'component'
-        self.node_in = None
-        self.node_out = None
+        self.interface_in = None
+        self.interface_out = None
 
     def __str__(self):
         return self.name
@@ -32,33 +32,33 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
         return self.name
 
     def set_connection(self, upstream: Interface, downstream: Interface):
-        if upstream != None:
-            if upstream.type == 'node':
-                self.node_in = upstream
+        if upstream is not None:
+            if upstream.type == 'interface':
+                self.interface_in = upstream
             elif upstream.type == 'component':
-                self.node_in = upstream.node_out
+                self.interface_in = upstream.interface_out
             else:
                 raise Exception("class.type not in list")
-        if downstream != None:
-            if downstream.type == 'node':
-                self.node_out = downstream
+        if downstream is not None:
+            if downstream.type == 'interface':
+                self.interface_out = downstream
             elif downstream.type == 'component':
-                self.node_out = Interface()
+                self.interface_out = Interface()
             else:
                 raise Exception("class.type not in list")
 
     def initialize(self):
-        self.node_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
-        self.node_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.node_in.state.rho, u=self.node_in.state.u, p=self.node_in.state.p)
+            self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
+            self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
 
-    def update(self): 
-        self.node_in.update()
-        self.node_out.update()
+    def update(self):
+        self.interface_in.update()
+        self.interface_out.update()
 
-    def eval(self, new_states: tuple[State, State]|None=None):
+    def eval(self, new_states: tuple[State, State]|None=None) -> list:
         if new_states is None:
-            state_in = self.node_in.state
-            state_out = self.node_out.state
+            state_in = self.interface_in.state
+            state_out = self.interface_out.state
         else:
             state_in = new_states[0]
             state_out = new_states[1]

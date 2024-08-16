@@ -10,7 +10,7 @@ import warnings
 from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..pressureSystem import PressureSystem
-from ..fluids.fluid import Fluid
+from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 
 
@@ -30,17 +30,17 @@ class Injector(ComponentClass):
     def initialize(self):
         if self.parent_system.outlet_BC != 'PressureOutlet':
             warnings.warn("Outlet BC not well posed. ")
-        self.node_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
-        self.node_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.node_in.state.rho, u=self.node_in.state.u, p=self.node_in.state.p)
+        self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
+        self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
 
     def update(self):
-        self.node_in.update()
-        self.node_out.update()
+        self.interface_in.update()
+        self.interface_out.update()
 
-    def eval(self, new_states: tuple[State, State]|None=None):
+    def eval(self, new_states: tuple[State, State]|None=None) -> list:
         if new_states is None:
-            state_in = self.node_in.state
-            state_out = self.node_out.state
+            state_in = self.interface_in.state
+            state_out = self.interface_out.state
         else:
             state_in = new_states[0]
             state_out = new_states[1]

@@ -3,12 +3,9 @@ Description
 '''
 
 from scipy.optimize import root
-import warnings
 
-from ..interfaces.interface import *
-from ..utilities.Utilities import *
+from ..utilities.Utilities import rms
 from ..utilities.units import UnitValue
-
 
 # Nomenclature:
 
@@ -64,30 +61,28 @@ class PressureSystem:
         if len(components) < 1:
             raise IndexError('No component found. ')
         self.components = components
-        for component in components:
-            self.objects += [component, component.interface_out]
-        self.inlet_BC = components[0].Inlet_type
-        self.outlet_BC = components[0].Outlet_type
+        for component in components[:-1]:
+                self.objects += [component, component.interface_out]
+        self.objects.append(components[-1])
+        self.inlet_BC = components[0].BC_type
+        self.outlet_BC = components[-1].BC_type
         for component in components:
             component.initialize()
-        components[0].initialize()
 
     def update_w(self):
         self.w = []
-        if self.inlet_BC=="PRESSURE" and self.outlet_BC=="PRESSURE":
-            for obj in self.objects:
-                if obj.type == 'interface':
-                    self.w += [obj.state.rho.value, obj.state.u.value, obj.state.p.value]
+        for obj in self.objects:
+            if obj.type == 'interface':
+                self.w += [obj.state.rho.value, obj.state.u.value, obj.state.p.value]
         return self.w
 
     def set_w(self, new_w):
         i = 0
-        if self.inlet_BC=="PRESSURE" and self.outlet_BC=="PRESSURE":
-            for obj in self.objects:
-                if obj.type == 'interface':
-                    obj.state.set(rho=UnitValue("METRIC", "DENSITY", "kg/m^3", new_w[i]), u=UnitValue("METRIC", "VELOCITY", "m/s", new_w[i+1]), p=UnitValue("METRIC", "PRESSURE", "kg/ms^2", new_w[i+2]))
-                    obj.update()
-                    i += 3
+        for obj in self.objects:
+            if obj.type == 'interface':
+                obj.state.set(rho=UnitValue("METRIC", "DENSITY", "kg/m^3", new_w[i]), u=UnitValue("METRIC", "VELOCITY", "m/s", new_w[i+1]), p=UnitValue("METRIC", "PRESSURE", "kg/ms^2", new_w[i+2]))
+                obj.update()
+                i += 3
         # if self.inlet_BC=="PressureInlet" and self.outlet_BC=="MassOutlet":
         #     var1 = new_w[i]
         #     i += 1
@@ -108,19 +103,20 @@ class PressureSystem:
 
     def solve(self):
         while True:
-            if self.inlet_BC=="PRESSURE" and self.outlet_BC=="PRESSURE":
-                self.update_w()
-                def func(x):
-                    #print(x)
-                    self.set_w(x)
-                    res = []
-                    for component in self.components:
-                        component.update()
-                        res += component.eval()
-                    print("Residual = "+str(rms(res)))
-                    #print(res)
-                    #self.output()
-                    return res
+            self.update_w()
+            def func(x):
+                #print(x)
+                self.set_w(x)
+                res = []
+                for component in self.components:
+                    component.update()
+                    res += component.eval()
+                temp = res.pop(-1)
+                res.insert(2, temp)
+                print("Residual = "+str(rms(res)))
+                #print(res)
+                #self.output()
+                return res
 
             sol = root(func, self.w).x
             print(sol)

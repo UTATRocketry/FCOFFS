@@ -1,1 +1,1 @@
-__all__ = ["componentClass", "pipe", "tank", "injector", "quasi_component"]
+__all__ = ["pipe", "tank", "injector", "quasi_component", "pressure_inlet", "pressure_outlet", "mass_flow_outlet"]

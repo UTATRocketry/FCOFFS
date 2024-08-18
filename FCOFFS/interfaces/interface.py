@@ -2,10 +2,9 @@
 Description
 '''
 
-from ..pressureSystem import PressureSystem
 from ..state.State import State
 from ..fluids.Fluid import Fluid
-
+from ..pressureSystem.PressureSystem import PressureSystem
 from ..utilities import *
 from ..utilities.units import *
 
@@ -23,12 +22,11 @@ class Interface:
     def update(self):
         self.state.update()
 
-    def initialize(self, parent_system: PressureSystem=None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
-        if not self.initialized:
-            self.parent_system = parent_system
-            self.state.set(area, fluid, rho, u, p)
-            self.update()
-            self.initialized = True
+    def initialize(self, parent_system: PressureSystem = None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
+        self.parent_system = parent_system
+        self.state.set(area, fluid, rho, u, p)
+        self.update()
+        self.initialized = True
 
 
 class PressureInlet(Interface):
@@ -40,7 +38,7 @@ class PressureInlet(Interface):
         T.convert_base_metric()
         self.T = T
 
-    def initialize(self, parent_system: PressureSystem=None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
+    def initialize(self, parent_system=None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
         if not self.initialized:
             self.parent_system = parent_system
             rho = Fluid.density(fluid, self.T, self.p)
@@ -56,7 +54,7 @@ class PressureOutlet(Interface):
         p.convert_base_metric()
         self.p = p
 
-    def initialize(self, parent_system: PressureSystem=None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
+    def initialize(self, parent_system=None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
         if not self.initialized:
             self.parent_system = parent_system
             rho = Fluid.density(fluid, parent_system.ref_T, self.p)
@@ -72,7 +70,7 @@ class MassOutlet(Interface):
         mdot.convert_base_metric()
         self.mdot = mdot
 
-    def initialize(self, parent_system: PressureSystem=None, area: UnitValue=None, fluid: UnitValue=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
+    def initialize(self, parent_system=None, area: UnitValue=None, fluid: UnitValue=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
         if not self.initialized:
             self.parent_system = parent_system
             if rho != None:

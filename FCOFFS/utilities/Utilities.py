@@ -1,10 +1,6 @@
-'''
-Description
-'''
 
 import numpy as np
     
-
 def rms(arr):
     sum = 0
     for num in arr:

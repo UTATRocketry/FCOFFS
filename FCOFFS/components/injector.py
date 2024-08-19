@@ -7,12 +7,11 @@ from scipy.optimize import fsolve
 from CoolProp.CoolProp import PropsSI
 import warnings
 
+from ..pressureSystem.PressureSystem import PressureSystem
 from ..state.State import *
 from ..components.componentClass import ComponentClass
-from ..pressureSystem import PressureSystem
 from ..fluids.Fluid import Fluid
 from ..utilities.units import *
-
 
 class Injector(ComponentClass):
     def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, diameter_out: UnitValue, diameter_hole: UnitValue, num_hole: int, fluid: str, name: str='Injector'):
@@ -26,9 +25,10 @@ class Injector(ComponentClass):
         self.diameter_hole = diameter_hole
         self.diameter_hole.convert_base_metric()
         self.num_hole = num_hole
+        self.decoupler = True
 
     def initialize(self):
-        if self.parent_system.outlet_BC != 'PressureOutlet':
+        if self.parent_system.outlet_BC != 'PRESSURE':
             warnings.warn("Outlet BC not well posed. ")
         self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)

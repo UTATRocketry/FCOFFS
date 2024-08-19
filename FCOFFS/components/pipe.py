@@ -5,9 +5,9 @@ Description
 from numpy import log10, sqrt
 from scipy.optimize import brentq
 
+from ..pressureSystem.PressureSystem import PressureSystem
 from ..state.State import *
 from ..components.componentClass import ComponentClass
-from ..pressureSystem import PressureSystem
 from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 

@@ -4,7 +4,7 @@ Description
 
 from ..components.componentClass import ComponentClass
 from ..pressureSystem import PressureSystem
-from ..fluids.fluid import Fluid
+from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 
 class Tank(ComponentClass):

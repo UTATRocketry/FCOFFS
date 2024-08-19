@@ -1,7 +1,7 @@
 from customtkinter import *
 
 from FCOFFS.components import injector
-from FCOFFS.fluids import fluid
+from FCOFFS.fluids import Fluid
 from ..widgets.component_tab import ComponentTab
 from .unit_entry import UnitEntry
 from ..utilities.pop_ups import gui_error
@@ -17,11 +17,11 @@ class InjectorTab(ComponentTab):
         self.component_name_ent = CTkEntry(self, font=("Arial", 18), placeholder_text=self.component.name)
         self.component_type_lbl = CTkLabel(self, text="Component Type: Injector", font=("Arial", 18))
         self.fluid_lbl = CTkLabel(self, text="Fluid: ", font=("Arial", 14))
-        self.fluid_opt = CTkOptionMenu(self, font=("Arial", 14), values=list(fluid.Fluid.supported_fluids))
+        self.fluid_opt = CTkOptionMenu(self, font=("Arial", 14), values=list(Fluid.Fluid.supported_fluids))
         self.fluid_opt.set(component.fluid)
         self.diameter_in_lbl = CTkLabel(self, text="Diameter In: ", font=("Arial", 14))
         self.diameter_in = UnitEntry(self, "DISTANCE", self.component.diameter_in)
-        self.diameter_out_lbl = CTkLabel(self, text="Diameter In: ", font=("Arial", 14))
+        self.diameter_out_lbl = CTkLabel(self, text="Diameter Out: ", font=("Arial", 14))
         self.diameter_out = UnitEntry(self, "DISTANCE", self.component.diameter_out)
         self.diameter_hole_lbl = CTkLabel(self, text="Hole Diameter: ", font=("Arial", 14))
         self.diameter_hole = UnitEntry(self, "DISTANCE", self.component.diameter)
@@ -60,13 +60,14 @@ class InjectorTab(ComponentTab):
             self.component.name = name
             self.Master.components_tabview.set(name)
         self.component.fluid = self.fluid_opt.get()
-        self.component.diameter = self.diameter_hole.unit
-        self.component.diameter_in = self.diameter_in.unit
-        self.component.diameter_out = self.diameter_out.unit
+        self.component.diameter = self.diameter_hole.unit.convert_base_metric()
+        self.component.diameter_in = self.diameter_in.unit.convert_base_metric()
+        self.component.diameter_out = self.diameter_out.unit.convert_base_metric()
         try:
             self.component.num_hole = float(self.num_holes.get())
         except:
             gui_error(f"Invalid Input Value, Must be a number, not a string")
+        self.master.write_to_dispaly(f"\n Set new parameters for component: {self.component.name} \n")
 
     def __delete(self) -> None: 
         super()._delete()

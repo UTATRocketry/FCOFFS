@@ -4,8 +4,8 @@ Description
 
 from numpy import pi
 
-from ..state.State import *
 from ..pressureSystem.PressureSystem import PressureSystem
+from ..state.State import *
 from ..interfaces.interface import Interface
 from ..utilities.Utilities import *
 from ..utilities.units import *
@@ -22,6 +22,7 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
         self.fluid = fluid
         self.name = name
         self.type = 'component'
+        self.decoupler = False
         self.interface_in = None
         self.interface_out = None
 
@@ -31,7 +32,7 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
     def __repr__(self): #TODO
         return self.name
 
-    def set_connection(self, upstream: Interface, downstream: Interface):
+    def set_connection(self, upstream: Interface|None = None, downstream: Interface|None = None):
         if upstream is not None:
             if upstream.type == 'interface':
                 self.interface_in = upstream
@@ -48,12 +49,16 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
                 raise Exception("class.type not in list")
 
     def initialize(self):
+        if self.interface_in is not None:
             self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
+        if self.interface_out is not None:
             self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
 
     def update(self):
-        self.interface_in.update()
-        self.interface_out.update()
+        if self.interface_in is not None:
+            self.interface_in.update()
+        if self.interface_out is not None:
+            self.interface_out.update()
 
     def eval(self, new_states: tuple[State, State]|None=None) -> list:
         if new_states is None:

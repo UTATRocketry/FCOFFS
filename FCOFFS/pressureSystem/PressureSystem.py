@@ -28,9 +28,9 @@ class PressureSystem:
 
     def output(self, verbose: bool=True):
         output_string = ""
-        items = ["name", "rho", "u", "p"]
+        items = ["name", "rho", "u", "p", "mdot", "area"]
         for item in items:
-            output_string += item[:15] + " "*max(16-len(item), 21)
+            output_string += item[:15] + " "*max(16-len(item), 23)
         output_string += "\n"
         for obj in self.objects:
             output_string += str(obj) + " "*2
@@ -58,8 +58,14 @@ class PressureSystem:
         print()
 
     def initialize(self, components: list):
+        # Sytem Vlaidation Checks
         if len(components) < 1:
             raise IndexError('No component found. ')
+        if components[0].BC_type != "PRESSURE":
+            for component in components:
+                if component.decoupler == True:
+                    raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+
         self.components = components
         for component in components[:-1]:
                 self.objects += [component, component.interface_out]
@@ -111,8 +117,6 @@ class PressureSystem:
                 for component in self.components:
                     component.update()
                     res += component.eval()
-                temp = res.pop(-1)
-                res.insert(2, temp)
                 print("Residual = "+str(rms(res)))
                 #print(res)
                 #self.output()

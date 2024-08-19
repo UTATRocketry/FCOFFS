@@ -22,11 +22,12 @@ class Interface:
     def update(self):
         self.state.update()
 
-    def initialize(self, parent_system: PressureSystem = None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None):
-        self.parent_system = parent_system
-        self.state.set(area, fluid, rho, u, p)
-        self.update()
-        self.initialized = True
+    def initialize(self, parent_system: PressureSystem = None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None, Override: bool=False):
+        if not self.initialized or Override:
+            self.parent_system = parent_system
+            self.state.set(area, fluid, rho, u, p)
+            self.update() 
+            self.initialized = True
 
 
 class PressureInlet(Interface):

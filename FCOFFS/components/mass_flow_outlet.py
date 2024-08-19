@@ -21,7 +21,7 @@ class MassFlowOutlet(ComponentClass):
         self.rho = Fluid.density(fluid, parent_system.ref_T, self.p)
 
     def initialize(self):
-        self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, p=self.p, rho=self.rho, u=self.interface_in.state.u)
+        self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, p=self.p, rho=self.rho, u=self.interface_in.state.u, Override=True)
 
     def eval(self)->list:
         res1 = (self.mdot - self.interface_in.state.mdot) / self.interface_in.state.mdot

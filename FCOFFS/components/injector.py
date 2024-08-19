@@ -25,6 +25,7 @@ class Injector(ComponentClass):
         self.diameter_hole = diameter_hole
         self.diameter_hole.convert_base_metric()
         self.num_hole = num_hole
+        self.decoupler = True
 
     def initialize(self):
         if self.parent_system.outlet_BC != 'PRESSURE':

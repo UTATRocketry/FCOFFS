@@ -1,35 +1,29 @@
 
 from customtkinter import *
+from customtkinter import CTkFrame
 
-from FCOFFS.components import pipe
+from FCOFFS.interfaces.interface import PressureOutlet
 from FCOFFS.fluids import Fluid
-from ..widgets.component_tab import ComponentTab
+from .component_tab import ComponentTab
 from .unit_entry import UnitEntry
-from ..utilities.pop_ups import gui_error
 
-class PipeTab(ComponentTab): 
-    def __init__(self, master: CTkFrame, OverarchingMaster: CTkFrame, component: pipe.Pipe, **kwargs):
+class MassOutletTab(ComponentTab):
+    def __init__(self, master: CTkFrame, OverarchingMaster: CTkFrame, component: PressureOutlet, **kwargs):
         super().__init__(master, OverarchingMaster, component, **kwargs)
 
         self.grid_columnconfigure((0, 1, 2, 3), weight=1)
-        self.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+        self.grid_rowconfigure((0, 1, 2, 3), weight=1)
 
         self.component_name_lbl = CTkLabel(self, text=f"Component Name:", font=("Arial", 18))
         self.component_name_ent = CTkEntry(self, font=("Arial", 18), placeholder_text=self.component.name)
-        self.component_type_lbl = CTkLabel(self, text="Component Type: Pipe", font=("Arial", 18))
+        self.component_type_lbl = CTkLabel(self, text="Component Type: Outlet", font=("Arial", 18))
         self.fluid_lbl = CTkLabel(self, text="Fluid: ", font=("Arial", 14))
         self.fluid_opt = CTkOptionMenu(self, font=("Arial", 14), values=list(Fluid.Fluid.supported_fluids))
         self.fluid_opt.set(component.fluid)
-        self.diameter_lbl = CTkLabel(self, text="Diameter: ", font=("Arial", 14))
+        self.diameter_lbl = CTkLabel(self, text="Outlet Diameter: ", font=("Arial", 14))
         self.diameter = UnitEntry(self, "DISTANCE", self.component.diameter)
-        self.length_lbl = CTkLabel(self, text="Length: ", font=("Arial", 14))
-        self.length = UnitEntry(self, "DISTANCE", self.component.length)
-        self.roughness_lbl = CTkLabel(self, text="Roughness: ", font=("Arial", 14))
-        self.roughness = CTkEntry(self, font=("Arial", 14))
-        self.roughness.insert(0, str(self.component.roughness))
-        self.epsilon_lbl = CTkLabel(self, text="Epsilon: ", font=("Arial", 14))
-        self.epsilon = CTkEntry(self, font=("Arial", 14))
-        self.epsilon.insert(0, str(self.component.epsilon))
+        self.mass_flow_lbl = CTkLabel(self, text="Outlet Mass FLow Rate: ", font=("Arial", 14))
+        self.mass_flow = UnitEntry(self, "MASS FLOW RATE", self.component.mdot)
         self.set_btn = CTkButton(self, text="SET", font=("Arial", 16), command=self.__set)
         self.delete_btn = CTkButton(self, text="DELETE", font=("Arial", 16), command=self.__delete)
         self.move_frm = CTkFrame(self)
@@ -41,19 +35,15 @@ class PipeTab(ComponentTab):
         self.component_type_lbl.grid(row=0, column=2, columnspan=2, padx=(10, 15), pady=10, sticky="nsew")
         self.fluid_lbl.grid(row=1, column=0, padx=(10, 5), pady=(10, 5), sticky="nsew")
         self.fluid_opt.grid(row=1, column=1, padx=(5, 10), pady=(10, 5), sticky="ew")
-        self.diameter_lbl.grid(row=2, column=0, padx=(10, 5), pady=5, sticky="nsew")
-        self.diameter.grid(row=2, column=1, padx=(0, 5), pady=5, sticky="nsew")
-        self.length_lbl.grid(row=2, column=2, padx=(5, 5), pady=5, sticky="nsew")
-        self.length.grid(row=2, column=3, padx=(0, 10), pady=5, sticky="nsew")
-        self.roughness_lbl.grid(row=3, column=0, padx=(10, 5), pady=(5, 10), sticky="nsew")
-        self.roughness.grid(row=3, column=1, padx=(0, 5), pady=(5, 10), sticky="nsew")
-        self.epsilon_lbl.grid(row=3, column=2, padx=(5, 5), pady=(5, 10), sticky="nsew")
-        self.epsilon.grid(row=3, column=3, padx=(0, 10), pady=(5, 10), sticky="nsew")
-        self.set_btn.grid(row=4, column=2, padx=(5, 5), pady=(10, 10))
-        self.delete_btn.grid(row=4, column=3, padx=(5, 10), pady=(10, 10))
+        self.diameter_lbl.grid(row=1, column=2, padx=(5, 5), pady=5, sticky="nsew")
+        self.diameter.grid(row=1, column=3, padx=(0, 10), pady=5, sticky="nsew")
+        self.mass_flow_lbl.grid(row=2, column=0, padx=(10, 5), pady=5, sticky="nsew")
+        self.mass_flow.grid(row=2, column=1, padx=(0, 5), pady=5, sticky="nsew")
+        self.set_btn.grid(row=3, column=2, padx=(5, 5), pady=(10, 10))
+        self.delete_btn.grid(row=3, column=3, padx=(5, 10), pady=(10, 10))
         self.move_opt.grid(row=0, column=1, padx=(10, 5), pady=(5, 5))
         self.move_btn.grid(row=0, column=0, padx=(5, 10), pady=(5, 5))
-        self.move_frm.grid(row=4, column=0, columnspan=2, padx=(10, 5), pady=(10, 10))
+        self.move_frm.grid(row=3, column=0, columnspan=2, padx=(10, 5), pady=(10, 10))
         self.move_opt.set("Choose New Index")
 
     def __set(self) -> None:
@@ -64,12 +54,7 @@ class PipeTab(ComponentTab):
             self.Master.components_tabview.set(name)
         self.component.fluid = self.fluid_opt.get()
         self.component.diameter = self.diameter.unit.convert_base_metric()
-        self.component.length = self.length.unit.convert_base_metric()
-        try:
-            self.component.roughness = float(self.roughness.get())
-            self.component.epsilon = float(self.epsilon.get())
-        except:
-            gui_error(f"Invalid Input Value, Must be a number, not a string")
+        self.component.mdot = self.mass_flow.unit.convert_base_metric()
         self.master.write_to_dispaly(f"\n Set new parameters for component: {self.component.name} \n")
 
     def __delete(self) -> None: 
@@ -83,3 +68,4 @@ class PipeTab(ComponentTab):
     
     def _change_move_options(self):
         super()._change_move_options()
+

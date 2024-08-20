@@ -28,7 +28,7 @@ class PressureSystem:
 
     def output(self, verbose: bool=True):
         output_string = ""
-        items = ["name", "rho", "u", "p", "mdot", "area"]
+        items = ["name", "rho", "u", "p", "T", "mdot", "area", "fluid"]
         for item in items:
             output_string += item[:15] + " "*max(16-len(item), 23)
         output_string += "\n"
@@ -107,7 +107,7 @@ class PressureSystem:
         self.update_w()
 
 
-    def solve(self):
+    def solve(self, verbose: bool=True, queue=None):
         while True:
             self.update_w()
             def func(x):
@@ -117,13 +117,17 @@ class PressureSystem:
                 for component in self.components:
                     component.update()
                     res += component.eval()
-                print("Residual = "+str(rms(res)))
+                if verbose is True:
+                    print("Residual = "+str(rms(res)))
+                if queue:
+                    queue.put(rms(res))
                 #print(res)
                 #self.output()
                 return res
 
             sol = root(func, self.w).x
-            print(sol)
+            if verbose is True:
+                print(sol)
             self.t += self.transient[2]
             if self.t > self.transient[1] or self.transient[2] == 0:
                 break

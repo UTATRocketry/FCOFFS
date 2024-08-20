@@ -20,6 +20,9 @@ class PipeTab(ComponentTab):
         self.fluid_lbl = CTkLabel(self, text="Fluid: ", font=("Arial", 14))
         self.fluid_opt = CTkOptionMenu(self, font=("Arial", 14), values=list(Fluid.Fluid.supported_fluids))
         self.fluid_opt.set(component.fluid)
+        self.known_roughness_lbl = CTkLabel(self, text="Known Roughness: ", font=("Arial", 14))
+        self.known_roughness_var = StringVar(value="No")
+        self.known_roughness = CTkSwitch(self, text=self.known_roughness_var.get(), font=("Arial", 14), variable=self.known_roughness_var, onvalue="Yes", offvalue="No", command=self.update_roughness)
         self.diameter_lbl = CTkLabel(self, text="Diameter: ", font=("Arial", 14))
         self.diameter = UnitEntry(self, "DISTANCE", self.component.diameter)
         self.length_lbl = CTkLabel(self, text="Length: ", font=("Arial", 14))
@@ -41,6 +44,8 @@ class PipeTab(ComponentTab):
         self.component_type_lbl.grid(row=0, column=2, columnspan=2, padx=(10, 15), pady=10, sticky="nsew")
         self.fluid_lbl.grid(row=1, column=0, padx=(10, 5), pady=(10, 5), sticky="nsew")
         self.fluid_opt.grid(row=1, column=1, padx=(5, 10), pady=(10, 5), sticky="ew")
+        self.known_roughness_lbl.grid(row=1, column=2, padx=(5, 5), pady=(10, 5), sticky="nsew")
+        self.known_roughness.grid(row=1, column=3, padx=(5, 10), pady=(10, 5), sticky="ew")
         self.diameter_lbl.grid(row=2, column=0, padx=(10, 5), pady=5, sticky="nsew")
         self.diameter.grid(row=2, column=1, padx=(0, 5), pady=5, sticky="nsew")
         self.length_lbl.grid(row=2, column=2, padx=(5, 5), pady=5, sticky="nsew")
@@ -66,11 +71,21 @@ class PipeTab(ComponentTab):
         self.component.diameter = self.diameter.unit.convert_base_metric()
         self.component.length = self.length.unit.convert_base_metric()
         try:
-            self.component.roughness = float(self.roughness.get())
-            self.component.epsilon = float(self.epsilon.get())
+            if self.known_roughness_var.get() == "No":
+                self.component.epsilon = float(self.epsilon.get())
+                self.component.roughness = self.component.epsilon / self.component.diameter.value
+                self.roughness.delete(0, END)
+                self.roughness.insert(END, str(self.component.roughness))
+            else:
+                self.component.roughness = float(self.roughness.get())
+                self.component.epsilon = float(self.epsilon.get())
         except:
             gui_error(f"Invalid Input Value, Must be a number, not a string")
-        self.master.write_to_dispaly(f"\n Set new parameters for component: {self.component.name} \n")
+        self.Master.write_to_display(f"\nSet new parameters for component: {self.component.name} \n")
+        self.Master.PS.initialized = False
+
+    def update_roughness(self):
+        self.known_roughness.configure(text=self.known_roughness_var.get())
 
     def __delete(self) -> None: 
         super()._delete()

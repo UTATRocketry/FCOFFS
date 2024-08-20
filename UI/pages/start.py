@@ -65,7 +65,7 @@ class StartPage(CTkFrame):
             for itm in dir_items:
                 if os.path.splitext(itm.name)[1] == ".fcoffs":
                     available_files.append(itm.name)
-            return available_files
+            return available_files if available_files else ["None"]
         else:
             os.makedirs(cur_dir)
         return ["None"]

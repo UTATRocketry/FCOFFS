@@ -1,6 +1,9 @@
+
 from typing import Any
 from customtkinter import *
 import pickle
+from queue import Queue
+from _thread import *
 
 from FCOFFS.pressureSystem import PressureSystem
 from FCOFFS.components import *
@@ -15,7 +18,7 @@ class ProjectPage(CTkFrame):
 
         self.PS = PS
         self.interfaces = []
-        self.initialized = False
+        self.PS.initialized = False
 
         self.grid_columnconfigure((0, 1, 2, 3), weight=1)
         self.grid_rowconfigure((0, 1, 2, 3), weight=1)
@@ -99,7 +102,7 @@ class ProjectPage(CTkFrame):
         self.initialize_btn = CTkButton(self.buttons, text="Initialize System", command=self.initialize, font=("Arial", 16))
         self.system_tree_btn = CTkButton(self.buttons, text="System Diagram", command=self.show_system_diagram, font=("Arial", 16))
         self.solve_btn = CTkButton(self.buttons, text="Solve System", command=self.solve, font=("Arial", 16))
-        self.system_output_btn = CTkButton(self.buttons, text="System State", command=self.show_system_state, font=("Arial", 16))
+        self.system_output_btn = CTkButton(self.buttons, text="System Output", command=self.show_system_state, font=("Arial", 16))
         self.initialize_btn.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="nsew")
         self.system_tree_btn.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
         self.solve_btn.grid(row=2, column=0, padx=10, pady=(5, 10), sticky="nsew")
@@ -112,6 +115,7 @@ class ProjectPage(CTkFrame):
     def set_ps_reference(self):
         self.PS.ref_p = self.reference_pressure.unit.convert_base_metric()
         self.PS.ref_T = self.reference_temperature.unit.convert_base_metric()
+        self.write_to_display(f"\nUpdated System References: Pressure = {self.PS.ref_p}, Temperature = {self.PS.ref_T}\n")
 
     def add_component(self) -> None:
         component_type = self.new_component_opt.get()
@@ -119,6 +123,9 @@ class ProjectPage(CTkFrame):
 
         if not component_name:
             pop_ups.gui_error("Component Name Cannot be Nothing")
+            return
+        elif component_name in self.components_tabview._name_list:
+            pop_ups.gui_error("Component Name Already Exists")
             return
 
         match component_type:
@@ -151,15 +158,14 @@ class ProjectPage(CTkFrame):
 
     def initialize(self) -> None:
         try:
-            if self.initialized:
-                self.PS.objects = []
+            self.PS.objects = []
             if not isinstance(self.PS.components[0], (pressure_inlet.PressureInlet)):
                 pop_ups.gui_error("System does not start with an Inlet please change system")
             if not isinstance(self.PS.components[-1], (pressure_outlet.PressureOutlet, mass_flow_outlet.MassFlowOutlet)):
                 pop_ups.gui_error("System does not end with an Outlet please change system")
             
             for i, comp in enumerate(self.PS.components):
-                next_interface = interface.Interface(f"Interface {i}")
+                next_interface = interface.Interface(f"Interface {i+1}")
                 if isinstance(comp, (pressure_inlet.PressureInlet)):
                     comp.set_connection(downstream=next_interface)
                 elif isinstance(comp, (pressure_outlet.PressureOutlet, mass_flow_outlet.MassFlowOutlet)):
@@ -169,8 +175,8 @@ class ProjectPage(CTkFrame):
                 prev_interface = next_interface
 
             self.PS.initialize(self.PS.components)
-            self.initialized = True
-            self.write_to_display("\n System Initialized Succesffuly \n")
+            self.PS.initialized = True
+            self.write_to_display("\nSystem Initialized Succesffuly \n")
         except Exception as e:
             pop_ups.gui_error(f"Initialization Failed Due To: {e}")
 
@@ -182,14 +188,32 @@ class ProjectPage(CTkFrame):
         self.write_to_display(res_string)
 
     def solve(self) -> None:
-        if self.initialized:
-            try:
-                self.PS.solve()
-                self.write_to_display("\n Finsihed Solving System \n")
-            except Exception as e:
-                pop_ups.gui_error(f"Solve Failed Due To: {e}")
-        else:
-            pop_ups.gui_error("System Not Yet Initialized")
+        def solve_system(queue: Queue):
+            if self.PS.initialized:
+                try:
+                    self.PS.solve(verbose=False, queue=queue)
+                    queue.put("DONE")
+                    return
+                except Exception as e:
+                    queue.put(f"ERROR:Solve Failed Due To: {e}")
+            else:
+                queue.put("ERROR:System Not Yet Initialized")
+            return
+        
+        q = Queue()
+        iter = 1
+        start_new_thread(solve_system, tuple([q]))
+        while True:
+            out = q.get()
+            if out == "DONE":
+                self.write_to_display("\nFinsihed Solving System \n")
+                return
+            elif isinstance(out, str) and len(out) > 5 and out[:5] == "ERROR":
+                pop_ups.gui_error(out[6:-1])
+                return
+            else:
+                self.write_to_display(f"\nIteration:{iter}, Residual = {out}\n")
+            iter += 1
 
     def show_system_state(self) -> None:
         try:

@@ -61,7 +61,8 @@ class PressureInletTab(ComponentTab):
         self.component.p = self.pressure.unit.convert_base_metric()
         self.component.T = self.temperature.unit.convert_base_metric()
         self.component.rho = Fluid.Fluid.density(self.fluid_opt.get(), self.temperature.unit.convert_base_metric(), self.pressure.unit.convert_base_metric())
-        self.master.write_to_dispaly(f"\n Set new parameters for component: {self.component.name} \n")
+        self.Master.write_to_display(f"\nSet new parameters for component: {self.component.name} \n")
+        self.Master.PS.initialized = False
 
     def __delete(self) -> None: 
         super()._delete()

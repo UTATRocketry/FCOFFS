@@ -55,7 +55,8 @@ class MassOutletTab(ComponentTab):
         self.component.fluid = self.fluid_opt.get()
         self.component.diameter = self.diameter.unit.convert_base_metric()
         self.component.mdot = self.mass_flow.unit.convert_base_metric()
-        self.master.write_to_dispaly(f"\n Set new parameters for component: {self.component.name} \n")
+        self.Master.write_to_display(f"\nSet new parameters for component: {self.component.name} \n")
+        self.Master.PS.initialized = False
 
     def __delete(self) -> None: 
         super()._delete()

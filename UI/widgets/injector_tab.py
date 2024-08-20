@@ -61,13 +61,15 @@ class InjectorTab(ComponentTab):
             self.Master.components_tabview.set(name)
         self.component.fluid = self.fluid_opt.get()
         self.component.diameter = self.diameter_hole.unit.convert_base_metric()
+        self.component.diameter_hole = self.diameter_hole.unit.convert_base_metric()
         self.component.diameter_in = self.diameter_in.unit.convert_base_metric()
         self.component.diameter_out = self.diameter_out.unit.convert_base_metric()
         try:
-            self.component.num_hole = float(self.num_holes.get())
+            self.component.num_hole = int(self.num_holes.get())
         except:
             gui_error(f"Invalid Input Value, Must be a number, not a string")
-        self.master.write_to_dispaly(f"\n Set new parameters for component: {self.component.name} \n")
+        self.Master.write_to_display(f"\nSet new parameters for component: {self.component.name} \n")
+        self.Master.PS.initialized = False
 
     def __delete(self) -> None: 
         super()._delete()

@@ -1,10 +1,10 @@
 '''
 This module allows you to easly store numbers with units and easily convert the units and value of the numbers.
 The two supported systems currently are Imperial and Metric. 
-It currently suports numbers of the unit type 'DISTANCE', 'PRESSURE', 'MASS', 'VELOCITY', 'DENSITY', 'VOLUME', "AREA", "TEMPERATURE", "MASS FLOW RATE", "ENERGY".
-Typically used units are supported and more can be added upon request.
+Typically used units are supported and more can be added upon request or in your instance.
 '''
 import warnings
+import numpy as np
 
 class UnitValue: 
     """
@@ -48,7 +48,7 @@ class UnitValue:
                          "DENSITY": {"kg/m^3": 1, "t/m^3": 1000, "g/m^3": 0.001},
                          "VOLUME": {"m^3": 1, "L": 0.001, "cm^3": 0.000001, "mL": 0.000001, "mm^3": 0.000000001},
                          "AREA": {"m^2": 1, "km^2": 1000000, "cm^2": 0.0001, "mm^2": 0.000001},
-                         "TEMPERATURE": {"k": None, "c": None}, # change to K
+                         "TEMPERATURE": {"K": None, "c": None}, 
                          "MASS FLOW RATE": {"kg/s": 1, "t/s": 1000, "kg/min": 0.0166667, "g/s": 0.001},
                          "ENERGY": {"kgm^2/s^2": 1, "MJ": 1000000, "kJ": 1000, "Nm": 1, "J": 1, "eV": 1.602177e-19},
                          "TIME": {"s": 1, "h": 3600, "min": 60, "ms": 0.001},
@@ -66,35 +66,34 @@ class UnitValue:
                         }
             }
     
-    SPELLING = {"m": {"meter": None, "metre": None, "mtr": None, "mtr.": None, "m ": None, "meters": None, "metres": None},
-                "km": {"kilometer": None, "kilometre": None, "kmeter": None, "klometer": None, "kilo meter": None, "k meter": None, "kmtr": None, "km ": None},
-                "cm": {"centimeter": None, "centimetre": None, "cmeter": None, "centemeter": None, "centi meter": None, "c meter": None, "cmtr": None, "cn": None, "cm ": None},
-                "mm": {"millimeter": None, "millimetre": None, "mmeter": None, "milimeter": None, "milli meter": None, "m meter": None, "mmtr": None, "mn": None, "mm ": None},
-                "g": {"gram": None, "gramme": None, "gm": None, "gms": None, "grm": None, "gramm": None, "g ": None, "gram ": None},
-                "kg": {"kilogram": None, "kilogramme": None, "kgrm": None, "kilo gram": None, "k gram": None, "kilograms": None, "kilogrammes": None, "kilogramme ": None, "kg ": None, "kilogram ": None},
-                "L": {"liter": None, "litre": None, "ltr": None, "liters": None, "litres": None, "ltrs": None, "litter": None, "l": None, "litre ": None, "liters ": None, "liter ": None},
-                "mL": {"milliliter": None, "millilitre": None, "mltr": None, "milli liter": None, "milli litre": None, "mliters": None, "mlitres": None, "ml": None},
-                "s": {"second": None, "sec": None, "secs": None, "sconds": None, "sedonds": None, "secnd": None, "seconds": None},
-                "min": {"minute": None, "min": None, "mins": None, "minut": None, "minuts": None, "minutes": None},
-                "h": {"hour": None, "hr": None, "hrs": None, "houer": None, "howr": None, "hou": None, "hours": None},
-                "m^2": {"square meter": None, "sq meter": None, "sqm": None, "sqr meter": None, "square metre": None, "sqmetre": None, "sq metres": None, "square meters": None},
-                "m^3": {"cubic meter": None, "cbm": None, "cu meter": None, "cubic metre": None, "cube meter": None, "cu m": None, "cubic meters": None},
-                "c": {"degree celsius": None, "degree centigrade": None, "deg c": None, "celsius degree": None, "deg celsius": None, "celsus": None, "celcius": None, "celsius": None},
-                "f": {"degree fahrenheit": None, "deg f": None, "fahrenheit degree": None, "deg fahrenheit": None, "farhenheit": None, "fahrenhiet": None},
-                "kgm/s^2": {"Newton": None, "newton": None, "nwt": None, "newtn": None, "nwton": None, "force": None},
-                "kgm^2/s^2": {"joule": None, "joules": None, "jl": None, "juole": None, "juul": None, "energy": None},
-                "in": {"inch": None, "inc": None, "inck": None, "inche": None, "inchh": None, "inch ": None},
-                "ft": {"foot": None, "fot": None, "foor": None, "foot ": None, "foott": None, "feet": None},
-                "yd": {"yard": None, "yardd": None, "yarrd": None, "yad": None, "yard ": None, "yarrd": None},
-                "mi": {"mile": None, "milee": None, "mile ": None, "mil": None, "mille": None},
-                "lb": {"pound": None, "poundd": None, "pound ": None, "pounnd": None, "lbs": None, "pounds": None},
-                "gal": {"gallon": None, "galln": None, "gallon ": None, "gllon": None, "galllon": None},
-                "oz": {"ounce": None, "ounze": None, "ounce ": None, "ounc": None, "ouncce": None, "ounc ": None, "ozs": None},
-                "st": {"stone": None, "stn": None, "st ": None, "stone ": None, "sts": None},
-                "ft^2": {"square foot": None, "sq foot": None, "sqft": None, "square feet": None, "ft2": None},
-                "ft^3": {"cubic foot": None, "cu ft": None, "cubic feet": None, "ft3": None, "cft": None}
-                }
+    SPELLING_MAP = {'mtr': 'm', 'meters': 'm', 'mtr.': 'm', 'metres': 'm', 'metre': 'm', 'm ': 'm', 'meter': 'm', 'kilometer': 'km', 'kilometre': 'km', 'kilo meter': 'km', 'k meter': 'km', 'klometer': 'km', 'km ': 'km', 'kmeter': 'km', 'kmtr': 'km', 'centemeter': 'cm', 'centimetre': 'cm', 'cn': 'cm', 'c meter': 'cm', 'cm ': 'cm', 'centi meter': 'cm', 'centimeter': 'cm', 'cmeter': 'cm', 'cmtr': 'cm', 'mmeter': 'mm', 'millimeter': 'mm', 'milimeter': 'mm', 'milli meter': 'mm', 'millimetre': 'mm', 'm meter': 'mm', 'mn': 'mm', 'mmtr': 'mm', 'mm ': 'mm', 'g ': 'g', 'gramme': 'g', 'grm': 'g', 'gms': 'g', 'gram': 'g', 'gm': 'g', 'gramm': 'g', 'gram ': 'g', 'kilograms': 'kg', 'k gram': 'kg', 'kilogramme': 'kg', 'kilogram ': 'kg', 'kilogramme ': 'kg', 'kilogrammes': 'kg', 'kg ': 'kg', 'kilogram': 'kg', 'kilo gram': 'kg', 'kgrm': 'kg', 'liters': 'L', 'l': 'L', 'litres': 'L', 'ltrs': 'L', 'liter': 'L', 'litre ': 'L', 'litre': 'L', 'liters ': 'L', 'liter ': 'L', 'litter': 'L', 'ltr': 'L', 'ml': 'mL', 'milliliter': 'mL', 'mlitres': 'mL', 'millilitre': 'mL', 'milli litre': 'mL', 'mliters': 'mL', 'milli liter': 'mL', 'mltr': 'mL', 'sec': 's', 'seconds': 's', 'sedonds': 's', 'sconds': 's', 'second': 's', 'secs': 's', 'secnd': 's', 'minute': 'min', 'minuts': 'min', 'mins': 'min', 'minutes': 'min', 'min': 'min', 'minut': 'min', 'hours': 'h', 'hr': 'h', 'howr': 'h', 'houer': 'h', 'hour': 'h', 'hou': 'h', 'hrs': 'h', 'square meters': 'm^2', 'square meter': 'm^2', 'sqr meter': 'm^2', 'square metre': 'm^2', 'sq meter': 'm^2', 'sqmetre': 'm^2', 'sq metres': 'm^2', 'sqm': 'm^2', 'cube meter': 'm^3', 'cu meter': 'm^3', 'cbm': 'm^3', 'cubic meters': 'm^3', 'cubic metre': 'm^3', 'cubic meter': 'm^3', 'cu m': 'm^3', 'degree centigrade': 'c', 'degree celsius': 'c', 'celcius': 'c', 'deg celsius': 'c', 'celsius degree': 'c', 'celsus': 'c', 'celsius': 'c', 'deg c': 'c', 'fahrenheit degree': 'f', 'deg f': 'f', 'deg fahrenheit': 'f', 'fahrenhiet': 'f', 'degree fahrenheit': 'f', 'farhenheit': 'f', 'force': 'kgm/s^2', 'Newton': 'kgm/s^2', 'newtn': 'kgm/s^2', 'nwton': 'kgm/s^2', 'nwt': 'kgm/s^2', 'newton': 'kgm/s^2', 'joule': 'kgm^2/s^2', 'energy': 'kgm^2/s^2', 'juole': 'kgm^2/s^2', 'jl': 'kgm^2/s^2', 'joules': 'kgm^2/s^2', 'juul': 'kgm^2/s^2', 'inck': 'in', 'inche': 'in', 'inch': 'in', 'inc': 'in', 'inch ': 'in', 'inchh': 'in', 'foot': 'ft', 'foott': 'ft', 'fot': 'ft', 'foor': 'ft', 'foot ': 'ft', 'feet': 'ft', 'yardd': 'yd', 'yad': 'yd', 'yarrd': 'yd', 'yard ': 'yd', 'yard': 'yd', 'mille': 'mi', 'mile ': 'mi', 'milee': 'mi', 'mil': 'mi', 'mile': 'mi', 'pounds': 'lb', 'pounnd': 'lb', 'pound ': 'lb', 'pound': 'lb', 'lbs': 'lb', 'poundd': 'lb', 'galln': 'gal', 'gllon': 'gal', 'gallon': 'gal', 'galllon': 'gal', 'gallon ': 'gal', 'ounze': 'oz', 'ouncce': 'oz', 'ounce ': 'oz', 'ozs': 'oz', 'ounce': 'oz', 'ounc': 'oz', 'ounc ': 'oz', 'stn': 'st', 'stone ': 'st', 'sts': 'st', 'stone': 'st', 'st ': 'st', 'ft2': 'ft^2', 'square foot': 'ft^2', 'sqft': 'ft^2', 'square feet': 'ft^2', 'sq foot': 'ft^2', 'ft3': 'ft^3', 'cft': 'ft^3', 'cubic foot': 'ft^3', 'cu ft': 'ft^3', 'cubic feet': 'ft^3'}
+    
+    @classmethod
+    def add_custom_unit(cls, system: str, dimension:str, unit:str, conversion_factor: float) -> None:
+        """
+        Add your own units to the package instance whihc you can then use in conversion and arithmatic. Note there is a small chance new SI/Metric units will mess with unit conversion during arithmatic. 
 
+        Args:
+            system (str): The measurement system ('IMPERIAL' or 'METRIC'). 
+            dimension (str): The dimension of the unit (e.g., 'DISTANCE', 'PRESSURE', 'MASS'). 
+            unit (str): The string representing the new unit e.g., 'kg'
+            conversion_factor (float): The conversion factor to convert from this unit to the SI base for this units dimension. Must be > 0 or throws error.
+
+        Raises:
+            Exception: If the provided system or dimension is invalid, if the unit already exists or if the conversion factor is less than 0.
+        """
+        if system == "METRIC" or system == "IMPERIAL":
+            if dimension not in cls.UNITS[system]:
+                raise ValueError(f"Dimension {dimension} is invalid must be one of {list(cls.UNITS[system].keys())}")
+            elif dimension == "TEMPERATURE":
+                raise NotImplementedError("Currently their is no support for adding custom temperature units")
+            elif unit in cls.UNITS[system][dimension]:
+                raise ValueError(f"Unit {unit} already exists")
+            elif conversion_factor <= 0:
+                raise ValueError(f"Conversion Factor {conversion_factor} invalid")
+            cls.UNITS[system][dimension][unit] = conversion_factor
+        raise ValueError(f"System {system} is invalid must be one of ('METRIC', 'IMPERIAL')")
+        
     @classmethod
     def available_units(cls, system: str="", dimension: str="") -> str:
         """
@@ -136,6 +135,68 @@ class UnitValue:
                 temp += f"{key}: {list(UnitValue.UNITS['IMPERIAL'][key].keys())}\n"
             res += temp
             return res
+    
+    @classmethod
+    def create_unit(cls, unit: str, value: float=0) -> 'UnitValue':
+        """
+        Create a UnitValue object based on the unit and value. Will also account for speeling mistakes/alternate names of units.
+
+        Args:
+            unit (str): The unit of the value.
+            value (float): The numerical value.
+        
+        Returns:
+            UnitValue: A UnitValue object with the specified unit and value.
+        """
+        u = cls.SPELLING_MAP.get(unit)
+        if u: unit  = u
+            
+        for system, dimensions in cls.UNITS.items():
+            for dimension, units in dimensions.items():
+                if unit in units:
+                    return UnitValue(system, dimension, unit, value)
+        warnings.warn("Creating unit not recongized by package") 
+        return UnitValue(None, None, unit, value)
+    
+    @classmethod
+    def unit_from_string(cls, unit_str:str) -> 'UnitValue':
+        """
+    Create a UnitValue object from a formatted string (e.g., '10 m').
+    
+    Args:
+        unit_str (str): The string containing the value and unit.
+    
+    Returns:
+        UnitValue: A UnitValue object.
+    
+    Raises:
+        ValueError: If the string is not in the correct format.
+    """
+        res = unit_str.split()
+        if len(res) > 2:
+            raise ValueError(f"String {unit_str} is not in right format 'value unit' e.g,. '10 kg")
+        try:
+            val = float(res[0])
+            return UnitValue.create_unit(res[1], val)
+        except:
+            raise ValueError("First element of string could not be converted to number, ensure string of the form e.g., '10 kg'")
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> 'UnitValue':
+        """
+        Create a UnitValue object from a dictionary.
+        
+        Args:
+            data (dict): A dictionary containing the system, dimension, unit, and value.
+        
+        Returns:
+            UnitValue: A UnitValue object.
+        """
+        try:
+            return cls(data['system'], data['dimension'], data['unit'], data['value'])
+        except:
+            raise ValueError(f"Dictionary {data}, doesn't contain the correct keys 'system', 'dimension',  unit, and value")
+    
 
     def __init__(self, system: str|None, dimension: str|None, unit: str, value: float=0) -> None:
         """
@@ -147,6 +208,7 @@ class UnitValue:
             unit (str): The unit of the value.
             value (float): The numerical value.
         """
+        self._conversion_cache = {}
         self.value = value
         if system is None:
             self.__system = None
@@ -168,12 +230,12 @@ class UnitValue:
             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
         self.__unit = unit
 
-    def __call__(self) -> float:
+    def __call__(self) -> int|float:
         """
         Get the value of the unit.
 
         Returns:
-            float: The magnitude of the dimensioned quatity
+            int|float: The magnitude of the dimensioned quatity
         """
         return self.value
     
@@ -197,14 +259,8 @@ class UnitValue:
                 i += 1
                 continue
             elif unit_str[i] == "k":
-                if i + 1 < len(unit_str):
-                    if unit_str[i+1] == "g":
-                        key = unit_str[i:i+2]
-                        i += 1
-                    else:
-                        key = unit_str[i] 
-                else:
-                    key = unit_str[i]
+                key = unit_str[i:i+2]
+                i += 1      
             else:
                 key = unit_str[i]
 
@@ -233,7 +289,7 @@ class UnitValue:
                 units[key] += opp
                 i += 1
 
-    def __mul__(self, m):
+    def __mul__(self, m) -> 'UnitValue':
         """
         Multiplies UnitValue object by another Unitvlue or dimensionless value.
         """
@@ -267,14 +323,15 @@ class UnitValue:
                 return self.value * m.value
                     
             return UnitValue(None, None, new_unit, self.value * m.value)
-        else:
-            if not isinstance(m, (int, float)):
-                raise TypeError(f"Invalid operation * between types: UnitValue and {type(m)}")
+        elif isinstance(m, (int, float, np.ndarray)):
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value * m)
+        else:
+            return NotImplemented
             
-    __rmul__ = __mul__
+    def __rmul__(self, m) -> 'UnitValue':
+        return self.__mul__(m)
 
-    def __truediv__(self, d):
+    def __truediv__(self, d) -> 'UnitValue':
         """
         Divides UnitValue object by another Unitvlue or dimensionless value.
         """
@@ -308,12 +365,12 @@ class UnitValue:
                 return self.value / d.value
                     
             return UnitValue(None, None, new_unit, self.value / d.value)
-        else:
-            if not isinstance(d, (int, float)):
-                raise TypeError(f"Invalid operation * between types: UnitValue and {type(d)}")
+        elif isinstance(d, (int, float, np.ndarray)):
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value / d)
+        else:
+            return NotImplemented
         
-    def __rtruediv__(self, d):
+    def __rtruediv__(self, d) -> 'UnitValue':
         """
         Divides another Unitvlue or dimensionless value by UnitValue object.
         """
@@ -347,9 +404,7 @@ class UnitValue:
                 return d.value / self.value
                     
             return UnitValue(None, None, new_unit, d.value / self.value)
-        else:
-            if not isinstance(d, (int, float)):
-                raise TypeError(f"Invalid operation * between types: UnitValue and {type(d)}")
+        elif isinstance(d, (int, float, np.ndarray)):
             
             units = {}
             self.__process_unit(self.__unit, units, -1)
@@ -373,8 +428,10 @@ class UnitValue:
 
             new_unit = numer + denom
             return UnitValue(None, None, new_unit, d / self.value)
+        else:
+            return NotImplemented
 
-    def __pow__(self, p):
+    def __pow__(self, p)  -> 'UnitValue':
         """
         Raises UnitValue object to the power of a float or interger.
         """
@@ -409,58 +466,51 @@ class UnitValue:
             return UnitValue(None, None, new_unit, self.value ** p)
 
         else:
-            raise TypeError(f"Cannot raise UnitValue to the power of type: {type(p)}")
+            raise NotImplementedError(f"Raising to the power with type {type(p)} not supported")
 
-    def __add__(self, a):
+    def __add__(self, a)  -> 'UnitValue':
         """
         Adds UnitValue object by another Unitvlue or dimensionless value.
         """
         if isinstance(a, UnitValue):
             if self.__dimension != a.__dimension:
                 if self.__unit != a.__unit:
-                    raise TypeError(f"Cannot add unit {self.__unit} and {a.__unit}")
+                    raise TypeError(f"Cannot add unit {self.__unit} and unit {a.__unit}")
                 return UnitValue(self.__system, self.__dimension, self.__unit, self.value + a.value)
             self.convert_base_metric()
             a.convert_base_metric()
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value + a.value)
         
-        if isinstance(a, (int, float)):
-            Warning("Adding dimensionless value to value with dimensions thus assumed same dimension")
+        elif isinstance(a, (int, float, np.ndarray)):
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value + a)
+        else:
+            return NotImplemented
         
-    __radd__ = __add__
+    def __radd__(self, a)  -> 'UnitValue':
+        return self.__add__(a)
 
-    def __sub__(self, s):
+    def __sub__(self, s)  -> 'UnitValue':
         """
         Subtracts UnitValue object by another Unitvlue or dimensionless value.
         """
         if isinstance(s, UnitValue):
             if self.__dimension != s.__dimension:
                 if self.__unit != s.__unit:
-                    raise TypeError(f"Cannot subtract unit {self.__unit} and {s.__unit}")
+                    raise TypeError(f"Cannot subtract unit {self.__unit} and unit {s.__unit}")
                 return UnitValue(self.__system, self.__dimension, self.__unit, self.value - s.value)
             self.convert_base_metric()
             s.convert_base_metric()
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value - s.value)
-        if isinstance(s, (int, float)):
-            warnings.warn("Subtracting value with dimensions by dimensionless value, thus assumed same dimension")
-            return UnitValue(self.__system, self.__dimension, self.__unit, self.value - s)   
+        elif isinstance(s, (int, float, np.ndarray)):
+            return UnitValue(self.__system, self.__dimension, self.__unit, self.value - s) 
+        else: 
+            return NotImplemented
         
-    def __rsub__(self, s):
-        """
-        Subtracts another Unitvlue or dimensionless value by UnitValue object.
-        """
-        if isinstance(s, UnitValue):
-            if self.__dimension != s.__dimension:
-                if self.__unit != s.__unit:
-                    raise TypeError(f"Cannot subtract unit {self.__unit} and {s.__unit}")
-                return UnitValue(self.__system, self.__dimension, self.__unit, s.value - self.value)
-            self.convert_base_metric()
-            s.convert_base_metric()
-            return UnitValue(self.__system, self.__dimension, self.__unit, s.value - self.value)
-        if isinstance(s, (int, float)):
-            warnings.warn("Subtracting dimensionless value by value with dimensions, thus assumed same dimension")
-            return UnitValue(self.__system, self.__dimension, self.__unit, s - self.value) 
+    def __rsub__(self, s)  -> 'UnitValue':
+        return -self.__sub__(s)
+
+    def __neg__(self):
+        return UnitValue(self.__system, self.__dimension, self.__unit, -self.value)
 
     def __abs__(self):
         """
@@ -531,7 +581,7 @@ class UnitValue:
     def __int__(self) -> int:
         return int(self.value)
     
-    def __round__(self, ndigits: int=0):
+    def __round__(self, ndigits: int=0)  -> 'UnitValue':
         """
         Rounds UnitValue to ndigts returns rounded Unitvale
         """
@@ -544,8 +594,24 @@ class UnitValue:
     def __str__(self) -> str:
         return f"{self.value} {self.__unit}"
     
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """
+        Handle NumPy ufunc (universal function) operations for UnitValue objects.
+        """
+        out = kwargs.get('out', ())
+        inputs = [i.value if isinstance(i, UnitValue) else i for i in inputs]
+        
+        result = getattr(ufunc, method)(*inputs, **kwargs)
+        
+        if method == 'reduce':
+            return UnitValue(self.__system, self.__dimension, self.__unit, result)
+        elif method == 'outer':
+            return np.vectorize(lambda x: UnitValue(self.__system, self.__dimension, self.__unit, x))(result)
+        else:
+            return UnitValue(self.__system, self.__dimension, self.__unit, result)
+    
     def __convert_system(self, unit: str = "") -> None:
-        self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
+        self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] 
         self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
         
         if unit:
@@ -564,17 +630,17 @@ class UnitValue:
         
     def __convert_unit(self, unit: str) -> None:
         if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
-            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
+            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit]
             self.value /= UnitValue.UNITS[self.__system][self.__dimension][unit] 
             self.__unit = unit
         else:
             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
 
-    def __cpy(self):
+    def __cpy(self)  -> 'UnitValue':
         return UnitValue(self.__system, self.__dimension, self.__unit, self.value)
     
     def __temperature_handler(self, old_unit: str, new_unit: str): # add Rankine
-        if new_unit == "k":
+        if new_unit == "K":
             if old_unit == "c":
                 self.value += 273.15
             elif old_unit == "f":
@@ -582,14 +648,14 @@ class UnitValue:
             elif old_unit == "R":
                 self.value *= 5/9
         elif new_unit == "c":
-            if old_unit == "k":
+            if old_unit == "K":
                 self.value -= 273.15
             elif old_unit == "f":
                 self.value = (self.value - 32) * (5/9)
             elif old_unit == "R":
                 self.value = (self.value - 491.67) * (5/9)
         elif new_unit == "f":
-            if old_unit == "k":
+            if old_unit == "K":
                 self.value = ((self.value -273.15) / (5/9)) + 32
             elif old_unit == "c":
                 self.value = (self.value / (5/9)) + 32 
@@ -600,7 +666,7 @@ class UnitValue:
                 self.value = self.value * (9/5) + 491.67
             elif old_unit == "f":
                 self.value += 459.67
-            elif old_unit == "k":
+            elif old_unit == "K":
                 self.value *= 1.8
         
     def __convert_temp(self, change_system: bool, unit: str=""):
@@ -620,7 +686,7 @@ class UnitValue:
         else:
             raise Exception("No conversion performed as change_system was false and unit was empty")
 
-    def convert_base_metric(self):
+    def convert_base_metric(self) -> 'UnitValue':
         """
         Convert the current value to it's base SI/Metric unit.
         
@@ -630,16 +696,16 @@ class UnitValue:
         if self.__system is None:
             return
         elif self.__dimension != "TEMPERATURE":
-            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] # converts back to base metric unit
+            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] 
             self.__system = "METRIC"
             self.__unit = list(UnitValue.UNITS[self.__system][self.__dimension].keys())[0]
         else:
-            self.__temperature_handler(self.__unit, "k")
+            self.__temperature_handler(self.__unit, "K")
             self.__system = "METRIC"
-            self.__unit = "k"
+            self.__unit = "K"
         return self
     
-    def to(self, unit:str):
+    def to(self, unit:str) -> 'UnitValue':
         """
         Convert the current value to a new unit.
 
@@ -652,24 +718,48 @@ class UnitValue:
         Raises:
             Exception: If the unit is not recognized or conversion is not possible.
         """
-        for u, spellings in UnitValue.SPELLING.items():
-            if unit in spellings:
-                unit = u
-                break
+        u = UnitValue.SPELLING_MAP.get(unit)
+        if u: unit  = u
 
+        cache_key = (self.__system, self.__dimension, self.__unit, unit)
+        if cache_key in self._conversion_cache:
+            cached_value = self._conversion_cache[cache_key]
+            return UnitValue(self.__system, self.__dimension, unit, cached_value)
+
+        other_system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
         if self.__system is None:
             raise Exception(f"Invalid unit {self.__unit}: this unit is not currently supported by the module")
         elif self.__dimension == "TEMPERATURE":
             if unit in UnitValue.UNITS[self.__system][self.__dimension]:
                 self.__convert_temp(False, unit)
-            else:
+            elif unit in UnitValue.UNITS[other_system][self.__dimension]:
                 self.__convert_temp(True, unit) 
+            else:
+                raise TypeError(f"Cannot convert unit of dimension {self.__dimension} to {unit}")
         else:
             if unit in UnitValue.UNITS[self.__system][self.__dimension]:
                 self.__convert_unit(unit)
-            else:
+            elif unit in UnitValue.UNITS[other_system][self.__dimension]:
                 self.__convert_system(unit)
+            else:
+                raise TypeError(f"Cannot convert unit of dimension {self.__dimension} to {unit}")
+        
+        self._conversion_cache[cache_key] = self.value
         return self
+
+    def to_dict(self) -> dict:
+        """
+        Convert the UnitValue object to a dictionary.
+        
+        Returns:
+            dict: A dictionary representation of the UnitValue object.
+        """
+        return {
+            'system': self.__system,
+            'dimension': self.__dimension,
+            'unit': self.__unit,
+            'value': self.value
+        }
 
     @property
     def get_unit(self) -> str:
@@ -683,26 +773,15 @@ class UnitValue:
     def get_system(self) -> str:
         return self.__system
 
+if __name__ == "__main__":
+    length1 = UnitValue.create_unit("metre", 10)
+    length2 = UnitValue("METRIC", "DISTANCE", "m", 20)
 
-def create_dimensioned_quantity(unit: str, value: float=0) -> UnitValue:
-    """
-    Create a UnitValue object based on the unit and value. Will also account for speeling mistakes/alternate names of units.
+    # Perform vectorized operations
+    array1 = np.array([length1, length2])
+    array2 = np.array([length2, length1])
 
-    Args:
-        unit (str): The unit of the value.
-        value (float): The numerical value.
-    
-    Returns:
-        UnitValue: A UnitValue object with the specified unit and value.
-    """
-    for u, spellings in UnitValue.SPELLING.items():
-        if unit in spellings:
-            unit = u
-            break
-        
-    for system, dimensions in UnitValue.UNITS.items():
-        for dimension, units in dimensions.items():
-            if unit in units:
-                return UnitValue(system, dimension, unit, value)
-    warnings.warn("Creating unit not recongized by module") 
-    return UnitValue(None, None, unit, value)
+    print(array1 * 10)
+    t = UnitValue.unit_from_string('5 s')
+    print(array2 * t)
+    print(t * array2)

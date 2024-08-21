@@ -1,10 +1,12 @@
 
+from math import pi
+
 from ..components.componentClass import ComponentClass
 from ..pressureSystem.PressureSystem import PressureSystem
 from ..fluids.Fluid import Fluid
 from ..utilities.units import UnitValue
+from ..state.State import *
 
-from math import pi
 
 # chnage this for later
 class MassFlowInlet(ComponentClass):
@@ -26,7 +28,12 @@ class MassFlowInlet(ComponentClass):
     def initialize(self):
         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.rho, u=self.u, p=self.p)
 
-    def eval(self)->list:
-        res1 = (self.p - self.interface_out.state.p) / self.interface_out.state.p
-        res2 = (self.T - self.interface_out.state.T) / self.interface_out.state.T
+    def eval(self, new_states: tuple[State, State]|None=None)->list:
+        if new_states is None:
+            state_out = self.interface_out.state
+        else:
+            state_out = new_states[1]
+
+        res1 = (self.p - state_out.p) / state_out.p
+        res2 = (self.T - state_out.T) / state_out.T
         return [res1, res2]

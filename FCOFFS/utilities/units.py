@@ -48,7 +48,7 @@ class UnitValue:
                          "DENSITY": {"kg/m^3": 1, "t/m^3": 1000, "g/m^3": 0.001},
                          "VOLUME": {"m^3": 1, "L": 0.001, "cm^3": 0.000001, "mL": 0.000001, "mm^3": 0.000000001},
                          "AREA": {"m^2": 1, "km^2": 1000000, "cm^2": 0.0001, "mm^2": 0.000001},
-                         "TEMPERATURE": {"k": None, "c": None},
+                         "TEMPERATURE": {"k": None, "c": None}, # change to K
                          "MASS FLOW RATE": {"kg/s": 1, "t/s": 1000, "kg/min": 0.0166667, "g/s": 0.001},
                          "ENERGY": {"kgm^2/s^2": 1, "MJ": 1000000, "kJ": 1000, "Nm": 1, "J": 1, "eV": 1.602177e-19},
                          "TIME": {"s": 1, "h": 3600, "min": 60, "ms": 0.001},

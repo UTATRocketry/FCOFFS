@@ -11,7 +11,7 @@ from ..utilities.units import UnitValue
 
 class PressureSystem:
 
-    def __init__(self, name: str="Pressure System", ref_T: UnitValue=UnitValue("METRIC", "TEMPERATURE", "k", 293.15), ref_p: UnitValue=UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5), transient=[0,0,0]):
+    def __init__(self, name: str="Pressure System", ref_T: UnitValue=UnitValue("METRIC", "TEMPERATURE", "K", 293.15), ref_p: UnitValue=UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5), transient=[0,0,0]):
         self.name = name
         self.w = []            # list of primitives on the nodes
         self.ref_T = ref_T

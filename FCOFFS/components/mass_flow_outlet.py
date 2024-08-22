@@ -26,7 +26,7 @@ class MassFlowOutlet(ComponentClass):
 
     def eval(self, new_states: tuple[State, State]|None=None)->list:
         if new_states is None:
-            state_in = self.interface_out.state
+            state_in = self.interface_in.state
         else:
             state_in = new_states[0]
 

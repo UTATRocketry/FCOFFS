@@ -16,7 +16,7 @@ class Fluid:
 
     def temp(fluid: str, rho: UnitValue, p: UnitValue) -> UnitValue:
         t = PropsSI('T', 'D', rho.value, 'P', p.value, fluid)
-        return UnitValue("METRIC", "TEMPERATURE", "k", t)
+        return UnitValue("METRIC", "TEMPERATURE", "K", t)
 
     def pressure(fluid: str, rho: UnitValue, T: UnitValue) -> UnitValue:
         p = PropsSI('P', 'D', rho.value, 'T', T.value, fluid)

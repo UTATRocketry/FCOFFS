@@ -323,10 +323,13 @@ class UnitValue:
                 return self.value * m.value
                     
             return UnitValue(None, None, new_unit, self.value * m.value)
-        elif isinstance(m, (int, float, np.ndarray)):
+        elif isinstance(m, (int, float)):
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value * m)
         else:
-            return NotImplemented
+            try: 
+                return self * float(m) # checking if whatever the type is if it can be converted to float and then used 
+            except:
+                return NotImplemented
             
     def __rmul__(self, m) -> 'UnitValue':
         return self.__mul__(m)
@@ -365,10 +368,13 @@ class UnitValue:
                 return self.value / d.value
                     
             return UnitValue(None, None, new_unit, self.value / d.value)
-        elif isinstance(d, (int, float, np.ndarray)):
+        elif isinstance(d, (int, float)):
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value / d)
         else:
-            return NotImplemented
+            try: 
+                return self / float(d) 
+            except:
+                return NotImplemented
         
     def __rtruediv__(self, d) -> 'UnitValue':
         """
@@ -404,7 +410,7 @@ class UnitValue:
                 return d.value / self.value
                     
             return UnitValue(None, None, new_unit, d.value / self.value)
-        elif isinstance(d, (int, float, np.ndarray)):
+        elif isinstance(d, (int, float)):
             
             units = {}
             self.__process_unit(self.__unit, units, -1)
@@ -429,7 +435,10 @@ class UnitValue:
             new_unit = numer + denom
             return UnitValue(None, None, new_unit, d / self.value)
         else:
-            return NotImplemented
+            try: 
+                return  float(d) / self
+            except:
+                return NotImplemented
 
     def __pow__(self, p)  -> 'UnitValue':
         """
@@ -466,7 +475,10 @@ class UnitValue:
             return UnitValue(None, None, new_unit, self.value ** p)
 
         else:
-            raise NotImplementedError(f"Raising to the power with type {type(p)} not supported")
+            try: 
+                return self ** float(p) 
+            except:
+                return NotImplemented
 
     def __add__(self, a)  -> 'UnitValue':
         """
@@ -480,11 +492,14 @@ class UnitValue:
             self.convert_base_metric()
             a.convert_base_metric()
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value + a.value)
-        
-        elif isinstance(a, (int, float, np.ndarray)):
+        elif isinstance(a, (int, float)):
+            warnings.warn("Adding unitless value to quantity with units")
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value + a)
         else:
-            return NotImplemented
+            try: 
+                return self + float(a) 
+            except:
+                return NotImplemented
         
     def __radd__(self, a)  -> 'UnitValue':
         return self.__add__(a)
@@ -501,16 +516,36 @@ class UnitValue:
             self.convert_base_metric()
             s.convert_base_metric()
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value - s.value)
-        elif isinstance(s, (int, float, np.ndarray)):
+        elif isinstance(s, (int, float)):
+            warnings.warn("Subtracting unitless value to quantity with units")
             return UnitValue(self.__system, self.__dimension, self.__unit, self.value - s) 
-        else: 
-            return NotImplemented
+        else:
+            try: 
+                return self - float(s) 
+            except:
+                return NotImplemented
         
     def __rsub__(self, s)  -> 'UnitValue':
         return -self.__sub__(s)
 
     def __neg__(self):
         return UnitValue(self.__system, self.__dimension, self.__unit, -self.value)
+    
+    def __mod__(self, other) -> int:
+        if isinstance(other, UnitValue):
+            return self.value % other.value
+        elif isinstance(other, (int, float)):
+            return self.value % other
+        else:
+            return NotImplemented
+        
+    def __rmod__(self, other) -> int:
+        if isinstance(other, UnitValue):
+            return  other.value % self.value
+        elif isinstance(other, (int, float)):
+            return other % self.value
+        else:
+            return NotImplemented
 
     def __abs__(self):
         """
@@ -599,17 +634,47 @@ class UnitValue:
         Handle NumPy ufunc (universal function) operations for UnitValue objects.
         """
         out = kwargs.get('out', ())
-        inputs = [i.value if isinstance(i, UnitValue) else i for i in inputs]
         
-        result = getattr(ufunc, method)(*inputs, **kwargs)
-        
-        if method == 'reduce':
-            return UnitValue(self.__system, self.__dimension, self.__unit, result)
-        elif method == 'outer':
-            return np.vectorize(lambda x: UnitValue(self.__system, self.__dimension, self.__unit, x))(result)
-        else:
-            return UnitValue(self.__system, self.__dimension, self.__unit, result)
+        if method == "__call__":
+            if isinstance(inputs[0], np.ndarray):
+                inputs = [inputs[0], inputs[1]]
+                for ind, element in enumerate(inputs[0]):
+                    inputs[0][ind] = ufunc(element, inputs[1], **kwargs)
+                return inputs[0]
+            elif isinstance(inputs[1], np.ndarray):
+                inputs = [inputs[0], inputs[1]]
+                for ind, element in enumerate(inputs[1]):
+                    inputs[1][ind] = ufunc(inputs[0], element, **kwargs)
+                return inputs[1]
+            else:
+                if ufunc == np.add:
+                    return inputs[0] + inputs[1]
+                elif ufunc == np.subtract:
+                    return inputs[0] - inputs[1]
+                elif ufunc == np.multiply:
+                    return inputs[0] * inputs[1]
+                elif ufunc == np.divide:
+                    return inputs[0] / inputs[1]
+                elif ufunc == np.power:
+                    return inputs[0] ** inputs[1]
+                elif ufunc == np.mod:
+                    return inputs[0] % inputs[1]
     
+    def __array_function__(self, func, types, *args, **kwargs):
+        if func is np.concatenate:
+            unit_cache = []
+            for arr in args[0]:
+                unit_cache += [item.get_unit if isinstance(item, UnitValue) else None for item in arr]
+                for i in range(len(arr)):
+                    arr[i] = arr[i].value if isinstance(arr[i], UnitValue) else arr[i]
+            new_array = np.concatenate(args[0], **kwargs)
+            for ind, unit in enumerate(unit_cache):
+                if unit is not None:
+                    new_array[ind] = self.create_unit(unit, new_array[ind])
+            return new_array
+        else:
+            return NotImplemented
+
     def __convert_system(self, unit: str = "") -> None:
         self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] 
         self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
@@ -778,10 +843,11 @@ if __name__ == "__main__":
     length2 = UnitValue("METRIC", "DISTANCE", "m", 20)
 
     # Perform vectorized operations
-    array1 = np.array([length1, length2])
+    array1 = np.array([length1, length2, length2, length1])
     array2 = np.array([length2, length1])
 
-    print(array1 * 10)
     t = UnitValue.unit_from_string('5 s')
-    print(array2 * t)
-    print(t * array2)
+    # print(array1 / t)
+    # print(t * array2)
+    print(np.concatenate(array1, array2))
+    print(np.split(array1, 4))

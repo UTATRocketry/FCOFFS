@@ -119,7 +119,7 @@ class PressureSystem:
                     res += component.eval()
                 if verbose is True:
                     print("Residual = "+str(rms(res)))
-                if queue:
+                if queue is not None:
                     queue.put(rms(res))
                 #print(res)
                 #self.output()

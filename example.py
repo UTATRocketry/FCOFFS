@@ -18,7 +18,7 @@ interface4 = Interface("INTER4")
 interface5 = Interface("INTER5")
 
 
-inlet = pressure_inlet.PressureInlet(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="Inlet", pressure=UnitValue("IMPERIAL", "PRESSURE", "psi", 780), temperature=UnitValue("METRIC", "TEMPERATURE", "k", 295))
+inlet = pressure_inlet.PressureInlet(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="Inlet", pressure=UnitValue("IMPERIAL", "PRESSURE", "psi", 780), temperature=UnitValue("METRIC", "TEMPERATURE", "K", 295))
 pipe1 = pipe.Pipe(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="PIPE1", length=UnitValue("IMPERIAL", "DISTANCE", "in", 72))
 bend1 = pipe.Pipe(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="BEND1", length=UnitValue("IMPERIAL", "DISTANCE", "in", 2))
 pipe2 = pipe.Pipe(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="PIPE2", length=UnitValue("IMPERIAL", "DISTANCE", "in", 72))

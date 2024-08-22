@@ -647,6 +647,8 @@ class UnitValue:
                     inputs[1][ind] = ufunc(inputs[0], element, **kwargs)
                 return inputs[1]
             else:
+                if isinstance(inputs[0], (np.float64, np.int64)):
+                    inputs = [float(inputs[0]), inputs[1]]
                 if ufunc == np.add:
                     return inputs[0] + inputs[1]
                 elif ufunc == np.subtract:
@@ -842,11 +844,14 @@ if __name__ == "__main__":
     length1 = UnitValue.create_unit("metre", 10)
     length2 = UnitValue("METRIC", "DISTANCE", "m", 20)
 
+    
+
     # Perform vectorized operations
     array1 = np.array([length1, length2, length2, length1])
     array2 = np.array([length2, length1])
 
     t = UnitValue.unit_from_string('5 s')
+    print(0.742 * t)
     # print(array1 / t)
     # print(t * array2)
     print(np.concatenate(array1, array2))

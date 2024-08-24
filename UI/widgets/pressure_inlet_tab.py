@@ -57,10 +57,10 @@ class PressureInletTab(ComponentTab):
             self.component.name = name
             self.Master.components_tabview.set(name)
         self.component.fluid = self.fluid_opt.get()
-        self.component.diameter = self.diameter.unit.convert_base_metric()
-        self.component.p = self.pressure.unit.convert_base_metric()
-        self.component.T = self.temperature.unit.convert_base_metric()
-        self.component.rho = Fluid.Fluid.density(self.fluid_opt.get(), self.temperature.unit.convert_base_metric(), self.pressure.unit.convert_base_metric())
+        self.component.diameter = self.diameter.unit().convert_base_metric()
+        self.component.p = self.pressure.unit().convert_base_metric()
+        self.component.T = self.temperature.unit().convert_base_metric()
+        self.component.rho = Fluid.Fluid.density(self.fluid_opt.get(), self.temperature.unit().convert_base_metric(), self.pressure.unit().convert_base_metric())
         self.Master.write_to_display(f"\nSet new parameters for component: {self.component.name} \n")
         self.Master.PS.initialized = False
 

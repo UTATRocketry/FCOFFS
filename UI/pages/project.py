@@ -113,8 +113,8 @@ class ProjectPage(CTkFrame):
         self.display_text.grid(row=2, rowspan=2, column=1, columnspan=4, padx=5, pady=5, sticky="nsew")
 
     def set_ps_reference(self):
-        self.PS.ref_p = self.reference_pressure.unit.convert_base_metric()
-        self.PS.ref_T = self.reference_temperature.unit.convert_base_metric()
+        self.PS.ref_p = self.reference_pressure.unit().convert_base_metric()
+        self.PS.ref_T = self.reference_temperature.unit().convert_base_metric()
         self.write_to_display(f"\nUpdated System References: Pressure = {self.PS.ref_p}, Temperature = {self.PS.ref_T}\n")
 
     def add_component(self) -> None:

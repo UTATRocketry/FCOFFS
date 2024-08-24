@@ -22,7 +22,12 @@ class PressureRegulator(ComponentClass):
         mdot_in = state_in.rho * state_in.area * state_in.u
         mdot_out = state_out.rho * state_out.area * state_out.u
         res1 = (self.flow_curve.y(state_in.u * state_in.area) - state_out.p ) / state_out.p 
-        res2 = (state_in.u - state_out.u) / state_out.u # or maybe = (v_out^2 - v_in^2) / (2 * v_in^2)
+        # (curve(p, q) - statr_out.p) / state_out.p
+        # (u_in*rho_in*area - u_out*rho_out*area) / u_out*rho_out*area
         res3 = (mdot_out - mdot_in) / mdot_in
+
+        res2 = (state_in.u - state_out.u) / state_out.u # or maybe = (v_out^2 - v_in^2) / (2 * v_in^2)
+        # (h_out - H_in + 1/2((v_out^2 - v_in^2))) / 
+        
         return [res1, res2, res3]
 

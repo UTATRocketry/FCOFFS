@@ -60,10 +60,10 @@ class InjectorTab(ComponentTab):
             self.component.name = name
             self.Master.components_tabview.set(name)
         self.component.fluid = self.fluid_opt.get()
-        self.component.diameter = self.diameter_hole.unit.convert_base_metric()
-        self.component.diameter_hole = self.diameter_hole.unit.convert_base_metric()
-        self.component.diameter_in = self.diameter_in.unit.convert_base_metric()
-        self.component.diameter_out = self.diameter_out.unit.convert_base_metric()
+        self.component.diameter = self.diameter_hole.unit().convert_base_metric()
+        self.component.diameter_hole = self.diameter_hole.unit().convert_base_metric()
+        self.component.diameter_in = self.diameter_in.unit().convert_base_metric()
+        self.component.diameter_out = self.diameter_out.unit().convert_base_metric()
         try:
             self.component.num_hole = int(self.num_holes.get())
         except:

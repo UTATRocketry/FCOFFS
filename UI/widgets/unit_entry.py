@@ -26,6 +26,7 @@ class UnitEntry(CTkFrame):
         self.unit_opt.grid(row=0, column=1, padx=(0, 10), pady=5)
 
         self.__set(value)
+        self.unit()
 
     def __set(self, value: Any) -> None:
         self.value_ent.delete(0, END)
@@ -47,18 +48,33 @@ class UnitEntry(CTkFrame):
         else:
             self.unit_opt.set(choice)
 
-    @property
     def unit(self) -> units.UnitValue:
         try:
             if self.unit_opt.get() in units.UnitValue.UNITS["METRIC"][self.dimension]:
                 self.cur_unit = units.UnitValue("METRIC", self.dimension, self.unit_opt.get(), float(self.value_ent.get()))
             else:
                 self.cur_unit = units.UnitValue("IMPERIAL", self.dimension, self.unit_opt.get(), float(self.value_ent.get()))
-        except:
-            gui_error("Invalid Input Value, Must be a number, not a string")
+        except Exception as e:
+            gui_error(f"Invalid Input Value, Must be a number, not a string| {e}")
             return units.UnitValue(None, None, "", 0)
         return self.cur_unit
         
   
+if __name__ == "__main__":
 
-        
+    main = CTk()
+    set_appearance_mode('dark') 
+    set_default_color_theme('blue')
+    temp = UnitEntry(main, "DISTANCE", 1)
+    temp.pack(padx=5, pady=5, fill="both", expand=True)
+
+    def update():
+        test = temp.unit()
+
+    but = CTkButton(main, text="set", command=update)
+    but.pack()
+    main.mainloop()
+
+    
+
+

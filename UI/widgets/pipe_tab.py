@@ -68,8 +68,8 @@ class PipeTab(ComponentTab):
             self.component.name = name
             self.Master.components_tabview.set(name)
         self.component.fluid = self.fluid_opt.get()
-        self.component.diameter = self.diameter.unit.convert_base_metric()
-        self.component.length = self.length.unit.convert_base_metric()
+        self.component.diameter = self.diameter.unit().convert_base_metric()
+        self.component.length = self.length.unit().convert_base_metric()
         try:
             if self.known_roughness_var.get() == "No":
                 self.component.epsilon = float(self.epsilon.get())

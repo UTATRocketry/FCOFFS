@@ -840,19 +840,3 @@ class UnitValue:
     def get_system(self) -> str:
         return self.__system
 
-if __name__ == "__main__":
-    length1 = UnitValue.create_unit("metre", 10)
-    length2 = UnitValue("METRIC", "DISTANCE", "m", 20)
-
-    
-
-    # Perform vectorized operations
-    array1 = np.array([length1, length2, length2, length1])
-    array2 = np.array([length2, length1])
-
-    t = UnitValue.unit_from_string('5 s')
-    print(0.742 * t)
-    # print(array1 / t)
-    # print(t * array2)
-    print(np.concatenate(array1, array2))
-    print(np.split(array1, 4))

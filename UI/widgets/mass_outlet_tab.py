@@ -53,8 +53,8 @@ class MassOutletTab(ComponentTab):
             self.component.name = name
             self.Master.components_tabview.set(name)
         self.component.fluid = self.fluid_opt.get()
-        self.component.diameter = self.diameter.unit.convert_base_metric()
-        self.component.mdot = self.mass_flow.unit.convert_base_metric()
+        self.component.diameter = self.diameter.unit().convert_base_metric()
+        self.component.mdot = self.mass_flow.unit().convert_base_metric()
         self.Master.write_to_display(f"\nSet new parameters for component: {self.component.name} \n")
         self.Master.PS.initialized = False
 

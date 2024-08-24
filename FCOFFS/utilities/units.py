@@ -35,7 +35,7 @@ class UnitValue:
                            "ENERGY PER UNIT MASS": {"ft^2/s^2": 0.09290304}, 
                            "MASS PER UNIT LENGTH": {"lb/ft": 1.48816, "oz/in": 1.11612},
                            "MASS PER AREA": {"lb/ft^2": 4.88243},
-                           "VOLUMETRIC FLOW RATE": {"ft^3/s": 0.0283168, "gal/s": 0.00378541},
+                           "VOLUMETRIC FLOW RATE": {"ft^3/s": 0.0283168, "gal/s": 0.00378541, "ft^3/min": 0.000471947},
                            "DYNAMIC VISCOCITY": {"lb/fts": 1.488163943568},
                            "KINEMATIC VISCOCITY": {"ft^2/s": 0.092903},
                            "MASS FLUX": {"lb/ft^2s": 4.88243} 

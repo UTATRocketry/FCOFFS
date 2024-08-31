@@ -6,7 +6,7 @@ Typically used units are supported and more can be added upon request or in your
 import warnings
 import numpy as np
 
-class UnitValue: 
+class UnitValue: # add specific heat
     """
     Represents a value with dimension/units.
 
@@ -26,7 +26,7 @@ class UnitValue:
                            "AREA": {"in^2": 0.00064516, "mi^2": 2590000, "yd^2": 0.836127, "ft^2": 0.092903},
                            "TEMPERATURE": {"f": None, "R":None},
                            "MASS FLOW RATE": {"lb/s": 0.453592, "ton/s": 907.1847, "st/s": 6.35029, "oz": 0.0283495, "lb/min": 0.00755987},
-                           "ENERGY": {"ftlb": 1.35582, "kcal": 4184, "cal": 4.184},
+                           "ENERGY": {"BTU": 1055.05585, "ftlb": 1.35582, "kcal": 4184, "cal": 4.184},
                            "TIME": {"s": 1, "h": 3600, "min": 60, "ms": 0.001},
                            "MOMENTUM": {"slugft/s": 4.449670915354, "lbft/s": 0.1383}, 
                            "FREQUENCY": {"rpm": 0.016667},
@@ -38,7 +38,8 @@ class UnitValue:
                            "VOLUMETRIC FLOW RATE": {"ft^3/s": 0.0283168, "gal/s": 0.00378541, "ft^3/min": 0.000471947},
                            "DYNAMIC VISCOCITY": {"lb/fts": 1.488163943568},
                            "KINEMATIC VISCOCITY": {"ft^2/s": 0.092903},
-                           "MASS FLUX": {"lb/ft^2s": 4.88243} 
+                           "MASS FLUX": {"lb/ft^2s": 4.88243},
+                           "SPECIFIC HEAT": {"BTU/lbf": 4186.8000000087}
                          }, 
              "METRIC": {
                          "DISTANCE": {"m": 1, "km": 1000, "cm": 0.01, "mm": 0.001}, 
@@ -62,7 +63,8 @@ class UnitValue:
                          "VOLUMETRIC FLOW RATE": {"m^3/s": 1, "cm^3/s": 0.000001},
                          "DYNAMIC VISCOCITY": {"kg/ms": 1, "g/cms":0.1},
                          "KINEMATIC VISCOCITY": {"m^2/s": 1, "cm^2/s": 0.0001},
-                         "MASS FLUX": {"kg/m^2s": 1}
+                         "MASS FLUX": {"kg/m^2s": 1},
+                         "SPECIFIC HEAT": {"m^2/s^2K": 1, "J/kgK": 1, "J/kgc": 1}
                         }
             }
     

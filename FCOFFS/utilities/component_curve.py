@@ -11,7 +11,7 @@ class ComponentCurve: # How to make data striclty increasing or decreasing? Mayb
 
     ALLOWED_METHODS = ['linear', 'nearest', 'cubic']
 
-    def __init__(self, data_filepath: str, interpolation_method: str = 'linear') -> None:
+    def __init__(self, data_filepath: str, interpolation_method: str = 'linear') -> None: #user define dimension of inputs #Spline
         '''
         Initializes a curve for a componeent given a dat file csv. Note it is expected that the xdata is in the first column and the ydata is in the second column
 
@@ -36,53 +36,30 @@ class ComponentCurve: # How to make data striclty increasing or decreasing? Mayb
         '''
         if not os.path.exists(filepath):
             raise FileExistsError(f"Filepath {filepath} doesn't exist")
-        
-        self.__inputs = []
-        self.__units = []
-        self.__output_values = []
-        data = pd.read_csv(filepath).to_numpy()
-        
-        self.__output_ind = None
-        try: # Allows output column to be anywhere in csv
-            for ind, string in enumerate(data[0]):
-                if string.lower() == "input":
-                    self.__inputs.append([])
-                elif string.lower() == "output":
-                    if self.__output_ind is None:
-                        self.__output_ind = ind
-                    else:
-                        raise Exception("To many outputs must only be one")
-            for unit in data[1]:
-                self.__units.append(unit)
+
+        try:
+            self.__output_values = pd.read_csv(filepath, usecols= ["Output"]).to_numpy() # extract output column and then delete
+            self.__output_unit = self.__output_values[0][0]
+            self.__output_values = np.delete(self.__output_values, 0)
+            self.__points = pd.read_csv(filepath) #extract everything and manually drop the Output column so only the Input columns remain  
+            self.__points.drop("Output", axis=1, inplace=True)
+            self.__points = self.__points.to_numpy()
+            self.__input_units = self.__points[0]
+            self.__points = np.delete(self.__points, 0, axis=0) 
         except Exception as e:
             raise Exception(f"CSV provided does not follow expected format. First row should indicate input or output, second row should indicate units, and the rest is data. | {e}")
-
-        for point in data[2:]:
-            input_ind = 0
-            for ind, val in enumerate(point):
-                if ind == self.__output_ind:
-                    self.__output_values.append(UnitValue.create_unit(self.__units[ind], float(val)).convert_base_metric())
-                else:
-                    self.__inputs[input_ind].append(UnitValue.create_unit(self.__units[ind], float(val)).convert_base_metric())
-                    input_ind += 1
-            
-        for i in range(len(self.__inputs) - 1):
-            if len(self.__inputs[i]) != len(self.__inputs[i+1]):
-                raise IndexError("X and Y axes are not the same size")
         
-        self.__points = []
-        for i in range(len(self.__inputs[0])):
-            point = []
-            for input in self.__inputs:
-                point.append(input[i])
-            self.__points.append(point)
-
+        for i in range(len(self.__points) - 1):
+            if len(self.__points[i]) != len(self.__points[i+1]):
+                raise IndexError("Inputs are not the same size")
+        
         if self.__method == "linear":
             self.Interpolator = LinearNDInterpolator(self.__points, self.__output_values)  
         elif self.__method == "nearest":
-            NearestNDInterpolator(self.__points, self.__output_values)
+            self.Interpolator = NearestNDInterpolator(self.__points, self.__output_values)
         elif self.__method == "cubic":
-            CloughTocher2DInterpolator(self.__points, self.__output_values) 
+             self.Interpolator = CloughTocher2DInterpolator(self.__points, self.__output_values) 
+
 
     def set_method(self, interpolation_method: str) -> None: 
         '''
@@ -99,16 +76,15 @@ class ComponentCurve: # How to make data striclty increasing or decreasing? Mayb
         elif self.__method == "cubic":
             CloughTocher2DInterpolator(self.__points, self.__output_values)
         
-    def __call__(self, inputs: tuple) -> UnitValue: # could make this work with multiple inputs at once but don't see the need
+    def __call__(self, inputs: list[UnitValue]) -> UnitValue: # could make this work with multiple inputs at once but don't see the need
         '''
         Returns interpolated output value for given inputs
         '''
-        if len(inputs) != len(self.__inputs):
+        if len(inputs) != len(self.__points[0]):
             raise IndexError(f"Incorrect number of inputs, should be: {len(self.inputs)}")
-        for ind, input in enumerate(self.__inputs):
-            if inputs[ind] < min(input) or inputs[ind] > max(input):
-                warnings.warn("Asking for value outside of provided data range")
-        return UnitValue.create_unit(self.__units[self.__output_ind], self.Interpolator(inputs)[0])
+        for ind, input in enumerate(inputs):
+            input.to(self.__input_units[ind])
+        return UnitValue.create_unit(self.__output_unit, self.Interpolator(inputs)[0])
     
     @property
     def points(self) -> list:
@@ -124,5 +100,5 @@ class ComponentCurve: # How to make data striclty increasing or decreasing? Mayb
 
 if __name__ == "__main__": 
     curve = ComponentCurve(os.path.join(os.getcwd(), 'FCOFFS', 'utilities', 'test.csv'))
-    print(curve([172369, 3447380, 0.002]))
+    print(curve([UnitValue.create_unit("psi", 25), UnitValue.create_unit("psi", 500), UnitValue.create_unit("ft^3/min", 0.02001990592322454)]))
     

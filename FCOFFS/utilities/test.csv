@@ -1,4 +1,3 @@
-P_set, P_In, Q, P_out
 Input,Input,Input,Output
 psi,psi,ft^3/min,psi
 25, 500, 0.02001990592322454, 25.271739107899947

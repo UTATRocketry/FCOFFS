@@ -40,7 +40,13 @@ class TwoPhaseTank(ComponentClass):
         elif self.volume_liquid <= self.aft_dome_volume and self.volume_liquid > 0:
             self.fluid_height = (self.volume_liquid/(2/3 * pi))**(1/3)
             #fluid remaining only exists in aft dome section 
-
+        
+        elif self.volume_liquid > self.volume_of_tank:
+            raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
+        
+        elif self.volume_liquid == self.volume_of_tank:
+            self.fluid_height = self.height_of_tank
+            
         else:
             raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
 

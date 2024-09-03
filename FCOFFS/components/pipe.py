@@ -20,7 +20,7 @@ class Pipe(ComponentClass):
     #                  calculated from epsilon if not specified
     # epsilon [m]:     roughness of the pipe internal wall, a function of
     #                  material
-    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, name: str=None, length: UnitValue=0, roughness: float|None=None, epsilon: float|None=None):
+    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, name: str=None, length: UnitValue= UnitValue.create_unit("m", 1), roughness: float|None=None, epsilon: float|None=None):
         super().__init__(parent_system, diameter, fluid, name)
         self.length = length
         self.length.convert_base_metric()

@@ -5,7 +5,7 @@ from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, Cloug
 import os
 import warnings
 
-from units import UnitValue
+from FCOFFS.utilities.units import UnitValue
 
 class ComponentCurve: # How to make data striclty increasing or decreasing? Maybe have user enter number of dimensions
 

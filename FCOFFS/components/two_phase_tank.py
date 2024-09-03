@@ -28,8 +28,8 @@ class TwoPhaseTank(ComponentClass):
         self.volume_liquid = mass_of_liquid / liquid_density 
 
                
-
-        self.fluid_height = 
+        #These need to be set
+        self.fluid_height = None
         self.pressure = None  
         self.temperature = None  
 
@@ -37,7 +37,7 @@ class TwoPhaseTank(ComponentClass):
         self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.fluid)
         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
 
-     def eval(self, new_states: tuple[State, State]|None=None) -> list:
+    def eval(self, new_states: tuple[State, State]|None=None) -> list:
         if new_states is None:
             state_in = self.interface_in.state
             state_out = self.interface_out.state
@@ -46,6 +46,13 @@ class TwoPhaseTank(ComponentClass):
             state_out = new_states[1]
 
         res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / 1/2(state_in.mdot / state_in.rho + state_out.mdot / state_out.rho)
+
+        # Wait for Liam
+        # Set heiht of inlet as reference
+        # P_in + 1/2 * rho_in * v_in ** 2 + rho_in * g * 0 = P_int + 1/2 * rho_in * v_int ** 2 + rho_in * g * (tank_heigh - liquid height)
+        bernoulli__const = state_in.p + 1/2 * state_in.rho * state_in.u ** 2
+        
+
         res2 = None
         res3 = None
 

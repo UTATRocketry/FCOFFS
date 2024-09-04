@@ -5,8 +5,7 @@ from scipy.interpolate import interp1d, RegularGridInterpolator, LinearNDInterpo
 import warnings
 import os
 
-#from FCOFFS.utilities.units import UnitValue
-from unitvalue import UnitValue
+from FCOFFS.utilities.units import UnitValue
 
 class ComponentCurve: # How to make data striclty increasing or decreasing, write algo 
 

@@ -11,7 +11,7 @@ class PressureRegulator(ComponentClass):
         super().__init__(parent_system, diameter, fluid, name)
 
         self.set_pressure = set_pressure.convert_base_metric()
-        self.flow_curve = ComponentCurve(flow_curve_filename, method)
+        self.flow_curve = ComponentCurve(flow_curve_filename, False, method)
 
     def eval(self, new_states: tuple[State, State] | None = None) -> list:
         if new_states is None:
@@ -21,7 +21,8 @@ class PressureRegulator(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
 
-        res1 = (self.flow_curve([self.set_pressure, state_in.p, state_in.u * state_in.area]) - state_out.p ) / state_out.p 
+        curve_res = self.flow_curve([self.set_pressure, state_in.p, state_in.u * state_in.area])
+        res1 = (curve_res - state_out.p) / state_out.p 
         # (curve(p, p, Q) - state_out.p) / state_out.p
         
         res2 = (state_out.mdot - state_in.mdot) / state_in.mdot

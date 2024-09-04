@@ -560,8 +560,8 @@ class UnitValue: # add specific heat
         Checks if UnitValue object is equal to other.
         """
         if isinstance(other, UnitValue):
-            a = self.__cpy().convert_base_metric()
-            b = other.__cpy().convert_base_metric()
+            a = self.copy().convert_base_metric()
+            b = other.copy().convert_base_metric()
             return a.value == b.value and a.__unit == b.__unit
         elif isinstance(other, (int, float)):
             return self.value == other
@@ -569,8 +569,8 @@ class UnitValue: # add specific heat
 
     def __ne__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            a = self.__cpy().convert_base_metric()
-            b = other.__cpy().convert_base_metric()
+            a = self.copy().convert_base_metric()
+            b = other.copy().convert_base_metric()
             return a.value != b.value and a.__unit != b.__unit
         elif isinstance(other, (int, float)):
             return self.value != other
@@ -578,8 +578,8 @@ class UnitValue: # add specific heat
     
     def __lt__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            a = self.__cpy().convert_base_metric()
-            b = other.__cpy().convert_base_metric()
+            a = self.copy().convert_base_metric()
+            b = other.copy().convert_base_metric()
             return a.value < b.value
         elif isinstance(other, (int, float)):
             return self.value < other
@@ -587,8 +587,8 @@ class UnitValue: # add specific heat
     
     def __le__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            a = self.__cpy().convert_base_metric()
-            b = other.__cpy().convert_base_metric()
+            a = self.copy().convert_base_metric()
+            b = other.copy().convert_base_metric()
             return a.value <= b.value
         elif isinstance(other, (int, float)):
             return self.value <= other
@@ -596,8 +596,8 @@ class UnitValue: # add specific heat
     
     def __gt__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            a = self.__cpy().convert_base_metric()
-            b = other.__cpy().convert_base_metric()
+            a = self.copy().convert_base_metric()
+            b = other.copy().convert_base_metric()
             return a.value > b.value
         elif isinstance(other, (int, float)):
             return self.value > other
@@ -605,8 +605,8 @@ class UnitValue: # add specific heat
     
     def __ge__(self, other) -> bool:
         if isinstance(other, UnitValue):
-            a = self.__cpy().convert_base_metric()
-            b = other.__cpy().convert_base_metric()
+            a = self.copy().convert_base_metric()
+            b = other.copy().convert_base_metric()
             return a.value >= b.value
         elif isinstance(other, (int, float)):
             return self.value >= other
@@ -643,7 +643,7 @@ class UnitValue: # add specific heat
                 for ind, element in enumerate(inputs[0]):
                     inputs[0][ind] = ufunc(element, inputs[1], **kwargs)
                 return inputs[0]
-            elif isinstance(inputs[1], np.ndarray):
+            elif len(inputs) > 1 and isinstance(inputs[1], np.ndarray):
                 inputs = [inputs[0], inputs[1]]
                 for ind, element in enumerate(inputs[1]):
                     inputs[1][ind] = ufunc(inputs[0], element, **kwargs)
@@ -659,10 +659,16 @@ class UnitValue: # add specific heat
                     return inputs[0] * inputs[1]
                 elif ufunc == np.divide:
                     return inputs[0] / inputs[1]
+                elif ufunc == np.sqrt:
+                    return inputs[0] ** 0.5
                 elif ufunc == np.power:
                     return inputs[0] ** inputs[1]
                 elif ufunc == np.mod:
                     return inputs[0] % inputs[1]
+                elif ufunc == np.log10:
+                    return np.log10(inputs[0].value)
+                else:
+                    return NotImplemented
     
     def __array_function__(self, func, types, *args, **kwargs):
         if func is np.concatenate:
@@ -705,7 +711,7 @@ class UnitValue: # add specific heat
         else:
             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
 
-    def __cpy(self)  -> 'UnitValue':
+    def copy(self)  -> 'UnitValue':
         return UnitValue(self.__system, self.__dimension, self.__unit, self.value)
     
     def __temperature_handler(self, old_unit: str, new_unit: str): # add Rankine

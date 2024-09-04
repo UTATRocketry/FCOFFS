@@ -4,7 +4,7 @@ Description
 
 from CoolProp.CoolProp import PropsSI
 #from ..utilities.units import UnitValue
-from unitvalue import UnitValue
+from FCOFFS.utilities.units import UnitValue
 
 class Fluid:
     supported_fluids = {"N2", "N2O", "C2H6O"} # why is this here
@@ -30,7 +30,7 @@ class Fluid:
     def local_speed_sound(fluid: str, T: UnitValue, rho: UnitValue) -> UnitValue:
         '''For pure and pseudo-pure fluids, two state variables are required to fix the state. The equations of state are based on T
             and ρ as state variables, so T,ρ will always be the fastest inputs. P,T will be a bit slower (3-10 times), WHATTTTTTTTTTTTT'''
-        c_s = PropsSI("A", 'T', T.value , 'Rho', rho.value, fluid)
+        c_s = PropsSI("A", 'T', T.value , 'D', rho.value, fluid)
         return UnitValue("METRIC", "VELOCITY", "m/s", c_s)
 
     def dynamic_viscosity(fluid: str, rho: UnitValue=None, T: UnitValue=None, p: UnitValue=None) -> UnitValue: # Eventuatly we want to calculate this 
@@ -46,4 +46,7 @@ class Fluid:
             rho = Fluid.density(fluid, T, p)
         return Fluid.dynamic_viscosity(fluid, rho, T, p) / rho
     
+if __name__ == "__main__":
+    UnitValue.create_unit("K", 293.15)
+    UnitValue.create_unit("")
 

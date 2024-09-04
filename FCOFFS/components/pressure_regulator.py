@@ -10,7 +10,7 @@ class PressureRegulator(ComponentClass):
     def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, flow_curve_filename: str, set_pressure: UnitValue, method: str = 'linear', name: str = "Pressure_Regulator"):
         super().__init__(parent_system, diameter, fluid, name)
 
-        self.set_pressure = set_pressure
+        self.set_pressure = set_pressure.convert_base_metric()
         self.flow_curve = ComponentCurve(flow_curve_filename, method)
 
     def eval(self, new_states: tuple[State, State] | None = None) -> list:

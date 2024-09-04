@@ -40,8 +40,8 @@ class CriticalOrifice(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
 
-        res1 = (state_out.mdot - state_in.rho*self.diameter_in*state_in.u) / state_out.mdot
-        res2 = (state_out.v - Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)) / Fluid.local_speed_sound(self.fluid, state_out.T , state_out.rho)
+        res1 = (state_out.mdot - state_in.rho*state_in.area*state_in.u) / state_out.mdot
+        res2 = (state_out.u - Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)) / Fluid.local_speed_sound(self.fluid, state_out.T , state_out.rho)
         res3 = (state_out.mdot - 0.532 * pi * self.diameter_in**2/4 * state_in.p * sqrt(1/state_in.T)) / state_out.mdot
         #0.532 applies for air only, should be revised for other gases
         # verify what the optimal two state variable are to input for CoolProps equation of state calculations

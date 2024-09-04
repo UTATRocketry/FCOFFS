@@ -82,9 +82,10 @@ class ComponentCurve: # How to make data striclty increasing or decreasing? Mayb
         '''
         if len(inputs) != len(self.__points[0]):
             raise IndexError(f"Incorrect number of inputs, should be: {len(self.inputs)}")
-        for ind, input in enumerate(inputs):
+        inputs = [input.copy() for input in inputs]
+        for ind, input in enumerate(inputs): 
             input.to(self.__input_units[ind])
-        return UnitValue.create_unit(self.__output_unit, self.Interpolator(inputs)[0])
+        return (UnitValue.create_unit(self.__output_unit, self.Interpolator(inputs)[0])).convert_base_metric()
     
     @property
     def points(self) -> list:

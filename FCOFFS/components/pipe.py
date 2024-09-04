@@ -9,7 +9,7 @@ from ..pressureSystem.PressureSystem import PressureSystem
 from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..fluids.Fluid import Fluid
-from ..utilities.units import *
+from FCOFFS.utilities.units import *
 
 ## Striaght section of the pipe
 class Pipe(ComponentClass):

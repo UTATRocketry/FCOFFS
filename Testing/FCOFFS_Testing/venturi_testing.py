@@ -14,11 +14,11 @@ interface2 = Interface("INTER2")
 interface3 = Interface("INTER3")
 
 
-inlet = pressure_inlet.PressureInlet(PS, UnitValue.create_unit("in", 0.25), "C2H6O", UnitValue.create_unit("psi", 614.7), UnitValue.create_unit("c",25), "pressure_inlet")
+inlet = pressure_inlet.PressureInlet(PS, UnitValue.create_unit("in", 0.25), "C2H6O", UnitValue.create_unit("psi", 600), UnitValue.create_unit("c",25), "pressure_inlet")
 venturi = cavitating_venturi.CavitatingVenturi(PS, UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.096), 0.95, "C2H6O")
 tube = pipe.Pipe(PS, UnitValue.create_unit("in", 0.25), "C2H6O","tube", UnitValue.create_unit("in", 10))
 #injector_manifold = injector.Injector(PS,)
-outlet = pressure_outlet.PressureOutlet(PS, UnitValue.create_unit("in",0.25) , "C2H6O", UnitValue.create_unit("psi", 94.7), "pressure_outlet")
+outlet = pressure_outlet.PressureOutlet(PS, UnitValue.create_unit("in",0.25) , "C2H6O", UnitValue.create_unit("psi", 400), "pressure_outlet")
 
 inlet.set_connection(downstream=interface1)
 venturi.set_connection(interface1, interface2)

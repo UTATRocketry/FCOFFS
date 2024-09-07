@@ -31,7 +31,7 @@ class PressureRegulator(ComponentClass):
         cp_in = Fluid.Cp(self.fluid, state_in.T, state_in.p)
         cp_out = Fluid.Cp(self.fluid, state_out.T, state_out.p)
         
-        # initialize specific energies, and use average of them to normalize the second residual
+        # initialize specific energies, and use average of them to normalize the second residual # double check energy for temperature 
         e1 = cp_in * state_in.T + 1/2 * state_in.u**2
         e2 = cp_out * state_out.T + 1/2 * state_out.u**2
 

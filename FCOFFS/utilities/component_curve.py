@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d, RegularGridInterpolator, LinearNDInterpo
 import warnings
 import os
 
-from FCOFFS.utilities.units import UnitValue
+from units import UnitValue
 
 class ComponentCurve: # How to make data striclty increasing or decreasing, write algo 
 
@@ -46,10 +46,10 @@ class ComponentCurve: # How to make data striclty increasing or decreasing, writ
             raise FileExistsError(f"Filepath {filepath} doesn't exist")
 
         try:
-            self.__output_values = pd.read_csv(filepath, usecols= ["Output"]).to_numpy() # extract output column and then delete
+            self.__output_values = pd.read_csv(filepath, skiprows=2, usecols=["Output"]).to_numpy() # extract output column and then delete
             self.__output_unit = self.__output_values[0][0]
             self.__output_values = np.delete(self.__output_values, 0)
-            self.__points = pd.read_csv(filepath) #extract everything and manually drop the Output column so only the Input columns remain  
+            self.__points = pd.read_csv(filepath, skiprows=2) #extract everything and manually drop the Output column so only the Input columns remain  
             self.__points.drop("Output", axis=1, inplace=True)
             self.__points = self.__points.to_numpy()
             self.__input_units = self.__points[0]
@@ -117,6 +117,6 @@ class ComponentCurve: # How to make data striclty increasing or decreasing, writ
         return self.__method
 
 if __name__ == "__main__": 
-    curve = ComponentCurve(os.path.join(os.getcwd(), 'FCOFFS', 'utilities', 'test.csv'), False)
-    print(curve([UnitValue.create_unit("psi", 25), UnitValue.create_unit("psi", 500), UnitValue.create_unit("ft^3/min", 0.02001990592322454)]))
+    curve = ComponentCurve(os.path.join(os.getcwd(), 'FCOFFS', 'utilities', "Component Data", 'KPF.csv'), False)
+    print(curve([UnitValue.create_unit("psi", 1000), UnitValue.create_unit("psi", 3600), UnitValue.create_unit("ft^3/min", 4)]))
     

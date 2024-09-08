@@ -1,3 +1,5 @@
+Pressure Regulator
+Set Pressure, Inlet Pressure, Flow Rate, Outlet Pressure 
 Input,Input,Input,Output
 psi,psi,ft^3/min,psi
 25, 500, 0.02001990592322454, 25.271739107899947

@@ -1,7 +1,7 @@
 Pressure Regulator KPF FC=1.0 PCP = 0-1000
 Set Pressure, Inlet Pressure, Flow Rate, Outlet Pressure 
 Input,Input,Input,Output
-psi,psi,ft^3/min,psi
+psig,psig,ft^3/min,psig
 1000, 3600, 0, 998.6013932848123
 1000, 3600, 0.04835700726884097, 973.4265924543555
 1000, 3600, 0.09671216990647187, 950.3495816537607

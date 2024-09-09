@@ -2,10 +2,9 @@
 import numpy as np # maybe remove
 import pandas as pd
 from scipy.interpolate import interp1d, RegularGridInterpolator, LinearNDInterpolator, NearestNDInterpolator
-import warnings
 import os
 
-from units import UnitValue
+from FCOFFS.utilities.units import UnitValue
 
 class ComponentCurve: # How to make data striclty increasing or decreasing, write algo 
 
@@ -105,7 +104,7 @@ class ComponentCurve: # How to make data striclty increasing or decreasing, writ
         return self.__points
 
     @property
-    def units(self) -> list:
+    def units(self) -> dict:
         return {"Inputs": [self.__input_units], "Output": self.__output_unit}
     
     @property

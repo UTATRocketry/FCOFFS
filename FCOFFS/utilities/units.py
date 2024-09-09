@@ -6,6 +6,52 @@ Typically used units are supported and more can be added upon request or in your
 import warnings
 import numpy as np
 
+
+class _gauge_conversion():
+    '''
+    This class is used for specifc units which can have guage versus absolute values and facilatest the conversion of these values to absolute or back to gauge. 
+    Mainly useful for pressure. Do not use outside of this file 
+    '''
+    def __init__(self, unit_conversion_to_SI: float|int, conv_to_absolute: float|int) -> None:
+        '''
+        Args:
+        unit_conversion_to_SI (float|int): value to multiply the non gauge unit value by to convert it to the standard SI unit.
+        conv_to_absolute (float|int): value to add to get from gauge to absolute value, note this value must be negative if you subtract to convert to absolute from gauge
+        '''
+        self.__to_SI = unit_conversion_to_SI
+        self.__to_ABSOLUTE = conv_to_absolute
+
+    def __mul__(self, m) -> int|float:
+        '''
+        Used in unit class to convert the unit to SI. Thus converts the guage value to absolute and then SI base unit.
+
+        Args:
+            d : the current value of the gauge unit.
+
+        Returns:
+            float|int : The base SI absolute value of the gauge value
+        '''
+        absolute_value = m + self.__to_ABSOLUTE
+        return absolute_value * self.__to_SI
+    
+    __rmul__ = __mul__
+
+    def __truediv__(self, d):
+        '''
+        Used in unit class to convert to the gauge unit. Thus converts the absolute base SI value to the gauge unit value.
+
+        Args:
+            d : the current value of theabsolute SI unit.
+
+        Returns:
+            float|int : The base SI absolute value of the gauge value
+        '''
+        new_unit_value = d / self.__to_SI
+        return new_unit_value - self.__to_ABSOLUTE
+    
+    __rtruediv__ = __truediv__
+
+
 class UnitValue: # add specific heat
     """
     Represents a value with dimension/units.
@@ -18,7 +64,7 @@ class UnitValue: # add specific heat
     """
     UNITS = {"IMPERIAL": {
                            "DISTANCE": {"in": 0.0254, "mi": 1609.34, "yd": 0.9144, "ft": 0.3048}, 
-                           "PRESSURE": {"psi": 6894.76, "psf": 47.8803}, 
+                           "PRESSURE": {"psi": 6894.76, "psig": _gauge_conversion(6894.76, 14.696), "psf": 47.8803}, 
                            "MASS": {"lb": 0.453592, "ton": 907.1847, "slug": 14.59390, "st": 6.35029, "oz": 0.0283495}, 
                            "VELOCITY": {"ft/s": 0.3048, "mi/s": 1609.34, "mph": 0.44704, "in/s": 0.0254}, 
                            "DENSITY": {"lb/in^3": 27679.9, "lb/ft^3": 16.0185, "lb/yd^3": 0.593276},

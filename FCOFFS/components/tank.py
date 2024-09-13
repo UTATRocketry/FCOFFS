@@ -49,8 +49,7 @@ class TwoPhaseTank(ComponentClass):
             
         else:
             raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
-
-        
+  
         self.pressure = None  
         self.temperature = None  
 
@@ -66,7 +65,7 @@ class TwoPhaseTank(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
 
-        res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / 1/2(state_in.mdot / state_in.rho + state_out.mdot / state_out.rho)
+        res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / 1/2 * (state_in.mdot / state_in.rho + state_out.mdot / state_out.rho)
         res2 = None
         res3 = None
 

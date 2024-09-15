@@ -54,37 +54,55 @@ class Pipe(ComponentClass):
         q_in = state_in.q
         T_in = state_in.T
 
+        phase = Fluid.phase(self.fluid, p=state_in.p, T=state_in.T)
+        c_s = Fluid.local_speed_sound(self.fluid, T = state_in.T, rho=state_in.rho)
+        Mach = state_in.u / c_s
 
-        # find friction factor
-        Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
-        def colebrook(f):
-            return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
-        def haaland(f):
-            return 1/sqrt(f) + 1.8*log10((self.roughness/3.7)**1.11 + 6.9/Re)
-        if Re > 2000:
-            friction_factor = brentq(colebrook, 0.005, 0.1)
+        if phase == "liquid":
+            if Mach < 0.3:
+                compressible = False
+            else:
+                compressible = True      
+        elif phase == "gas":
+            if Mach < 0.3:
+                compressible = False
+            else:
+                compressible = True
         else:
-            friction_factor = 64 / Re
+            raise ValueError("Fluid is not in gas or liquid state")
 
-        # update downstream condition
-        PLC = friction_factor * self.length / self.diameter
-        dp = PLC * q_in
-        p_out = p_in - dp + state_in.rho*9.81*self.height_diference # added height factor
-        rho_out = Fluid.density(self.fluid, T_in, p_out)
-        u_out = mdot / rho_out / state_out.area
-        res1 = (rho_out - state_out.rho)/rho_out
-        res2 = (u_out - state_out.u)/u_out
-        res3 = (p_out - state_out.p)/p_out # add delta_h
+        match compressible:
+            case True: 
+                   
+                # find friction factor
+                Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
+                def colebrook(f):
+                    return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
+                def haaland(f):
+                    return 1/sqrt(f) + 1.8*log10((self.roughness/3.7)**1.11 + 6.9/Re)
+                if Re > 2000:
+                    friction_factor = brentq(colebrook, 0.005, 0.1)
+                else:
+                    friction_factor = 64 / Re
 
+                # update downstream condition
+                PLC = friction_factor * self.length / self.diameter
+                dp = PLC * q_in
+                p_out = p_in - dp + state_in.rho*9.81*self.height_diference # added height factor
+                rho_out = Fluid.density(self.fluid, T_in, p_out)
+                u_out = mdot / rho_out / state_out.area
+                res1 = (rho_out - state_out.rho)/rho_out
+                res2 = (u_out - state_out.u)/u_out
+                res3 = (p_out - state_out.p)/p_out # add delta_h
 
-        #compressible case
+            case False:
 
-        Cp = Fluid.Cp(state_in.T, state_in.p)
+                Cp = Fluid.Cp(state_in.T, state_in.p)
 
-        # mass conservation
-        res1 = (state_in.mdot - state_out.mdot) / 0,5 * (state_in.mdot + state_out.mdot)
-        res2 = (state_in.u**2 - (2*Cp(state_out.T- state_in.T) + 2*9.81*self.height_diference + state_out.u**2)) / 0.5*(Cp(state_out.T- state_in.T) + 9.81*self.height_diference + 0.5(state_in.u**2 + state_out.u**2))
-        res3 = None
+                # mass conservation
+                res1 = (state_in.mdot - state_out.mdot) / 0.5 * (state_in.mdot + state_out.mdot)
+                res2 = (state_in.u**2 - (2*Cp(state_out.T- state_in.T) + 2*9.81*self.height_diference + state_out.u**2)) / 0.5*(Cp(state_out.T - state_in.T) + 9.81*self.height_diference + 0.5(state_in.u**2 + state_out.u**2))
+                res3 = None # look into
 
 
         return [res1, res2, res3]

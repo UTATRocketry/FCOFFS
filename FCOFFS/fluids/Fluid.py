@@ -6,8 +6,9 @@ from CoolProp.CoolProp import PropsSI
 #from ..utilities.units import UnitValue
 from FCOFFS.utilities.units import UnitValue
 
+
 class Fluid:
-    supported_fluids = {"N2", "N2O", "C2H6O"} # why is this here
+    supported_fluids = {"N2", "N2O", "C2H6O"} 
 
     # density [kg/m3]
     # dynamic_viscosity [Pa-s]
@@ -36,6 +37,17 @@ class Fluid:
             and ρ as state variables, so T,ρ will always be the fastest inputs. P,T will be a bit slower (3-10 times), WHATTTTTTTTTTTTT'''
         c_s = PropsSI("A", 'T', T.value , 'D', rho.value, fluid)
         return UnitValue("METRIC", "VELOCITY", "m/s", c_s)
+    
+    def phase(fluid: str, T: UnitValue|None = None, p: UnitValue|None = None, rho: UnitValue|None = None) -> str:
+        indexes = {0.0: "liquid", 2.0: "supercritical gas", 5.0: 'gas', 6.0: "mixed (liquid + vapour)"}
+        if T != None and p != None: 
+            phase_index = PropsSI("Phase", "P", p.value, "T", T.value, fluid)
+        elif T != None and rho != None: 
+            phase_index = PropsSI("Phase", "D", rho.value, "T", T.value, fluid)
+        elif rho != None and p != None: 
+            phase_index = PropsSI("Phase", "P", p.value, "D", rho.value, fluid)
+        
+        return indexes[phase_index]
 
     def dynamic_viscosity(fluid: str, rho: UnitValue=None, T: UnitValue=None, p: UnitValue=None) -> UnitValue: # Eventuatly we want to calculate this 
         if fluid=="N2O":
@@ -51,6 +63,9 @@ class Fluid:
         return Fluid.dynamic_viscosity(fluid, rho, T, p) / rho
     
 if __name__ == "__main__":
-    UnitValue.create_unit("K", 293.15)
-    UnitValue.create_unit("")
+    rho = UnitValue.create_unit("kg/m^3", 500)
+    p = UnitValue.create_unit("MPa", 4)
+    p.convert_base_metric()
+
+    print(Fluid.phase("N2O", rho=rho, p=p))
 

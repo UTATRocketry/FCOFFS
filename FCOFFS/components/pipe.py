@@ -52,6 +52,8 @@ class Pipe(ComponentClass):
         q_in = state_in.q
         T_in = state_in.T
 
+        #state = s
+
         # find friction factor
         Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
         def colebrook(f):

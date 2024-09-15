@@ -2,9 +2,7 @@
 Description
 '''
 
-from numpy import sqrt, pi, log
-from scipy.optimize import fsolve
-from CoolProp.CoolProp import PropsSI
+from numpy import sqrt, pi
 import warnings
 
 from ..pressureSystem.PressureSystem import PressureSystem
@@ -13,15 +11,21 @@ from ..components.componentClass import ComponentClass
 from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 
-class CavitatingVenturri(ComponentClass):
-    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, diameter_out: UnitValue, throat_diameter: UnitValue, Cd: float, fluid: str, name: str='cavitating_venturi'):
-        if fluid not in ['N2O','CO2']:
+class CavitatingVenturi(ComponentClass):
+
+    FLUID_CDS = {"N2O": 0.95, "CO2": 0.95, "C2H6O": 0.95}
+
+    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, diameter_out: UnitValue, throat_diameter: UnitValue, fluid: str, Cd: float|None = None, name: str='cavitating_venturi'):
+        if fluid not in ['N2O','CO2', "C2H6O"]:
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)
         self.diameter_in = diameter_in.convert_base_metric()
         self.diameter_out = diameter_out.convert_base_metric()
         self.throat_diameter = throat_diameter.convert_base_metric()
-        self.Cd = Cd
+        if Cd is None:
+            self.Cd = self.FLUID_CDS[fluid]
+        else:
+            self.Cd = Cd
         self.decoupler = True
 
     def initialize(self):

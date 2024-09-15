@@ -11,15 +11,22 @@ from ..components.componentClass import ComponentClass
 from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 
+
 class CriticalOrifice(ComponentClass):
-    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float = 1):
+
+    FLUID_CDS = {"N2O": 0.95, "CO2": 0.95, "C2H6O": 0.95}
+
+    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
         if fluid not in ['N2O','CO2']:
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)
         self.orifice_diameter = orifice_diameter
-        self.diameter_in = diameter_in 
+        self.diameter_in = diameter_in
+        if Cd is None:
+            self.Cd = self.FLUID_CDS[fluid]
+        else:
+            self.Cd = Cd
         self.decoupler = True 
-        self.Cd = Cd
 
     def initialize(self):
             if self.parent_system.outlet_BC != 'PRESSURE':

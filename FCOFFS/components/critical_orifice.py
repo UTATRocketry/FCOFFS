@@ -14,7 +14,7 @@ from ..utilities.units import *
 
 class CriticalOrifice(ComponentClass):
 
-    FLUID_CDS = {"N2O": 0.95, "CO2": 0.95, "C2H6O": 0.95}
+    FLUID_CDS = {"N2O":1, "CO2": 1, "C2H6O": 1}
 
     def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
         if fluid not in ['N2O','CO2']:

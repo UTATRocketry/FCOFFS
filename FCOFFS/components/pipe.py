@@ -20,10 +20,12 @@ class Pipe(ComponentClass):
     #                  calculated from epsilon if not specified
     # epsilon [m]:     roughness of the pipe internal wall, a function of
     #                  material
-    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, name: str=None, length: UnitValue= UnitValue.create_unit("m", 1), roughness: float|None=None, epsilon: float|None=None):
+    # height_delta [m]: Difference in heigh between one end of pipe to another, a decrease in height should be a negative value
+    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, length: UnitValue, height_delta: UnitValue, roughness: float|None=None, epsilon: float|None=None, name: str=None):
         super().__init__(parent_system, diameter, fluid, name)
         self.length = length
         self.length.convert_base_metric()
+        self.height_diference = height_delta.convert_base_metric()
         if roughness == None:
             if epsilon == None:
                 self.epsilon = 0.000025
@@ -52,7 +54,6 @@ class Pipe(ComponentClass):
         q_in = state_in.q
         T_in = state_in.T
 
-        #state = s
 
         # find friction factor
         Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
@@ -68,10 +69,22 @@ class Pipe(ComponentClass):
         # update downstream condition
         PLC = friction_factor * self.length / self.diameter
         dp = PLC * q_in
-        p_out = p_in - dp
+        p_out = p_in - dp + state_in.rho*9.81*self.height_diference # added height factor
         rho_out = Fluid.density(self.fluid, T_in, p_out)
         u_out = mdot / rho_out / state_out.area
         res1 = (rho_out - state_out.rho)/rho_out
         res2 = (u_out - state_out.u)/u_out
-        res3 = (p_out - state_out.p)/p_out
+        res3 = (p_out - state_out.p)/p_out # add delta_h
+
+
+        #compressible case
+
+        Cp = Fluid.Cp(state_in.T, state_in.p)
+
+        # mass conservation
+        res1 = (state_in.mdot - state_out.mdot) / 0,5 * (state_in.mdot + state_out.mdot)
+        res2 = (state_in.u**2 - (2*Cp(state_out.T- state_in.T) + 2*9.81*self.height_diference + state_out.u**2)) / 0.5*(Cp(state_out.T- state_in.T) + 9.81*self.height_diference + 0.5(state_in.u**2 + state_out.u**2))
+        res3 = None
+
+
         return [res1, res2, res3]

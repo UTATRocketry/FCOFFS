@@ -20,7 +20,7 @@ class _gauge_conversion():
         '''
         self.__to_SI = unit_conversion_to_SI
         self.__to_ABSOLUTE = conv_to_absolute
-
+    
     def __mul__(self, m) -> int|float:
         '''
         Used in unit class to convert the unit to SI. Thus converts the guage value to absolute and then SI base unit.
@@ -61,7 +61,7 @@ class UnitValue: # add specific heat
         __dimension (str): The dimension of the unit (e.g., LENGTH, MASS).
         __unit (str): The unit of the value (e.g., m, kg).
         value (float): The numerical value.
-    """
+    """ 
     UNITS = {"IMPERIAL": {
                            "DISTANCE": {"in": 0.0254, "mi": 1609.34, "yd": 0.9144, "ft": 0.3048}, 
                            "PRESSURE": {"psi": 6894.76, "psig": _gauge_conversion(6894.76, 14.696), "psf": 47.8803}, 
@@ -85,7 +85,7 @@ class UnitValue: # add specific heat
                            "DYNAMIC VISCOCITY": {"lb/fts": 1.488163943568},
                            "KINEMATIC VISCOCITY": {"ft^2/s": 0.092903},
                            "MASS FLUX": {"lb/ft^2s": 4.88243},
-                           "SPECIFIC HEAT": {"BTU/lbf": 4186.8000000087}
+                           "GAS CONSTANTS": {"BTU/lbf": 4186.8000000087}
                          }, 
              "METRIC": {
                          "DISTANCE": {"m": 1, "km": 1000, "cm": 0.01, "mm": 0.001}, 
@@ -110,7 +110,7 @@ class UnitValue: # add specific heat
                          "DYNAMIC VISCOCITY": {"kg/ms": 1, "g/cms":0.1},
                          "KINEMATIC VISCOCITY": {"m^2/s": 1, "cm^2/s": 0.0001},
                          "MASS FLUX": {"kg/m^2s": 1},
-                         "SPECIFIC HEAT": {"m^2/s^2K": 1, "J/kgK": 1, "J/kgc": 1}
+                         "GAS CONSTANTS": {"m^2/s^2K": 1, "J/kgK": 1, "J/kgc": 1}
                         }
             }
     

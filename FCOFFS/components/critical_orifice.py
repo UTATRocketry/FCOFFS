@@ -52,7 +52,7 @@ class CriticalOrifice(ComponentClass):
         res1 = (state_out.mdot - state_in.rho*self.diameter_in*state_in.u) / state_out.mdot
         
         #from isentropic nozzle flow equations
-        res2 = (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) / 0.5 * ((state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)))
+        res2 = ( (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) / ( 0.5 * ((state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1))) )
         
         #mass flux calculations that follow from isentropic nozzle flow 
         res3 = (state_out.mdot - 0.544 * pi * self.diameter_in**2/4 * state_in.p * sqrt(1/state_in.T)) / state_out.mdot

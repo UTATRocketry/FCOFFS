@@ -25,7 +25,11 @@ class Fluid:
     
     def Cp(fluid: str, T: UnitValue, p: UnitValue) -> UnitValue:
         cp = PropsSI('C', 'T', T.value, 'P', p.value, fluid)
-        return UnitValue("METRIC", "SPECIFIC HEAT", "m^2/s^2K", cp)
+        return UnitValue("METRIC", "SPECIFIC HEAT AT CONSTANT PRESSURE", "m^2/s^2K", cp)
+    
+    def Cv(fluid: str, T: UnitValue, p: UnitValue) -> UnitValue:
+        cv = PropsSI('O', 'T', T.value, 'P', p.value, fluid)
+        return UnitValue("METRIC", "SPECIFIC HEAT AT CONSTANT VOLUME", "m^2/s^2K", cv)
     
     def local_speed_sound(fluid: str, T: UnitValue, rho: UnitValue) -> UnitValue:
         '''For pure and pseudo-pure fluids, two state variables are required to fix the state. The equations of state are based on T

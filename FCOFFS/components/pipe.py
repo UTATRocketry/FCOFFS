@@ -2,7 +2,7 @@
 Description
 '''
 
-from numpy import log10, sqrt
+from numpy import log10, sqrt, log
 from scipy.optimize import brentq
 
 from ..pressureSystem.PressureSystem import PressureSystem
@@ -71,19 +71,20 @@ class Pipe(ComponentClass):
         else:
             raise ValueError("Fluid is not in gas or liquid state")
 
+
+        # find friction factor
+        Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
+        def colebrook(f):
+            return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
+        def haaland(f):
+            return 1/sqrt(f) + 1.8*log10((self.roughness/3.7)**1.11 + 6.9/Re)
+        if Re > 2000:
+            friction_factor = brentq(colebrook, 0.005, 0.1)
+        else:
+            friction_factor = 64 / Re
+
         match compressible:
             case True: 
-                   
-                # find friction factor
-                Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
-                def colebrook(f):
-                    return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
-                def haaland(f):
-                    return 1/sqrt(f) + 1.8*log10((self.roughness/3.7)**1.11 + 6.9/Re)
-                if Re > 2000:
-                    friction_factor = brentq(colebrook, 0.005, 0.1)
-                else:
-                    friction_factor = 64 / Re
 
                 # update downstream condition
                 PLC = friction_factor * self.length / self.diameter
@@ -97,12 +98,26 @@ class Pipe(ComponentClass):
 
             case False:
 
-                Cp = Fluid.Cp(state_in.T, state_in.p)
+                fanning_factor = friction_factor/4
 
-                # mass conservation
+                Cp = Fluid.Cp(state_in.T, state_in.p)
+                Cv = Fluid.Cv(state_in.T, state_in.p)
+                gamma = Cp/Cv
+                speed_sound = Fluid.local_speed_sound(self.fluid, state_in.T, state_in.rho)
+                M_in = state_in.u/speed_sound
+                M_in_sqrd = M_in**2
+                def momentum_equation(M_out):
+                    return (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5
+
+                M_out = brentq(momentum_equation, 0, 2)
+                state_M_out = state_out.u/Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)
+                
+                #mass conservation
                 res1 = (state_in.mdot - state_out.mdot) / 0.5 * (state_in.mdot + state_out.mdot)
+                #energy conservation
                 res2 = (state_in.u**2 - (2*Cp(state_out.T- state_in.T) + 2*9.81*self.height_diference + state_out.u**2)) / 0.5*(Cp(state_out.T - state_in.T) + 9.81*self.height_diference + 0.5(state_in.u**2 + state_out.u**2))
-                res3 = None # look into
+                #Momentum conservation
+                res3 = (state_M_out - M_out) /  0.5(state_M_out + M_out)
 
 
         return [res1, res2, res3]

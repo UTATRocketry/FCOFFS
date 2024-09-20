@@ -16,12 +16,13 @@ class CriticalOrifice(ComponentClass):
 
     FLUID_CDS = {"N2O": 0.95, "CO2": 0.95, "C2H6O": 0.95}
 
-    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
+    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue,  diameter_out: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
         if fluid not in ['N2O','CO2']:
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)
-        self.orifice_diameter = orifice_diameter
-        self.diameter_in = diameter_in
+        self.orifice_diameter = orifice_diameter.convert_base_metric()
+        self.diameter_out = diameter_out.convert_base_metric()
+        self.diameter_in = diameter_in.convert_base_metric()
         if Cd is None:
             self.Cd = self.FLUID_CDS[fluid]
         else:
@@ -55,15 +56,16 @@ class CriticalOrifice(ComponentClass):
         Cv = Fluid.Cv(self.fluid, state_out.T , state_out.p)
         gamma = Cp / Cv
         
+        R_gas = Fluid.get_gas_constant(self.fluid)
+                
         #from mass continuity 
         res1 = (state_out.mdot - state_in.rho*self.diameter_in*state_in.u) / state_out.mdot
         
         #from isentropic nozzle flow equations
-        res2 = (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) / 0.5 * ((state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)))
+        res2 = ((state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1))) /( 0.5 * ((state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1))))
         
-        #mass flux calculations that follow from isentropic nozzle flow 
-        res3 = (state_out.mdot - 0.544 * pi * self.diameter_in**2/4 * state_in.p * sqrt(1/state_in.T)) / state_out.mdot
-        #0.532 applies for air only, should be revised for other gases. 
+        #output mass flux calculations that follow from isentropic nozzle flow 
+        res3 = (state_out.mdot - state_in.p * Mach_final * pi * self.diameter_out**2/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ) / state_out.mdot
         
         # verify what the optimal two state variable are to input for CoolProps equation of state calculations-->temperature and density
         return [res1, res2, res3]

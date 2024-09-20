@@ -187,7 +187,7 @@ class UnitValue: # add specific heat
     @classmethod
     def create_unit(cls, unit: str, value: float=0) -> 'UnitValue':
         """
-        Create a UnitValue object based on the unit and value. Will also account for speeling mistakes/alternate names of units.
+        Create a UnitValue object based on the unit and value. Will also account for spelling mistakes/alternate names of units.
 
         Args:
             unit (str): The unit of the value.

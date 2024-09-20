@@ -58,7 +58,7 @@ class Pipe(ComponentClass):
         c_s = Fluid.local_speed_sound(self.fluid, T = state_in.T, rho=state_in.rho)
         Mach = state_in.u / c_s
 
-        if phase == "liquid":
+        if phase == "liquid": # redundant
             if Mach < 0.3:
                 compressible = False
             else:
@@ -115,7 +115,7 @@ class Pipe(ComponentClass):
                 #mass conservation
                 res1 = (state_in.mdot - state_out.mdot) / 0.5 * (state_in.mdot + state_out.mdot)
                 #energy conservation
-                res2 = (state_in.u**2 - (2*Cp(state_out.T- state_in.T) + 2*9.81*self.height_diference + state_out.u**2)) / 0.5*(Cp(state_out.T - state_in.T) + 9.81*self.height_diference + 0.5(state_in.u**2 + state_out.u**2))
+                res2 = (state_in.u**2 - (2*Cp(state_out.T- state_in.T) + 2*9.81*self.height_diference + state_out.u**2)) / 0.5*(Cp(state_out.T + state_in.T) + 9.81*self.height_diference + 0.5(state_in.u**2 + state_out.u**2))
                 #Momentum conservation
                 res3 = (state_M_out - M_out) /  0.5(state_M_out + M_out)
 

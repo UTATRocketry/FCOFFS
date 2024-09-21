@@ -50,7 +50,7 @@ inlet of the pipe is checked to see if it is a liquid or gas. Then after that, t
   compressible flow which gives us a resultant Mach number for the flow at the outlet of the tube. Since this equation is implicit it must also be iteratively solved for our Mach number out. We then convert the solver guessed outlet speed to its Mach number and then for the final residual we compare these two numbers.  
   
   **Momentum Equation:**  
-  <p align="center">$M_{out} = (M_{in} = \gamma M_{in}^2M_{out}^2(\frac{4fL}{D_H}-\frac{\gamma + 1}{2\gamma}ln[\frac{M_{in}^2(1 + \frac{\gamma - 1}{2}M_{out}^2)}{M_{out}^2(1 + \frac{\gamma - 1}{2}M_{in}^2}]))^{\frac{1}{2}}$</p>  
+  <p align="center">$M_{out} = (M_{in} + \gamma M_{in}^2M_{out}^2(\frac{4fL}{D_H}-\frac{\gamma + 1}{2\gamma}ln[\frac{M_{in}^2(1 + \frac{\gamma - 1}{2}M_{out}^2)}{M_{out}^2(1 + \frac{\gamma - 1}{2}M_{in}^2}]))^{\frac{1}{2}}$</p>  
   The final residual is then:
    <p align="center">$r_3 = \frac{M_{out, guessed} - M_{out, expected}}{\frac{1}{2}(M_{out, guessed}+M_{out})}$</p>
 

@@ -5,6 +5,7 @@ Description
 from CoolProp.CoolProp import PropsSI
 #from ..utilities.units import UnitValue
 from FCOFFS.utilities.units import UnitValue
+from scipy.constants import R
 
 
 class Fluid:
@@ -26,11 +27,11 @@ class Fluid:
     
     def Cp(fluid: str, T: UnitValue, p: UnitValue) -> UnitValue:
         cp = PropsSI('C', 'T', T.value, 'P', p.value, fluid)
-        return UnitValue("METRIC", "SPECIFIC HEAT AT CONSTANT PRESSURE", "m^2/s^2K", cp)
+        return UnitValue("METRIC", "GAS CONSTANTS", "m^2/s^2K", cp)
     
     def Cv(fluid: str, T: UnitValue, p: UnitValue) -> UnitValue:
         cv = PropsSI('O', 'T', T.value, 'P', p.value, fluid)
-        return UnitValue("METRIC", "SPECIFIC HEAT AT CONSTANT VOLUME", "m^2/s^2K", cv)
+        return UnitValue("METRIC", "GAS CONSTANTS", "m^2/s^2K", cv)
     
     def local_speed_sound(fluid: str, T: UnitValue, rho: UnitValue) -> UnitValue:
         '''For pure and pseudo-pure fluids, two state variables are required to fix the state. The equations of state are based on T
@@ -61,6 +62,13 @@ class Fluid:
         if rho == None:
             rho = Fluid.density(fluid, T, p)
         return Fluid.dynamic_viscosity(fluid, rho, T, p) / rho
+    
+    def get_gas_constant(fluid: str) -> UnitValue:
+        # Gas Constant = Universal Gas Constant / Molecular Weight of Gas
+        GasConstant = {"C2H6O": R/50.0 , "N20" : R/44.013 , "N2" : R/28.02 , "H20" : R/18.015}
+        return UnitValue.create_unit("m^2/s^2K", GasConstant[fluid])
+        
+        
     
 if __name__ == "__main__":
     rho = UnitValue.create_unit("kg/m^3", 500)

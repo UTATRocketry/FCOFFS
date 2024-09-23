@@ -10,6 +10,7 @@ Pressure Regulator (type) (flow_coefficient) (PCP)
 | (enter unit)  |  (enter unit)  | (enter unit) | (enter unit) |
 | data | data | data | data |
 | ... | ... | ... | ... |
+---------
 If you need more guidance you can also look at the couple regulator flow curve files we have already created which are also in the folder under the Data subfolder. 
 
 ## Steady State

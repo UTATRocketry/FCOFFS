@@ -4,10 +4,10 @@ Description
 
 from numpy import pi
 
-from ..pressureSystem.PressureSystem import PressureSystem
+from ..systems.steady import SteadySolver
 from ..state.State import *
 from ..interfaces.interface import Interface
-from ..utilities.Utilities import *
+from ..utilities.utilities import *
 from ..utilities.units import *
 
 
@@ -15,7 +15,7 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
     # diameter [m]:    diameter of the component at the connections
     # name []:         name of the component, if left blank will receive a label
     #                  of 'COMP #'
-    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, name: str="COMP_AUTO"):
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, name: str="COMP_AUTO"):
         self.parent_system = parent_system
         self.diameter = diameter
         self.diameter.convert_base_metric()

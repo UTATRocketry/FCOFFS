@@ -4,13 +4,13 @@ Description
 from numpy import pi
 
 from ..components.componentClass import ComponentClass
-from ..pressureSystem import PressureSystem
+from ..systems.steady import SteadySolver
 from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 from ..state.State import *
 
 class TwoPhaseTank(ComponentClass):
-    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, diameter_out: UnitValue, initial_liquid_temerature: UnitValue, fluid_in: str, fluid_out: str, name: str="Tank"):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, initial_liquid_temerature: UnitValue, fluid_in: str, fluid_out: str, name: str="Tank"):
       
         super().__init__(parent_system, diameter_in, fluid_in, name)
         self.diameter_in = diameter_in.convert_base_metric()

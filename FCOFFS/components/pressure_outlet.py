@@ -1,5 +1,5 @@
 
-from ..pressureSystem.PressureSystem import PressureSystem
+from ..systems.steady import SteadySolver
 from ..components.componentClass import ComponentClass
 from ..fluids.Fluid import Fluid
 from ..utilities.units import UnitValue
@@ -8,7 +8,7 @@ from ..state.State import State
 from math import pi
 
 class PressureOutlet(ComponentClass):
-    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, pressure: UnitValue, name: str=None) -> None:
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, pressure: UnitValue, name: str=None) -> None:
         super().__init__(parent_system, diameter, fluid,name)
 
         if pressure.get_dimension != "PRESSURE":

@@ -1,5 +1,5 @@
 
-from FCOFFS.pressureSystem.PressureSystem import PressureSystem
+from ..systems.steady import SteadySolver
 from FCOFFS.state.State import State
 from FCOFFS.utilities.units import UnitValue
 from FCOFFS.utilities.component_curve import ComponentCurve
@@ -7,7 +7,7 @@ from FCOFFS.components.componentClass import ComponentClass
 from FCOFFS.fluids.Fluid import Fluid
 
 class PressureRegulator(ComponentClass):
-    def __init__(self, parent_system: PressureSystem, diameter: UnitValue, fluid: str, flow_curve_filename: str, set_pressure: UnitValue, method: str = 'linear', name: str = "Pressure_Regulator"):
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, flow_curve_filename: str, set_pressure: UnitValue, method: str = 'linear', name: str = "Pressure_Regulator"):
         super().__init__(parent_system, diameter, fluid, name)
 
         self.set_pressure = set_pressure.convert_base_metric()

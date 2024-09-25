@@ -4,24 +4,16 @@ Description
 
 from scipy.optimize import root
 
-from ..utilities.Utilities import rms
+from .system import System
+from ..utilities.utilities import rms
 from ..utilities.units import UnitValue
 
 # Nomenclature:
 
-class PressureSystem:
+class SteadySolver(System):
 
-    def __init__(self, name: str="Pressure System", ref_T: UnitValue=UnitValue("METRIC", "TEMPERATURE", "K", 293.15), ref_p: UnitValue=UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5), transient=[0,0,0]):
-        self.name = name
-        self.w = []            # list of primitives on the nodes
-        self.ref_T = ref_T
-        self.ref_p = ref_p
-        self.ref_p.convert_base_metric()
-        self.transient = transient   # [t_i, t_f, dt]
-        self.t = transient[0]
-        self.components = []
-        self.objects = []
-
+    def __init__(self, name: str="Steady State System", ref_T: UnitValue=UnitValue("METRIC", "TEMPERATURE", "K", 293.15), ref_p: UnitValue=UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5)):
+        super().__init__(name, ref_T, ref_p)
 
     def __repr__(self):
         return str(self.objects)
@@ -67,6 +59,7 @@ class PressureSystem:
                     raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
 
         self.components = components
+        self.objects = []
         for component in components[:-1]:
                 self.objects += [component, component.interface_out]
         self.objects.append(components[-1])
@@ -89,45 +82,24 @@ class PressureSystem:
                 obj.state.set(rho=UnitValue("METRIC", "DENSITY", "kg/m^3", new_w[i]), u=UnitValue("METRIC", "VELOCITY", "m/s", new_w[i+1]), p=UnitValue("METRIC", "PRESSURE", "kg/ms^2", new_w[i+2]))
                 obj.update()
                 i += 3
-        # if self.inlet_BC=="PressureInlet" and self.outlet_BC=="MassOutlet":
-        #     var1 = new_w[i]
-        #     i += 1
-        #     self.objects[0].state.u =  var1 / self.objects[0].state.rho / self.objects[0].state.area
-        #     self.objects[0].update()
-        #     for obj in self.objects[1:-1]:
-        #         if obj.type == 'node':
-        #             obj.state.set(rho=new_w[i], u=new_w[i+1], p=new_w[i+2])
-        #             obj.update()
-        #             i += 3
-        #     var2 = new_w[i]
-        #     var3 = new_w[i+1]
-        #     self.objects[-1].state.p = var2
-        #     self.objects[-1].state.rho =  Fluid.density(self.objects[-1].state.fluid,var3,var2)
-        #     self.objects[-1].state.u =  self.objects[-1].state.mdot / self.objects[-1].state.rho / self.objects[-1].state.area
         self.update_w()
 
 
     def solve(self, verbose: bool=True, queue=None):
-        while True:
-            self.update_w()
-            def func(x):
-                #print(x)
-                self.set_w(x)
-                res = []
-                for component in self.components:
-                    component.update()
-                    res += component.eval()
-                if verbose is True:
-                    print("Residual = "+str(rms(res)))
-                if queue is not None:
-                    queue.put(rms(res))
-                #print(res)
-                #self.output()
-                return res
-
-            sol = root(func, self.w).x
+        self.update_w()
+        def func(x):
+            self.set_w(x)
+            res = []
+            for component in self.components:
+                component.update()
+                res += component.eval()
             if verbose is True:
-                print(sol)
-            self.t += self.transient[2]
-            if self.t > self.transient[1] or self.transient[2] == 0:
-                break
+                print("Residual = "+str(rms(res)))
+            if queue is not None:
+                queue.put(rms(res))
+            return res
+
+        sol = root(func, self.w).x
+        if verbose is True:
+            print(sol)
+        

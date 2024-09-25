@@ -6,7 +6,7 @@ import warnings
 
 from ..fluids.Fluid import Fluid
 from ..utilities.units import UnitValue
-from ..utilities.Utilities import *
+from ..utilities.utilities import *
 
 
 class State:

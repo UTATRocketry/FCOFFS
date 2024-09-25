@@ -1,9 +1,9 @@
 from FCOFFS.utilities.units import *
 from FCOFFS.components import *
 from FCOFFS.interfaces.interface import *
-from FCOFFS.pressureSystem.PressureSystem import *
+from FCOFFS.systems.steady import *
 
-PS = PressureSystem(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psi", 15)) 
+PS = SteadySolver(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psi", 15)) 
 
 interface1 = Interface("INTER1")
 interface2 = Interface("INTER2")

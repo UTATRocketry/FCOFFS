@@ -5,7 +5,7 @@ Description
 from numpy import sqrt, pi
 import warnings
 
-from ..pressureSystem.PressureSystem import PressureSystem
+from ..systems.steady import SteadySolver
 from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..fluids.Fluid import Fluid
@@ -16,7 +16,7 @@ class CriticalOrifice(ComponentClass):
 
     FLUID_CDS = {"N2O":1, "CO2": 1, "C2H6O": 1}
 
-    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue,  diameter_out: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue,  diameter_out: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
         if fluid not in ['N2O','CO2']:
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)

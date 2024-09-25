@@ -4,7 +4,7 @@ Description
 
 from ..state.State import State
 from ..fluids.Fluid import Fluid
-from ..pressureSystem.PressureSystem import PressureSystem
+from ..systems.steady import SteadySolver
 from ..utilities import *
 from ..utilities.units import *
 
@@ -22,7 +22,7 @@ class Interface:
     def update(self):
         self.state.update()
 
-    def initialize(self, parent_system: PressureSystem = None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None, Override: bool=False):
+    def initialize(self, parent_system: SteadySolver = None, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None, Override: bool=False):
         if not self.initialized or Override:
             self.parent_system = parent_system
             self.state.set(area, fluid, rho, u, p)

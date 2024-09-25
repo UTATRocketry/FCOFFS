@@ -5,7 +5,7 @@ Description
 from numpy import sqrt, pi
 import warnings
 
-from ..pressureSystem.PressureSystem import PressureSystem
+from ..systems.steady import SteadySolver
 from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..fluids.Fluid import Fluid
@@ -15,7 +15,7 @@ class CavitatingVenturi(ComponentClass):
 
     FLUID_CDS = {"N2O": 0.95, "CO2": 0.95, "C2H6O": 0.95}
 
-    def __init__(self, parent_system: PressureSystem, diameter_in: UnitValue, diameter_out: UnitValue, throat_diameter: UnitValue, fluid: str, Cd: float|None = None, name: str='cavitating_venturi'):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, throat_diameter: UnitValue, fluid: str, Cd: float|None = None, name: str='cavitating_venturi'):
         if fluid not in ['N2O','CO2', "C2H6O"]:
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)

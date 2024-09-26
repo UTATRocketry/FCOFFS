@@ -29,7 +29,7 @@ The third residual is about the conservation of energy. We are assuming that the
 <p align="center">$e_{in} = Cp_{in}T_{in} + \frac{1}{2}v_{in}^{2} $</p> 
 <p align="center">$e_{out} = Cp_{out}T_{out} + \frac{1}{2}v_{out}^{2} $</p>
 Finally, we arrive at the residual:
-<p align="center">$r_2 = \frac{e_{out} - e_{in}}{\frac{1}{2}(e_{in}+e_{out})}$</p> 
+<p align="center">$r_3 = \frac{e_{out} - e_{in}}{\frac{1}{2}(e_{in}+e_{out})}$</p> 
 
 ## Transient 
 Still being implemented

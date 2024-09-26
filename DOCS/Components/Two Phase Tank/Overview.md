@@ -8,7 +8,7 @@ The three governing equations for the pressure regulator are:
   - Conservation of energy
 
 The first residual is based on the conservation of the volume of our control volume. This is derived as the volume of fluid that enters the tank must equal the volume that leaves the tank. This residual is given by
-<p align="center">$r_1 = \frac{\frac{\dot m_{in}}{\rhp_{in}} - \frac{\dot m_{out}}{\rhp_{out}}}{\frac{1}{2}(\frac{\dot m_{in}}{\rhp_{in}} + \frac{\dot m_{out})}$</p> 
+<p align="center">$r_1 = \frac{\frac{\dot m_{in}}{\rho_{in}} - \frac{\dot m_{out}}{\rho_{out}}}{\frac{1}{2}(\frac{\dot m_{in}}{\rho_{in}} + \frac{\dot m_{out}}{\rho_{out}})}$</p> 
 
 The second residual is a large assumption and assumes that the pressure at the inlet of the tank will be equal to the pressure at the outlet:
 <p align="center">$r_2 = \frac{p_{in} - p_{out}}{\frac{1}{2}(p_{in} + p_{out})}$</p>  

@@ -35,7 +35,7 @@ class TwoPhaseTank(ComponentClass):
 
         res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / 1/2(state_in.mdot / state_in.rho + state_out.mdot / state_out.rho)
         res2 = (state_in.p - state_out.p) / 1/2 (state_in.p + state_out.p)
-        res3 = (state_out.p - self.liquid_temperature) / self.liquid_temperature
+        res3 = (state_out.T - self.liquid_temperature) / self.liquid_temperature
 
         return [res1, res2, res3]
 

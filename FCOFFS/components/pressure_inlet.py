@@ -33,6 +33,6 @@ class PressureInlet(ComponentClass):
         else:
             state_out = new_states[1]
 
-        res1 = (self.p - state_out.p) / state_out.p
-        res2 = (self.T - state_out.T) / state_out.T
+        res1 = (self.p - state_out.p) / self.p
+        res2 = (self.T - state_out.T) / self.T
         return [res1, res2]

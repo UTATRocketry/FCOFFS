@@ -31,6 +31,6 @@ class MassFlowInlet(ComponentClass):
         else:
             state_out = new_states[1]
 
-        res1 = (self.mass_flow - state_out.mdot) / state_out.mdot
-        res2 = (self.T - state_out.T) / state_out.T
+        res1 = (self.mass_flow - state_out.mdot) / self.mass_flow
+        res2 = (self.T - state_out.T) / self.T
         return [res1, res2]

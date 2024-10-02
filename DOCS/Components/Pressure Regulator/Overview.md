@@ -11,7 +11,10 @@ Pressure Regulator (type) (flow_coefficient) (PCP)
 | data | data | data | data |
 | ... | ... | ... | ... |
 ---------
-If you need more guidance you can also look at the couple regulator flow curve files we have already created which are also in the folder under the Data subfolder. 
+If you need more guidance you can also look at the couple of regulator flow curve files we have already created which are also in the folder under the Data subfolder. 
+
+>[!IMPORTANT]
+>When initializing a pressure regulator component ensure you provide the absolute file path to the manufacturer regulator curve data CSV as this is what is expected.
 
 ## Steady State
 The three governing equations for the pressure regulator are:

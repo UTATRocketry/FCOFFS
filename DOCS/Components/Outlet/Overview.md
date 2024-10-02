@@ -1,6 +1,6 @@
 # Outlets
 Outlets are the components at the very end of the system and set the outlet's initial known conditions for the system. There are currently two types of outlets that can be used in the solver: the **Pressure Outlet** and the **Mass Flow Outlet**. Note unlike other components the outlets only have one residual instead of three. The other two residuals are made up for in the inlet of the system. Note that the outlet only has one interface attached to it and it is on the front/forward side of the component. The residuals for each of these types of outlet are given below:
-# in progress 
+
 ## Pressure Outlet
 For the **Pressure Outler**, you provide the outlet pressure at the system outlet.
 ### Steady Flow

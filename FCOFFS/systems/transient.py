@@ -50,7 +50,7 @@ class TransientSolver(System):
             self.quasi_steady_state.initialize(self.components)
             # run steady state
             self.quasi_steady_state.solve(verbose=False)
-            # grab new states produced by qusi solver
+            # grab new states produced by quasi solver
             self.components = self.quasi_steady_state.components
 
             # solve for the new partials uing euler equations

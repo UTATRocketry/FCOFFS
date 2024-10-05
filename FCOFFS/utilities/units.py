@@ -666,10 +666,10 @@ class UnitValue: # add specific heat
     
     def __round__(self, ndigits: int=0)  -> 'UnitValue':
         """
-        Rounds UnitValue to ndigts returns rounded Unitvale
+        Returns Rounded UnitValue to ndigts 
         """
-        self.value = round(self.value, ndigits)
-        return self
+        value = round(self.value, ndigits)
+        return UnitValue(self.__system, self.__dimension, self.__unit, value)
     
     def __repr__(self) -> str:
         return f"{self.value} {self.__unit}"

@@ -4,9 +4,10 @@ Description
 import numpy as np
 import pandas
 
-from ..utilities.units import UnitValue
-from .system import System
-from .steady import SteadySolver
+from FCOFFS.utilities.units import UnitValue
+from FCOFFS.systems.system import System
+from FCOFFS.systems.steady import SteadySolver
+from FCOFFS.fluids.Fluid import Fluid
 
 class TransientSolver(System):
     def __init__(self, name: str = "Transient State Solver", ref_T: UnitValue = UnitValue("METRIC", "TEMPERATURE", "K", 293.15), ref_p: UnitValue = UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5)):
@@ -46,7 +47,7 @@ class TransientSolver(System):
         self.quasi_steady_solver.initialize(self.components) 
         
     def state_time_marching(self, time):
-        for ind, bc in enumerate(self.inlet_BC):
+        for ind, bc in enumerate(self.inlet_BC): # inlet bc maybe not needed??
             if time == bc[0]:
                 in_BC = bc[1]
             elif time > bc[0]:
@@ -57,14 +58,24 @@ class TransientSolver(System):
             elif time > bc[0]:
                 out_BC = (time - self.inlet_BC[ind-1][0])*((bc[1] - self.inlet_BC[ind-1][1])/(bc[0] - self.inlet_BC[ind-1][0])) + self.inlet_BC[ind-1][1]
         
-        dp = in_BC - self.components[0].interface_out.state.p # only wokrs for pressure as of now
-        u_t_next = self.components[0].interface_out.state.u - self.dt * (dp/self.components[0].interface_out.state.rho)
         for component in self.components[1:-1]:
             #use array of bcs at inlet (2) and outlet (1), inteprolate if needed for dt 
             #inlet and outlet don't have interface on both sides need BCs
             dp = component.interface_in.state.p - component.interface_out.state.p
+            u_next = component.interface_in.state.u - self.dt * (dp/component.interface_in.state.rho)
+            T_next = component.interface_in.state.T + (component.interface_in.state.u**2-u_next**2)/(2*Fluid.Cp(component.interface_in.state.fluid, component.interface_in.state.T, component.interface_in.state.p)) 
+            P_next = Fluid.pressure(component.interface_in.state.fluid, component.interface_in.state.rho, T_next)
+            component.interface_in.state.u = u_next
+            component.interface_in.state.T = T_next
+            component.interface_in.state.p = P_next
         #deal with inlet and outlet 
-        pass
+        dp = self.components[-1].interface_in.state.p - out_BC
+        u_next = self.components[-1].interface_in.state.u - self.dt * (dp/self.components[-1].interface_in.state.rho)
+        T_next = self.components[-1].interface_in.state.T + (self.components[-1].interface_in.state.u**2-u_next**2)/(2*Fluid.Cp(self.components[-1].interface_in.state.fluid, self.components[-1].interface_in.state.T, self.components[-1].interface_in.state.p)) 
+        P_next = Fluid.pressure(self.components[-1].interface_in.state.fluid, self.components[-1].interface_in.state.rho, T_next)
+        self.components[-1].interface_in.state.u = u_next
+        self.components[-1].interface_in.state.T = T_next
+        self.components[-1].interface_in.state.p = P_next
 
     def store_converged_state(self, state_type: str):
         # save state into file 1 or 2 depending on if it is converged or intialized state
@@ -84,11 +95,11 @@ class TransientSolver(System):
             # initialize the steady state solver
             self.quasi_steady_solver.solve(False)
             self.output() # prints what quasi steady solver converged to
-            self.store_converged_state("Conv")
+            #self.store_converged_state("Conv")
 
             self.state_time_marching(t)
             self.output()
-            self.store_converged_state("Init")
+            #self.store_converged_state("Init")
         
         # push datafranmes to csv
            

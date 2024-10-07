@@ -15,40 +15,6 @@ class SteadySolver(System):
     def __init__(self, name: str="Steady State System", ref_T: UnitValue=UnitValue("METRIC", "TEMPERATURE", "K", 293.15), ref_p: UnitValue=UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5)):
         super().__init__(name, ref_T, ref_p)
 
-    def __repr__(self):
-        return str(self.objects)
-
-    def output(self, verbose: bool=True):
-        output_string = ""
-        items = ["name", "rho", "u", "p", "T", "mdot", "area", "fluid"]
-        for item in items:
-            output_string += item[:15] + " "*max(16-len(item), 23)
-        output_string += "\n"
-        for obj in self.objects:
-            output_string += str(obj) + " "*2
-            for item in items:
-                try:
-                    val = getattr(obj.state, item)
-                except:
-                    val = None
-                if val == None:
-                    val_string = " "
-                elif type(val) == str:
-                    val_string = val
-                else:
-                    val_string = str(val)
-                output_string += val_string + " "*max(16-len(val_string), 2)
-            output_string += "\n"
-        if verbose: print("\n\n", output_string, "\n\n", sep='')
-        return output_string
-
-    def show_tree(self):
-        for i in range(len(self.objects)-1):
-            print(self.objects[i].name)
-            print(' | ')
-        print(self.objects[-1].name)
-        print()
-
     def initialize(self, components: list):
         # Sytem Vlaidation Checks
         if len(components) < 1:

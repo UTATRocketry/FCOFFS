@@ -18,21 +18,17 @@ class TransientSolver(System):
         self.dt = 0.1 # seconds
 
 
-    def initialize(self, components: list, simulation_time: float, Inlet_BC: list[tuple], Outlet_BC: list[tuple]):
+    def initialize(self, components: list, simulation_time: float):
         if len(components) < 1:
             raise IndexError('No component found. ')
         if components[0].BC_type != "PRESSURE":
             for component in components:
                 if component.decoupler == True:
                     raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
-        if len(Inlet_BC) == 0 and len(Outlet_BC) == 0:
-            raise IndexError("Insufficinet Boundary Conditions Provided")
 
         self.end_time = simulation_time
-        self.Conv_dataframe = pandas.DataFrame()  # provide column labels [time_step, component, rho, p, u, mdot]
-        self.Init_dataframe = pandas.DataFrame() #pandas dataframe
-        self.inlet_BC = Inlet_BC
-        self.outlet_BC = Outlet_BC
+        self.dataframe = pandas.DataFrame({"Time": [], "Interface": [], "Rho": [], "Pressure": [], "Velocity": [], "Temperature": [], "Mass Flow Rate": []})  # provide column labels [time_step, component, rho, p, u, mdot]
+        self.Init_dataframe = pandas.DataFrame({"Time": [], "Interface":[], "Rho": [], "Pressure": [], "Velocity": [], "Temperature": [], "Mass Flow Rate": []}) #pandas dataframe
 
         self.components = components
         self.objects = []
@@ -46,60 +42,33 @@ class TransientSolver(System):
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 
         
-    def state_time_marching(self, time):
-        for ind, bc in enumerate(self.inlet_BC): # inlet bc maybe not needed??
-            if time == bc[0]:
-                in_BC = bc[1]
-            elif time > bc[0]:
-                in_BC = (time - self.inlet_BC[ind-1][0])*((bc[1] - self.inlet_BC[ind-1][1])/(bc[0] - self.inlet_BC[ind-1][0])) + self.inlet_BC[ind-1][1]
-        for ind, bc in enumerate(self.outlet_BC):
-            if time == bc[0]:
-                out_BC = bc[1]
-            elif time > bc[0]:
-                out_BC = (time - self.inlet_BC[ind-1][0])*((bc[1] - self.inlet_BC[ind-1][1])/(bc[0] - self.inlet_BC[ind-1][0])) + self.inlet_BC[ind-1][1]
-        
-        for component in self.components[1:-1]:
-            #use array of bcs at inlet (2) and outlet (1), inteprolate if needed for dt 
-            #inlet and outlet don't have interface on both sides need BCs
-            dp = component.interface_in.state.p - component.interface_out.state.p
-            u_next = component.interface_in.state.u - self.dt * (dp/component.interface_in.state.rho)
-            T_next = component.interface_in.state.T + (component.interface_in.state.u**2-u_next**2)/(2*Fluid.Cp(component.interface_in.state.fluid, component.interface_in.state.T, component.interface_in.state.p)) 
-            P_next = Fluid.pressure(component.interface_in.state.fluid, component.interface_in.state.rho, T_next)
-            component.interface_in.state.u = u_next
-            component.interface_in.state.T = T_next
-            component.interface_in.state.p = P_next
-        #deal with inlet and outlet 
-        dp = self.components[-1].interface_in.state.p - out_BC
-        u_next = self.components[-1].interface_in.state.u - self.dt * (dp/self.components[-1].interface_in.state.rho)
-        T_next = self.components[-1].interface_in.state.T + (self.components[-1].interface_in.state.u**2-u_next**2)/(2*Fluid.Cp(self.components[-1].interface_in.state.fluid, self.components[-1].interface_in.state.T, self.components[-1].interface_in.state.p)) 
-        P_next = Fluid.pressure(self.components[-1].interface_in.state.fluid, self.components[-1].interface_in.state.rho, T_next)
-        self.components[-1].interface_in.state.u = u_next
-        self.components[-1].interface_in.state.T = T_next
-        self.components[-1].interface_in.state.p = P_next
-
-    def store_converged_state(self, state_type: str):
-        # save state into file 1 or 2 depending on if it is converged or intialized state
-        # add state to appropriate dataframe
-        
+    def time_marching(self):
         for component in self.components:
-            # add to dataframe 
-            pass
-        pass
+            if callable(getattr(component, "transient")):
+                component.transient(self.dt, component.interface_out.state)
+
+    def store_converged_state(self, time: float):
+        # store convegred state
+        for object in self.objects:
+            if object.type == 'interface':
+                pandas.concat([self.dataframe, pandas.DataFrame({"Time": [time], "Interface": [object.name], "Rho": [object.state.rho], "Pressure": [object.state.p], "Velocity": [object.state.u], "Temperature": [object.state.T], "Mass Flow Rate": [object.state.mdot]})], ignore_index=True)
 
     def solve(self):
         #solve system 
         start_time = 0
         N = self.end_time / self.dt
-        time = np.linspace(0, self.end_time, N)
+        time = np.linspace(start_time, self.end_time, N)
         for t in time:
             # initialize the steady state solver
-            self.quasi_steady_solver.solve(False)
+            self.quasi_steady_solver.solve(True)
             self.output() # prints what quasi steady solver converged to
-            #self.store_converged_state("Conv")
+            self.store_converged_state(t)
 
-            self.state_time_marching(t)
-            self.output()
-            #self.store_converged_state("Init")
+            self.time_marching()
+            # update interface state with new component values and print maybe not needed
+
+            #self.store_converged_state("Init") # second store maybve not needed
         
+        self.dataframe.to_csv("Transient Result.csv")
         # push datafranmes to csv
            

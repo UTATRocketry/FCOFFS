@@ -14,10 +14,10 @@ from ..utilities.units import *
 
 class CriticalOrifice(ComponentClass):
 
-    FLUID_CDS = {"N2O":1, "CO2": 1, "C2H6O": 1}
+    FLUID_CDS = {"N2O":1, "CO2": 1, "C2H6O": 1, "N2": 1}
 
     def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue,  diameter_out: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
-        if fluid not in ['N2O','CO2']:
+        if fluid not in ['N2O','CO2', 'C2H6O', 'N2']:
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)
         self.orifice_diameter = orifice_diameter.convert_base_metric()
@@ -59,7 +59,7 @@ class CriticalOrifice(ComponentClass):
         R_gas = Fluid.get_gas_constant(self.fluid)
                 
         #from mass continuity 
-        res1 = (state_out.mdot - state_in.rho*self.diameter_in*state_in.u) / state_out.mdot
+        res1 = (state_out.mdot - state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) / state_out.mdot
         
         #from isentropic nozzle flow equations
         res2 = ( (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) / ( 0.5 * ((state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1))) )

@@ -104,7 +104,7 @@ class Pipe(ComponentClass):
                     return ans
 
    
-                M_out = brentq(momentum_equation, 0.001, 10)
+                M_out = brentq(momentum_equation, 0, 10)
                 state_M_out = state_out.u/c_s
                 
                 #mass conservation

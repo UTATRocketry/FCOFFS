@@ -31,16 +31,13 @@ class TransientSolver(System):
         self.Init_dataframe = pandas.DataFrame({"Time": [], "Interface":[], "Rho": [], "Pressure": [], "Velocity": [], "Temperature": [], "Mass Flow Rate": []}) #pandas dataframe
 
         self.components = components
-        self.objects = []
-        for component in components[:-1]:
-                self.objects += [component, component.interface_out]
-                component.initialize() # this will likely be a differtent initialization method 
-        self.objects.append(components[-1])
-        self.inlet_BC_type = components[0].BC_type
-        self.outlet_BC_type = components[-1].BC_type
-
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 
+
+        self.objects = self.quasi_steady_solver.objects
+        self.inlet_BC_type =  self.quasi_steady_solver.inlet_BC
+        self.outlet_BC_type = self.quasi_steady_solver.outlet_BC
+
         
     def time_marching(self):
         for component in self.components:
@@ -56,7 +53,7 @@ class TransientSolver(System):
     def solve(self):
         #solve system 
         start_time = 0
-        N = self.end_time / self.dt
+        N = int(self.end_time / self.dt)
         time = np.linspace(start_time, self.end_time, N)
         for t in time:
             # initialize the steady state solver

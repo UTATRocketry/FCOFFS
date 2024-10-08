@@ -48,15 +48,19 @@ class CriticalOrifice(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
             
-        c_s = Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)
-        Mach_initial = state_in.u / c_s
-        Mach_final = state_out.u / c_s   
-              
-        Cp = Fluid.Cp(self.fluid, state_out.T , state_out.p)
+        Cp = Fluid.Cp(self.fluid, state_out.T , state_out.p) #why state out??
         Cv = Fluid.Cv(self.fluid, state_out.T , state_out.p)
         gamma = Cp / Cv
-        
         R_gas = Fluid.get_gas_constant(self.fluid)
+        
+        try:
+            c_s = Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)
+        except Exception:
+            c_s = sqrt(gamma*R_gas*state_out.T)
+        Mach_initial = state_in.u / c_s
+        Mach_final = state_out.u / c_s   
+        #something very wrong is gpoing on as im getting negative velocity and mdot
+        
                 
         #from mass continuity 
         res1 = (state_out.mdot - state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) / state_out.mdot
@@ -66,7 +70,7 @@ class CriticalOrifice(ComponentClass):
         
         #output mass flux calculations that follow from isentropic nozzle flow 
         res3 = (state_out.mdot - state_in.p * Mach_final * pi * (self.diameter_out**2)/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ) / state_out.mdot
-        
+        # chnaged above to orrifivce diameter is this what it should be????
         # verify what the optimal two state variable are to input for CoolProps equation of state calculations-->temperature and density
         return [res1, res2, res3]
 

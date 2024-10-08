@@ -51,10 +51,12 @@ class Fluid:
         return indexes[phase_index]
 
     def dynamic_viscosity(fluid: str, rho: UnitValue=None, T: UnitValue=None, p: UnitValue=None) -> UnitValue: # Eventuatly we want to calculate this 
-        if fluid=="N2O":
+        if fluid=="N2O": # get better values
             return UnitValue("METRIC", "DYNAMIC VISCOCITY", "kg/ms", 0.0000552)
         elif fluid=="C2H6O":
             return UnitValue("METRIC", "DYNAMIC VISCOCITY", "kg/ms", 0.001198)
+        elif fluid=="N2": 
+            return UnitValue("METRIC", "DYNAMIC VISCOCITY", "kg/ms", 0.00001789)
         else:
             raise Exception("Fluid " + fluid + " not supported")
 
@@ -65,7 +67,7 @@ class Fluid:
     
     def get_gas_constant(fluid: str) -> UnitValue:
         # Gas Constant = Universal Gas Constant / Molecular Weight of Gas
-        GasConstant = {"C2H6O": R/50.0 , "N20" : R/44.013 , "N2" : R/28.02 , "H20" : R/18.015}
+        GasConstant = {"C2H6O": R/50.0 , "N2O" : R/44.013 , "N2" : R/28.02 , "H2O" : R/18.015}
         return UnitValue.create_unit("m^2/s^2K", GasConstant[fluid])
         
         

@@ -21,7 +21,7 @@ class Pipe(ComponentClass):
     # epsilon [m]:     roughness of the pipe internal wall, a function of
     #                  material
     # height_delta [m]: Difference in heigh between one end of pipe to another, a decrease in height should be a negative value
-    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, length: UnitValue, height_delta: UnitValue = UnitValue("METRIC", "DISTANCE", "m", 0), roughness: float|None=None, epsilon: float|None=None, name: str=None):
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, length: UnitValue, height_delta: UnitValue = UnitValue("METRIC", "DISTANCE", "m", 0), roughness: float|None=None, epsilon: float|None=None, name: str="Pipe"):
         super().__init__(parent_system, diameter, fluid, name)
         self.length = length
         self.length.convert_base_metric()
@@ -56,12 +56,12 @@ class Pipe(ComponentClass):
         g = UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)
 
         c_s = Fluid.local_speed_sound(self.fluid, T = state_in.T, rho=state_in.rho)
-        Mach = state_in.u / c_s
+        Mach_in = state_in.u / c_s
 
-        if Mach < 0.3:
+        if Mach_in < 0.3:
             compressible = True
         else:
-            compressible = False     
+            compressible = False  
 
         # find friction factor
         Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
@@ -90,25 +90,29 @@ class Pipe(ComponentClass):
             case False:
 
                 fanning_factor = friction_factor/4
-
+                R = Fluid.get_gas_constant(self.fluid)
                 Cp = Fluid.Cp(self.fluid, state_in.T, state_in.p)
                 Cv = Fluid.Cv(self.fluid, state_in.T, state_in.p)
                 gamma = Cp/Cv
-                speed_sound = Fluid.local_speed_sound(self.fluid, state_in.T, state_in.rho)
-                M_in = state_in.u/speed_sound
-                M_in_sqrd = M_in**2
+                #speed_sound = sqrt(gamma*R*state_in.T)#Fluid.local_speed_sound(self.fluid, state_in.T, state_in.rho)
+                #M_in = state_in.u/c_s
+                M_in_sqrd = Mach_in**2
                 def momentum_equation(M_out):
-                    return (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5
+                    ans = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5
+                    #print(ans)
+                    # check this as something weird is happening sometimes
+                    return ans
 
-                M_out = brentq(momentum_equation, 0, 2)
-                state_M_out = state_out.u/Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)
+   
+                M_out = brentq(momentum_equation, 0.001, 10)
+                state_M_out = state_out.u/c_s
                 
                 #mass conservation
-                res1 = (state_in.mdot - state_out.mdot) / 0.5 * (state_in.mdot + state_out.mdot)
+                res1 = (state_in.mdot - state_out.mdot) / (0.5 * (state_in.mdot + state_out.mdot))
                 #energy conservation
-                res2 = (state_in.u**2 - (2*Cp*(state_out.T- state_in.T) + 2*g*self.height_diference + state_out.u**2)) / 0.5*(Cp*(state_out.T + state_in.T) + g*self.height_diference + 0.5*(state_in.u**2 + state_out.u**2))
+                res2 = (state_in.u**2 - (2*Cp*(state_out.T- state_in.T) + 2*g*self.height_diference + state_out.u**2)) / (0.5*(Cp*(state_out.T + state_in.T) + g*self.height_diference + 0.5*(state_in.u**2 + state_out.u**2)))
                 #Momentum conservation
-                res3 = (state_M_out - M_out) /  0.5*(state_M_out + M_out)
+                res3 = (state_M_out - M_out) / (0.5*(state_M_out + M_out))
 
 
         return [res1, res2, res3]

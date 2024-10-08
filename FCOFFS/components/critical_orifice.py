@@ -62,10 +62,10 @@ class CriticalOrifice(ComponentClass):
         res1 = (state_out.mdot - state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) / state_out.mdot
         
         #from isentropic nozzle flow equations
-        res2 = ( (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) / ( 0.5 * ((state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1))) )
+        res2 = ( (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) / ( 0.5 * ( (state_in.p/state_out.p) + (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) )
         
         #output mass flux calculations that follow from isentropic nozzle flow 
-        res3 = (state_out.mdot - state_in.p * Mach_final * pi * self.diameter_out**2/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ) / state_out.mdot
+        res3 = (state_out.mdot - state_in.p * Mach_final * pi * (self.diameter_out**2)/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ) / state_out.mdot
         
         # verify what the optimal two state variable are to input for CoolProps equation of state calculations-->temperature and density
         return [res1, res2, res3]

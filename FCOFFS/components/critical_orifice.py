@@ -16,11 +16,10 @@ class CriticalOrifice(ComponentClass):
 
     FLUID_CDS = {"N2O":1, "CO2": 1, "C2H6O": 1, "N2": 1}
 
-    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue,  diameter_out: UnitValue, orifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue,  diameter_out: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
         if fluid not in ['N2O','CO2', 'C2H6O', 'N2']:
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)
-        self.orifice_diameter = orifice_diameter.convert_base_metric()
         self.diameter_out = diameter_out.convert_base_metric()
         self.diameter_in = diameter_in.convert_base_metric()
         if Cd is None:
@@ -33,7 +32,7 @@ class CriticalOrifice(ComponentClass):
             if self.parent_system.outlet_BC != 'PRESSURE':
                 warnings.warn("Outlet BC not well posed. ")
             self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.fluid)
-            self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.orifice_diameter**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
+            self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
             # we will assume that component adjacent to orifice has inlet diameter matching orifice diameter (up to user variability)
 
     def update(self):

@@ -65,7 +65,11 @@ class SteadySolver(System):
                 queue.put(rms(res))
             return res
 
-        sol = root(func, self.w).x
+        sol = root(func, self.w, method='lm').x
         if verbose is True:
             print(sol)
+        res = []
+        # for component in self.components:
+        #     res += component.eval()
+        # print(res)
         

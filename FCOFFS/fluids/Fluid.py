@@ -67,7 +67,7 @@ class Fluid:
     
     def get_gas_constant(fluid: str) -> UnitValue:
         # Gas Constant = Universal Gas Constant / Molecular Weight of Gas
-        GasConstant = {"C2H6O": R/50.0 , "N2O" : R/44.013 , "N2" : R/28.02 , "H2O" : R/18.015}
+        GasConstant = {"C2H6O": R/50.0 , "N2O" : R/44.013 , "N2" : R/28.02 , "H2O" : R/18.015, "CO2": R/44}
         return UnitValue.create_unit("m^2/s^2K", GasConstant[fluid])
         
         

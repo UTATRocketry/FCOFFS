@@ -10,6 +10,7 @@ from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..fluids.Fluid import Fluid
 from FCOFFS.utilities.units import *
+from FCOFFS.utilities.utilities import Newtons_Method
 
 ## Striaght section of the pipe
 class Pipe(ComponentClass):
@@ -59,9 +60,10 @@ class Pipe(ComponentClass):
         Mach_in = state_in.u / c_s
 
         if Mach_in < 0.3:
-            compressible = True
+            compressible = False
         else:
-            compressible = False  
+            compressible = True
+        #compressible = False
 
         # find friction factor
         Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
@@ -75,7 +77,7 @@ class Pipe(ComponentClass):
             friction_factor = 64 / Re
 
         match compressible:
-            case True: 
+            case False: 
 
                 # update downstream condition
                 PLC = friction_factor * self.length / self.diameter
@@ -87,7 +89,7 @@ class Pipe(ComponentClass):
                 res2 = (u_out - state_out.u)/u_out
                 res3 = (p_out - state_out.p)/p_out # add delta_h
 
-            case False:
+            case True:
 
                 fanning_factor = friction_factor/4
                 R = Fluid.get_gas_constant(self.fluid)
@@ -98,13 +100,21 @@ class Pipe(ComponentClass):
                 #M_in = state_in.u/c_s
                 M_in_sqrd = Mach_in**2
                 def momentum_equation(M_out):
-                    ans = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5
-                    #print(ans)
-                    # check this as something weird is happening sometimes
+                    ans = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
+                    print(ans)
                     return ans
-
+                alpha = Mach_in
+                beta = gamma * M_in_sqrd 
+                gamma2 = 4*fanning_factor*self.length/self.diameter
+                delta = (gamma+1)/(2*gamma)
+                sigma = (gamma-1)/2 
+                epsilon = 1 + sigma*alpha**2
+                def momentum_equation_derivative(M_out):
+                    x_prime = 2*beta*gamma2*M_out - 2*beta*M_out*delta*log(1/epsilon) - 4*beta*delta*log(alpha/M_out + alpha*sigma)*M_out + 2*beta*delta*((alpha/M_out**2)/((alpha/M_out)+alpha*sigma))*M_out**2
+                    return 1/(2*sqrt(momentum_equation(M_out)+M_out)) * x_prime -1
    
-                M_out = brentq(momentum_equation, 0, 10)
+                #M_out = brentq(momentum_equation, 0, 10)
+                M_out = Newtons_Method(momentum_equation, momentum_equation_derivative) #plot in desmos for confidence # ask about solving method
                 state_M_out = state_out.u/c_s
                 
                 #mass conservation
@@ -116,3 +126,4 @@ class Pipe(ComponentClass):
 
 
         return [res1, res2, res3]
+  

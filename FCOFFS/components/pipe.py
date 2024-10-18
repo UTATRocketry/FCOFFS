@@ -101,7 +101,7 @@ class Pipe(ComponentClass):
                 M_in_sqrd = Mach_in**2
                 def momentum_equation(M_out):
                     ans = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
-                    print(ans)
+                    #print(ans)
                     return ans
                 alpha = Mach_in
                 beta = gamma * M_in_sqrd 
@@ -119,7 +119,7 @@ class Pipe(ComponentClass):
                 
                 #mass conservation
                 res1 = (state_in.mdot - state_out.mdot) / (0.5 * (state_in.mdot + state_out.mdot))
-                #energy conservation
+                #energy conservation # maybe do enthalpy consevrartion
                 res2 = (state_in.u**2 - (2*Cp*(state_out.T- state_in.T) + 2*g*self.height_diference + state_out.u**2)) / (0.5*(Cp*(state_out.T + state_in.T) + g*self.height_diference + 0.5*(state_in.u**2 + state_out.u**2)))
                 #Momentum conservation
                 res3 = (state_M_out - M_out) / (0.5*(state_M_out + M_out))
@@ -127,3 +127,54 @@ class Pipe(ComponentClass):
 
         return [res1, res2, res3]
   
+if __name__ == "__main__":
+
+    M_in_sqrd = 0.4225
+    gamma = 1.27
+    fanning_factor = 0.02
+    length = 0.0001
+    diameter = 0.001 
+
+    alpha = M_in_sqrd**0.5
+    beta = gamma * M_in_sqrd 
+    gamma2 = 4*fanning_factor*length/diameter
+    delta = (gamma+1)/(2*gamma)
+    sigma = (gamma-1)/2 
+    epsilon = 1 + sigma*alpha**2
+    
+    def Newtons_Method(f,fprime):
+        tolerance = 1e-9
+        x_approx = 2 #initial guess
+        step = 0 #to keep track of number of iterations
+        while f(x_approx) > tolerance:
+            #estimate the successive value
+            x_approx = x_approx - f(x_approx) / fprime(x_approx)
+            step += 1
+            if step > 1000:
+                raise Exception(f"Could not converge on root of function. Last guess was: {x_approx}")
+        return x_approx
+    
+    def momentum_equation(M_out):
+        constant = (4 * fanning_factor * length) / diameter
+        first_term = (M_out**2 - M_in_sqrd)/(gamma*M_in_sqrd*M_out**2)
+        mult = (gamma+1)/(2*gamma)
+        top = 1 + (((gamma - 1)/2)*M_out**2)
+        bottom = 1 + (((gamma - 1)/2)*M_in_sqrd)
+        inside_log = (M_in_sqrd/M_out**2)*(top/bottom)
+        natural_log = log(inside_log)
+
+        ans = first_term + mult*natural_log - constant
+
+        #ans = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*length/diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
+        #print(ans)
+        return ans
+    
+    def momentum_equation_derivative(M_out):
+        top = 4*(M_out**2 - 1)
+        bottom = (gamma*M_out**3)*((gamma-1)*M_out**2 + 2) 
+        ans = -1*(top/bottom)
+        return ans
+    
+    M_out = Newtons_Method(momentum_equation, momentum_equation_derivative) #plot in desmos for confidence # ask about solving method
+    
+    print(M_out)

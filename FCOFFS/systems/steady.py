@@ -63,9 +63,11 @@ class SteadySolver(System):
                 print("Residual = "+str(rms(res)))
             if queue is not None:
                 queue.put(rms(res))
+            self.output(True)
+            print(res)
             return res
 
-        sol = root(func, self.w, method='lm').x
+        sol = root(func, self.w).x #method='lm'
         if verbose is True:
             print(sol)
         res = []

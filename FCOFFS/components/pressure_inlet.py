@@ -21,7 +21,7 @@ class PressureInlet(ComponentClass):
         self.p = pressure
         self.T = temperature
         self.rho = Fluid.density(self.fluid, self.T, self.p)
-        self.u = UnitValue("METRIC", "VELOCITY", "m/s", 5)
+        self.u = UnitValue("METRIC", "VELOCITY", "m/s", 50)
 
     def initialize(self):
         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.rho, u=self.u, p=self.p)

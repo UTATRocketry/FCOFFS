@@ -57,13 +57,15 @@ class Pipe(ComponentClass):
         g = UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)
 
         c_s = Fluid.local_speed_sound(self.fluid, T = state_in.T, rho=state_in.rho)
+        # print(state_in.u)
         Mach_in = state_in.u / c_s
 
-        if Mach_in < 0.3:
+        if Mach_in < 0.3: #check state # ensure no abrupt discountiinuity 
             compressible = False
         else:
             compressible = True
         #compressible = False
+
 
         # find friction factor
         Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
@@ -96,33 +98,19 @@ class Pipe(ComponentClass):
                 Cp = Fluid.Cp(self.fluid, state_in.T, state_in.p)
                 Cv = Fluid.Cv(self.fluid, state_in.T, state_in.p)
                 gamma = Cp/Cv
-                #speed_sound = sqrt(gamma*R*state_in.T)#Fluid.local_speed_sound(self.fluid, state_in.T, state_in.rho)
-                #M_in = state_in.u/c_s
                 M_in_sqrd = Mach_in**2
-                def momentum_equation(M_out):
-                    ans = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
-                    #print(ans)
-                    return ans
-                alpha = Mach_in
-                beta = gamma * M_in_sqrd 
-                gamma2 = 4*fanning_factor*self.length/self.diameter
-                delta = (gamma+1)/(2*gamma)
-                sigma = (gamma-1)/2 
-                epsilon = 1 + sigma*alpha**2
-                def momentum_equation_derivative(M_out):
-                    x_prime = 2*beta*gamma2*M_out - 2*beta*M_out*delta*log(1/epsilon) - 4*beta*delta*log(alpha/M_out + alpha*sigma)*M_out + 2*beta*delta*((alpha/M_out**2)/((alpha/M_out)+alpha*sigma))*M_out**2
-                    return 1/(2*sqrt(momentum_equation(M_out)+M_out)) * x_prime -1
-   
-                #M_out = brentq(momentum_equation, 0, 10)
-                M_out = Newtons_Method(momentum_equation, momentum_equation_derivative) #plot in desmos for confidence # ask about solving method
-                state_M_out = state_out.u/c_s
+                M_out = state_out.u/c_s
                 
                 #mass conservation
                 res1 = (state_in.mdot - state_out.mdot) / (0.5 * (state_in.mdot + state_out.mdot))
-                #energy conservation # maybe do enthalpy consevrartion
-                res2 = (state_in.u**2 - (2*Cp*(state_out.T- state_in.T) + 2*g*self.height_diference + state_out.u**2)) / (0.5*(Cp*(state_out.T + state_in.T) + g*self.height_diference + 0.5*(state_in.u**2 + state_out.u**2)))
-                #Momentum conservation
-                res3 = (state_M_out - M_out) / (0.5*(state_M_out + M_out))
+                #energy conservation # maybe do enthalpy consevrartion  #density is not constant v^2/2 + CP(T) # only do conservation of enthalpy
+                #res2 = (state_in.u**2 - (2*Cp*(state_out.T- state_in.T) + 2*g*self.height_diference + state_out.u**2)) / (0.5*(Cp*(state_out.T + state_in.T) + g*self.height_diference + 0.5*(state_in.u**2 + state_out.u**2)))
+                #enthalpy conservation
+                Cp_out = Fluid.Cp(self.fluid, state_in.T, state_in.p)
+                res2 = (Cp*state_in.T - Cp_out*state_out.T) / (0.5 * (Cp*state_in.T + Cp_out*state_out.T))
+                
+                #Momentum conservation # momentum euqstion go to zero
+                res3 = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
 
 
         return [res1, res2, res3]

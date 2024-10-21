@@ -70,7 +70,7 @@ class Fluid:
         GasConstant = {"C2H6O": R/50.0 , "N2O" : R/44.013 , "N2" : R/28.02 , "H2O" : R/18.015, "CO2": R/44}
         return UnitValue.create_unit("m^2/s^2K", GasConstant[fluid])
         
-        
+       
     
 if __name__ == "__main__":
     rho = UnitValue.create_unit("kg/m^3", 500)

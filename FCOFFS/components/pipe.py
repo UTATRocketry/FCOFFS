@@ -97,9 +97,33 @@ class Pipe(ComponentClass):
                 speed_sound = Fluid.local_speed_sound(self.fluid, state_in.T, state_in.rho)
                 M_in = state_in.u/speed_sound
                 M_in_sqrd = M_in**2
+                
                 def momentum_equation(M_out):
-                    return (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5
+                    return (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
+                
+                alpha = M_in; beta = gamma * M_in_sqrd ; gamma2 = 4*fanning_factor*self.length/self.diameter; delta = (gamma+1)/(2*gamma); sigma = (gamma-1)/2 ; epsilon = 1 + sigma*alpha**2
+                
+                #must redefine both the function and its derivative to solve for x such that f(x) = 0 
+                #this can be done analytically, cause both f and f' have closed form expressions
 
+                def momentum_equation_derivative(M_out):
+                    x_prime = 2*beta*gamma2*M_out - 2*beta*M_out*delta*log(1/epsilon) - 4*beta*delta*log(alpha/M_out + alpha*sigma)*M_out + 2*beta*delta*((alpha/M_out**2)/((alpha/M_out)+alpha*sigma))*M_out**2
+                    return 1/(2*sqrt(momentum_equation(M_out)+M_out)) * x_prime -1
+
+                def Newtons_Method(f,fprime):
+                    tolerance = 1e-6
+                    x_approx = 10000 #initial guess
+                    step = 0 #to keep track of number of iterations
+                    while f(x_approx) > tolerance:
+                        #estimate the successive value
+                        x_approx = x_approx - f(x_approx) / fprime(x_approx)
+                        step += 1
+                        
+                    root = round(x_approx , 5)
+                    return root
+
+                M_out = Newtons_Method(momentum_equation,momentum_equation_derivative)
+                
                 M_out = brentq(momentum_equation, 0, 2)
                 state_M_out = state_out.u/Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)
                 

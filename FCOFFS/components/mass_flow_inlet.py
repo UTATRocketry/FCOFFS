@@ -7,12 +7,12 @@ from ..fluids.Fluid import Fluid
 from ..utilities.units import UnitValue
 from ..state.State import *
 
-# chnage this for later
+# Needs fixes as it is not initilaizing mass flow rate correctly
 class MassFlowInlet(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, mass_flow_rate: UnitValue, temperature: UnitValue, name: str=None) -> None:
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, mass_flow_rate: UnitValue, temperature: UnitValue, velocity_guess:UnitValue = UnitValue("METRIC", "VELOCITY", "m/s", 500), name: str=None) -> None:
         super().__init__(parent_system, diameter, fluid,name)
 
-        if mass_flow_rate.get_dimension != "MASS FLOW RATE" or temperature.get_dimension != "TEMMPERATURE":
+        if mass_flow_rate.get_dimension != "MASS FLOW RATE" or temperature.get_dimension != "TEMPERATURE":
             raise Exception("Entered invalid mass flow rate and/or temperature")
 
         self.BC_type = "MASS FLOW RATE"
@@ -20,7 +20,8 @@ class MassFlowInlet(ComponentClass):
         self.p = self.parent_system.ref_p
         self.T = temperature.convert_base_metric()
         self.rho = Fluid.density(self.fluid, self.T, self.p)
-        self.u = UnitValue("METRIC", "VELOCITY", "m/s", 5)
+        self.u = velocity_guess
+        # push mass flow through on initalization # 
 
     def initialize(self):
         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.rho, u=self.u, p=self.p)

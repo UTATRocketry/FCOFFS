@@ -63,9 +63,16 @@ class SteadySolver(System):
                 print("Residual = "+str(rms(res)))
             if queue is not None:
                 queue.put(rms(res))
+            #self.output(True)
+            #print(res)
             return res
 
-        sol = root(func, self.w).x
+        sol = root(func, self.w).x #method='lm'
         if verbose is True:
             print(sol)
+            print("CONVERGED STATE")
+        #res = []
+        # for component in self.components:
+        #     res += component.eval()
+        # print(res)
         

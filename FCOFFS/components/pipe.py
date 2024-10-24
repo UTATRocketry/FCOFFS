@@ -10,6 +10,7 @@ from ..state.State import *
 from ..components.componentClass import ComponentClass
 from ..fluids.Fluid import Fluid
 from FCOFFS.utilities.units import *
+from FCOFFS.utilities.utilities import Newtons_Method
 
 ## Striaght section of the pipe
 class Pipe(ComponentClass):
@@ -21,7 +22,7 @@ class Pipe(ComponentClass):
     # epsilon [m]:     roughness of the pipe internal wall, a function of
     #                  material
     # height_delta [m]: Difference in heigh between one end of pipe to another, a decrease in height should be a negative value
-    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, length: UnitValue, height_delta: UnitValue = UnitValue("METRIC", "DISTANCE", "m", 0), roughness: float|None=None, epsilon: float|None=None, name: str=None):
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, length: UnitValue, height_delta: UnitValue = UnitValue("METRIC", "DISTANCE", "m", 0), roughness: float|None=None, epsilon: float|None=None, name: str="Pipe"):
         super().__init__(parent_system, diameter, fluid, name)
         self.length = length
         self.length.convert_base_metric()
@@ -56,12 +57,15 @@ class Pipe(ComponentClass):
         g = UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)
 
         c_s = Fluid.local_speed_sound(self.fluid, T = state_in.T, rho=state_in.rho)
-        Mach = state_in.u / c_s
+        # print(state_in.u)
+        Mach_in = state_in.u / c_s
 
-        if Mach < 0.3:
-            compressible = True
+        if Mach_in < 0.3: #check state # ensure no abrupt discountiinuity 
+            compressible = False
         else:
-            compressible = False     
+            compressible = True
+        #compressible = False
+
 
         # find friction factor
         Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
@@ -75,7 +79,7 @@ class Pipe(ComponentClass):
             friction_factor = 64 / Re
 
         match compressible:
-            case True: 
+            case False: 
 
                 # update downstream condition
                 PLC = friction_factor * self.length / self.diameter
@@ -87,52 +91,78 @@ class Pipe(ComponentClass):
                 res2 = (u_out - state_out.u)/u_out
                 res3 = (p_out - state_out.p)/p_out # add delta_h
 
-            case False:
+            case True:
 
                 fanning_factor = friction_factor/4
-
+                R = Fluid.get_gas_constant(self.fluid)
                 Cp = Fluid.Cp(self.fluid, state_in.T, state_in.p)
                 Cv = Fluid.Cv(self.fluid, state_in.T, state_in.p)
                 gamma = Cp/Cv
-                speed_sound = Fluid.local_speed_sound(self.fluid, state_in.T, state_in.rho)
-                M_in = state_in.u/speed_sound
-                M_in_sqrd = M_in**2
-                
-                def momentum_equation(M_out):
-                    return (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
-                
-                alpha = M_in; beta = gamma * M_in_sqrd ; gamma2 = 4*fanning_factor*self.length/self.diameter; delta = (gamma+1)/(2*gamma); sigma = (gamma-1)/2 ; epsilon = 1 + sigma*alpha**2
-                
-                #must redefine both the function and its derivative to solve for x such that f(x) = 0 
-                #this can be done analytically, cause both f and f' have closed form expressions
-
-                def momentum_equation_derivative(M_out):
-                    x_prime = 2*beta*gamma2*M_out - 2*beta*M_out*delta*log(1/epsilon) - 4*beta*delta*log(alpha/M_out + alpha*sigma)*M_out + 2*beta*delta*((alpha/M_out**2)/((alpha/M_out)+alpha*sigma))*M_out**2
-                    return 1/(2*sqrt(momentum_equation(M_out)+M_out)) * x_prime -1
-
-                def Newtons_Method(f,fprime):
-                    tolerance = 1e-6
-                    x_approx = 10000 #initial guess
-                    step = 0 #to keep track of number of iterations
-                    while f(x_approx) > tolerance:
-                        #estimate the successive value
-                        x_approx = x_approx - f(x_approx) / fprime(x_approx)
-                        step += 1
-                        
-                    root = round(x_approx , 5)
-                    return root
-
-                M_out = Newtons_Method(momentum_equation,momentum_equation_derivative)
-                
-                M_out = brentq(momentum_equation, 0, 2)
-                state_M_out = state_out.u/Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)
+                M_in_sqrd = Mach_in**2
+                M_out = state_out.u/c_s
                 
                 #mass conservation
-                res1 = (state_in.mdot - state_out.mdot) / 0.5 * (state_in.mdot + state_out.mdot)
-                #energy conservation
-                res2 = (state_in.u**2 - (2*Cp*(state_out.T- state_in.T) + 2*g*self.height_diference + state_out.u**2)) / 0.5*(Cp*(state_out.T + state_in.T) + g*self.height_diference + 0.5*(state_in.u**2 + state_out.u**2))
-                #Momentum conservation
-                res3 = (state_M_out - M_out) /  0.5*(state_M_out + M_out)
+                res1 = (state_in.mdot - state_out.mdot) / (0.5 * (state_in.mdot + state_out.mdot))
+                #energy conservation # maybe do enthalpy consevrartion  #density is not constant v^2/2 + CP(T) # only do conservation of enthalpy
+                #res2 = (state_in.u**2 - (2*Cp*(state_out.T- state_in.T) + 2*g*self.height_diference + state_out.u**2)) / (0.5*(Cp*(state_out.T + state_in.T) + g*self.height_diference + 0.5*(state_in.u**2 + state_out.u**2)))
+                #enthalpy conservation
+                Cp_out = Fluid.Cp(self.fluid, state_in.T, state_in.p)
+                res2 = (Cp*state_in.T - Cp_out*state_out.T) / (0.5 * (Cp*state_in.T + Cp_out*state_out.T))
+                
+                #Momentum conservation # momentum euqstion go to zero
+                res3 = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/self.diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
 
 
         return [res1, res2, res3]
+  
+if __name__ == "__main__":
+
+    M_in_sqrd = 0.4225
+    gamma = 1.27
+    fanning_factor = 0.02
+    length = 0.0001
+    diameter = 0.001 
+
+    alpha = M_in_sqrd**0.5
+    beta = gamma * M_in_sqrd 
+    gamma2 = 4*fanning_factor*length/diameter
+    delta = (gamma+1)/(2*gamma)
+    sigma = (gamma-1)/2 
+    epsilon = 1 + sigma*alpha**2
+    
+    def Newtons_Method(f,fprime):
+        tolerance = 1e-9
+        x_approx = 2 #initial guess
+        step = 0 #to keep track of number of iterations
+        while f(x_approx) > tolerance:
+            #estimate the successive value
+            x_approx = x_approx - f(x_approx) / fprime(x_approx)
+            step += 1
+            if step > 1000:
+                raise Exception(f"Could not converge on root of function. Last guess was: {x_approx}")
+        return x_approx
+    
+    def momentum_equation(M_out):
+        constant = (4 * fanning_factor * length) / diameter
+        first_term = (M_out**2 - M_in_sqrd)/(gamma*M_in_sqrd*M_out**2)
+        mult = (gamma+1)/(2*gamma)
+        top = 1 + (((gamma - 1)/2)*M_out**2)
+        bottom = 1 + (((gamma - 1)/2)*M_in_sqrd)
+        inside_log = (M_in_sqrd/M_out**2)*(top/bottom)
+        natural_log = log(inside_log)
+
+        ans = first_term + mult*natural_log - constant
+
+        #ans = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*length/diameter)-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
+        #print(ans)
+        return ans
+    
+    def momentum_equation_derivative(M_out):
+        top = 4*(M_out**2 - 1)
+        bottom = (gamma*M_out**3)*((gamma-1)*M_out**2 + 2) 
+        ans = -1*(top/bottom)
+        return ans
+    
+    M_out = Newtons_Method(momentum_equation, momentum_equation_derivative) #plot in desmos for confidence # ask about solving method
+    
+    print(M_out)

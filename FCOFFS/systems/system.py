@@ -31,7 +31,7 @@ class System:
             if obj.type == 'interface':
                 state = obj.state
                 
-                output_string += f"{obj.name:<12} {str(round(getattr(state, 'rho', 'N/A'), 4)):<20} {str(round(getattr(state, 'u', 'N/A'), 2)):<20} {str(round(getattr(state, 'p', 'N/A'), 4)):<20} {str(round(getattr(state, 'T', 'N/A'), 4)):<15} {str(round(getattr(state, 'mdot', 'N/A'), 4)):<20} {str(round(getattr(state, 'area', 'N/A'), 4)):<20} {getattr(state, 'fluid', 'N/A'):<10}\n"
+                output_string += f"{obj.name:<12} {str(round(getattr(state, 'rho', 'N/A'), 4)):<20} {str(round(getattr(state, 'u', 'N/A'), 2)):<20} {str(round(getattr(state, 'p', 'N/A'), 4)):<20} {str(round(getattr(state, 'T', 'N/A'), 4)):<15} {str(round(getattr(state, 'mdot', 'N/A'), 4)):<20} {str(round(getattr(state, 'area', 'N/A'), 8)):<20} {getattr(state, 'fluid', 'N/A'):<10}\n"
             else:
                 output_string += f"{obj.name:<12}\n"
 

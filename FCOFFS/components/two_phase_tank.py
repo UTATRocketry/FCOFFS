@@ -38,6 +38,9 @@ class TwoPhaseTank(ComponentClass):
         res3 = (state_out.T - self.liquid_temperature) / self.liquid_temperature
 
         return [res1, res2, res3]
+    
+    def transient(self, dt:float, state:State):
+        pass
 
 
 

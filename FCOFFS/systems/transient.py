@@ -42,7 +42,10 @@ class TransientSolver(System):
     def time_marching(self):
         for component in self.components:
             if callable(getattr(component, "transient")):
-                component.transient(self.dt, component.interface_out.state)
+                try:
+                    component.transient(self.dt, component.interface_in.state, component.interface_out.state)
+                except:
+                    pass
 
     def store_converged_state(self, time: float):
         # store convegred state
@@ -58,7 +61,7 @@ class TransientSolver(System):
         for t in time:
             # initialize the steady state solver
             self.quasi_steady_solver.solve(True)
-            self.output() # prints what quasi steady solver converged to
+            #self.output() # prints what quasi steady solver converged to
             self.store_converged_state(t)
 
             self.time_marching()

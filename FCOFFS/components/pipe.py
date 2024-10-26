@@ -116,7 +116,7 @@ class Pipe(ComponentClass):
         return [res1, res2, res3]
   
 if __name__ == "__main__":
-
+    # testing items whihc can be removed
     M_in_sqrd = 0.4225
     gamma = 1.27
     fanning_factor = 0.02

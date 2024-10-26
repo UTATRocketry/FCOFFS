@@ -72,3 +72,6 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
         res2 = (state_in.u - state_out.u)/state_in.u
         res3 = (state_in.p - state_out.p)/state_in.p
         return [res1, res2, res3]
+
+    def transient(self, dt, state_in, state_out):
+        pass

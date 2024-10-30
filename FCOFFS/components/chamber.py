@@ -6,17 +6,20 @@ from ..utilities.units import UnitValue
 from ..state.State import State
 
 from math import pi
+from scipy.constants import R
 
 class Chamber(ComponentClass): # eventually have N inlets
-    def __init__(self, parent_system: SteadySolver, outlet_diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, volume: UnitValue, name: str="Pressurant Tank") -> None:
-        super().__init__(parent_system, outlet_diameter, fluid,name)
+    def __init__(self, parent_system: SteadySolver, outlet_diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, volume: UnitValue, name: str="Chamber") -> None:
+        super().__init__(parent_system, outlet_diameter, fluid, name)
         self.p = pressure.convert_base_metric()
         self.T = temperature.convert_base_metric()
         self.volume = volume.convert_base_metric()
 
         self.rho = Fluid.density(self.fluid, self.T, self.p)
-        self.R = Fluid.get_gas_constant(self.fluid)
-        self.mass =  (self.p*self.volume)/(self.R*self.T)
+        self.mass = self.rho*self.volume
+        # self.M_r = Fluid.get_molecular_mass(self.fluid)
+        # U_R = UnitValue.create_unit("kgm^2/s^2MolK", R)
+        # self.mass = (self.p*self.volume*self.M_r)/(U_R*self.T)
 
     def eval(self, new_states: tuple[State, State]|None=None) -> list:
         if new_states is None:
@@ -33,16 +36,18 @@ class Chamber(ComponentClass): # eventually have N inlets
     
     def transient(self, dt:float, state_in: State, state_out: State):
         print(self.mass)
-        self.mass = self.mass - dt*state_out.area*state_out.rho*state_out.u + dt*state_in.area*state_in.rho*state_out.u # time march
+        self.mass = self.mass - dt*state_out.area*state_out.rho*state_out.u + dt*state_in.area*state_in.rho*state_in.u # time march
         print(self.mass)
+        #print(self.rho)
         new_rho = self.mass/self.volume
+       # print(new_rho)
         Cp = Fluid.Cp(self.fluid, self.T, self.p)
         Cv = Fluid.Cv(self.fluid, self.T, self.p)
-        print(self.p)
+        #print(self.p)
         self.p = self.p*(new_rho/self.rho)**(Cp/Cv)
-        print(self.p)
+        #print(self.p)
         self.rho = new_rho
-        print(self.T)
+        #print(self.T)
         self.T = Fluid.temp(self.fluid, self.rho, self.p)
-        print(self.T)
+        #print(self.T)
     

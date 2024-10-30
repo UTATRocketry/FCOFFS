@@ -8,7 +8,7 @@ from ..state.State import State
 from math import pi
 
 class PressureInlet(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, velocity_guess:UnitValue = UnitValue("METRIC", "VELOCITY", "m/s", 5), name: str=None) -> None:
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, velocity_guess:UnitValue = UnitValue("METRIC", "VELOCITY", "m/s", 5), name: str="Pressure Inlet") -> None:
         super().__init__(parent_system, diameter, fluid,name)
 
         if pressure.get_dimension != "PRESSURE" or temperature.get_dimension != "TEMPERATURE":

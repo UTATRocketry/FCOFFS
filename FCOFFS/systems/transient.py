@@ -51,7 +51,7 @@ class TransientSolver(System):
         # store convegred state
         for object in self.objects:
             if object.type == 'interface':
-                pandas.concat([self.dataframe, pandas.DataFrame({"Time": [time], "Interface": [object.name], "Rho": [object.state.rho], "Pressure": [object.state.p], "Velocity": [object.state.u], "Temperature": [object.state.T], "Mass Flow Rate": [object.state.mdot]})], ignore_index=True)
+                self.dataframe = pandas.concat([self.dataframe, pandas.DataFrame({"Time": [time], "Interface": [object.name], "Rho": [object.state.rho], "Pressure": [object.state.p], "Velocity": [object.state.u], "Temperature": [object.state.T], "Mass Flow Rate": [object.state.mdot]})], ignore_index=True)
 
     def solve(self):
         #solve system 
@@ -61,14 +61,14 @@ class TransientSolver(System):
         for t in time:
             # initialize the steady state solver
             self.quasi_steady_solver.solve(True)
-            #self.output() # prints what quasi steady solver converged to
+            self.output() # prints what quasi steady solver converged to
             self.store_converged_state(t)
-
+            
             self.time_marching()
             # update interface state with new component values and print maybe not needed
 
             #self.store_converged_state("Init") # second store maybve not needed
-        
+
         self.dataframe.to_csv("Transient Result.csv")
         # push datafranmes to csv
            

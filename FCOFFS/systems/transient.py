@@ -8,17 +8,15 @@ from FCOFFS.utilities.units import UnitValue
 from FCOFFS.systems.system import System
 from FCOFFS.systems.steady import SteadySolver
 from FCOFFS.fluids.Fluid import Fluid
+from .output import OutputHandler
 
 class TransientSolver(System):
     def __init__(self, name: str = "Transient State Solver", ref_T: UnitValue = UnitValue("METRIC", "TEMPERATURE", "K", 293.15), ref_p: UnitValue = UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5)):
         super().__init__(name, ref_T, ref_p)
         self.quasi_steady_solver = SteadySolver("Transient Qausi Intemediate", ref_T, ref_p)
-        # Stuff I think we will need
-        self.simulation_time = None
-        self.dt = 0.1 # seconds
+        self.dt = 0.1
 
-
-    def initialize(self, components: list, simulation_time: float):
+    def initialize(self, components: list):
         if len(components) < 1:
             raise IndexError('No component found. ')
         if components[0].BC_type != "PRESSURE":
@@ -26,49 +24,40 @@ class TransientSolver(System):
                 if component.decoupler == True:
                     raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
 
-        self.end_time = simulation_time
-        self.dataframe = pandas.DataFrame({"Time": [], "Interface": [], "Rho": [], "Pressure": [], "Velocity": [], "Temperature": [], "Mass Flow Rate": []})  # provide column labels [time_step, component, rho, p, u, mdot]
-        self.Init_dataframe = pandas.DataFrame({"Time": [], "Interface":[], "Rho": [], "Pressure": [], "Velocity": [], "Temperature": [], "Mass Flow Rate": []}) #pandas dataframe
-
         self.components = components
+
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 
-
+        self.quasi_steady_solver.Output.deactivate()
         self.objects = self.quasi_steady_solver.objects
         self.inlet_BC_type =  self.quasi_steady_solver.inlet_BC
         self.outlet_BC_type = self.quasi_steady_solver.outlet_BC
+        self.Output = OutputHandler(self.objects, True, self.name)
 
-        
+
     def time_marching(self):
         for component in self.components:
             if callable(getattr(component, "transient")):
-                try:
+                if component.interface_in and component.interface_out:
                     component.transient(self.dt, component.interface_in.state, component.interface_out.state)
-                except:
-                    pass
+                elif component.interface_out: 
+                    component.transient(self.dt, None, component.interface_out.state)
+                elif component.interface_in:
+                    component.transient(self.dt, component.interface_in.state, None)
 
-    def store_converged_state(self, time: float):
-        # store convegred state
-        for object in self.objects:
-            if object.type == 'interface':
-                self.dataframe = pandas.concat([self.dataframe, pandas.DataFrame({"Time": [time], "Interface": [object.name], "Rho": [object.state.rho], "Pressure": [object.state.p], "Velocity": [object.state.u], "Temperature": [object.state.T], "Mass Flow Rate": [object.state.mdot]})], ignore_index=True)
 
-    def solve(self):
+    def solve(self, simulation_time: float, dt: float = 0.1):
         #solve system 
-        start_time = 0
-        N = int(self.end_time / self.dt)
-        time = np.linspace(start_time, self.end_time, N)
-        for t in time:
+        self.dt = dt
+        self.simulation_time = simulation_time
+        t = 0
+        while t <= self.simulation_time:
             # initialize the steady state solver
-            self.quasi_steady_solver.solve(True)
-            self.output() # prints what quasi steady solver converged to
-            self.store_converged_state(t)
-            
+            self.quasi_steady_solver.solve(False)
+            self.Output._run(dt)
             self.time_marching()
-            # update interface state with new component values and print maybe not needed
+            t += dt
 
-            #self.store_converged_state("Init") # second store maybve not needed
-
-        self.dataframe.to_csv("Transient Result.csv")
+        self.Output._finish()
         # push datafranmes to csv
            

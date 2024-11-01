@@ -42,8 +42,9 @@ class PressurantTank(ComponentClass):
         res2 = (self.T - state_out.T) / self.T
         return [res1, res2]
     
-    def transient(self, dt: float|int, state: State, _: State):
-        self.mass = self.mass - dt*state.area*state.rho*state.u # time march
+    def transient(self, dt: float|int, _: State, state: State):
+        # time march
+        self.mass = self.mass - dt*state.area*state.rho*state.u 
         new_rho = self.mass/self.volume
         Cp = Fluid.Cp(self.fluid, self.T, self.p)
         Cv = Fluid.Cv(self.fluid, self.T, self.p)

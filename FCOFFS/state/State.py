@@ -23,7 +23,7 @@ class State:
     def update(self) -> None:
         # Update other fluid properties based on the primitives
         self.mdot = self.rho * self.u * self.area 
-        self.q = self.rho * self.u**2 / 2
+        self.q = self.rho * self.u**2 / 2 
         self.T = Fluid.temp(self.fluid, self.rho, self.p)
 
     def set(self, area: UnitValue=None, fluid: str=None, rho: UnitValue=None, u: UnitValue=None, p: UnitValue=None) -> None:

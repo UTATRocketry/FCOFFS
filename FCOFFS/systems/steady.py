@@ -5,7 +5,7 @@ Description
 from scipy.optimize import root
 
 from .system import System
-from ..utilities.utilities import rms
+from ..utilities.Utilities import rms
 from ..utilities.units import UnitValue
 
 # Nomenclature:

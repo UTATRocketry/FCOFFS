@@ -11,7 +11,7 @@ class OutputHandler:
         self.__is_transient = is_transient
         self.__iter_counter = 0
         self.__time = 0 
-        self.__steady_muted = False
+        self._interface_muted = False
         self.__objects = objects
         self.__probes = []
 
@@ -24,21 +24,21 @@ class OutputHandler:
         if self.__active is False:
             return
         self.__add_to_log()
-        if self.__steady_muted is False:
-            if self.__is_transient is True:
+        if self.__is_transient is True:
                 print(f"\nTransient Time Step: {self.__time}, Transient Iteration: {self.__iter_counter}")
+        if self._interface_muted is False:
             self.__print_converged_state()
         self.__iter_counter += 1
         self.__time += dt
 
     def _finish(self):
+        if self._interface_muted is True:
+            self.__print_converged_state()
+        if self.__is_transient is True:
+            self.__transient_results()
         if self.__active is False:
             return
         self.__save_log()
-        if self.__steady_muted is True:
-            self.__print_converged_state()
-        if self.__is_transient is True:
-            self.__print_transient_results()
 
     def deactivate(self):
         self.__active = False
@@ -70,7 +70,7 @@ class OutputHandler:
         print("\n" + output_string + "\n")
         #return output_string # maybe needed in future
     
-    def __print_transient_results(self):
+    def __transient_results(self):
        #USe saved datframe for this
         result = [[]]
         for _ in range(len(self.__probes)):
@@ -84,30 +84,40 @@ class OutputHandler:
                 if row["Object"] == probe[0]:
                     result[ind2 + 1].append(row[probe[1]])
 
+        col_dict = {"Time" : result[0]}
+        for ind, probe in enumerate(self.__probes):
+            col_dict[probe[0] + ' ' + probe[1]] = result[ind + 1]
+        transient_df = pd.DataFrame(col_dict)  
+        transient_df.to_csv(f"{self.__filename} Probes.csv", index=False) 
+        del transient_df       
+
         header = f"{'Time':<10}"
         for probe in self.__probes:
             header += f" {(probe[0] + ' ' + probe[1]):<25}"
         output_string = header + "\n" + "-" * len(header) + "\n"
-        for ind1 in range(len(result[0])):
-            for ind2 in range(len(result)):
-                if ind2 == 0:
-                    output_string += f"{str(round(result[ind2][ind1], 6)):<10} "
+        for column in range(len(result[0])):
+            for row in range(len(result)):
+                if row == 0:
+                    output_string += f"{str(round(result[row][column], 6)):<10} "
                 else:
-                    output_string += f"{str(round(result[ind2][ind1], 6)):<25} " 
+                    output_string += f"{str(round(result[row][column], 6)):<25} " 
             output_string += "\n"
 
         print("\n" + output_string + "\n")
         #return output_string maybe for future need
                     
     def __save_log(self):
-        self.__full_df.to_csv(f"{self.__filename} Full Log.csv")
-        self.__interfaces_df.to_csv(f"{self.__filename} Interface Log.csv")
+        self.__full_df.to_csv(f"{self.__filename} Full Log.csv", index=False)
+        self.__interfaces_df.to_csv(f"{self.__filename} Interface Log.csv", index=False)
         if self.__is_transient is True:
-            self.__components_df.to_csv(f"{self.__filename} Component Log.csv")
+            self.__components_df.to_csv(f"{self.__filename} Component Log.csv", index=False)
         print("LOGS SAVED\n")
+        self.__full_df = self.__full_df[0:0]
+        self.__components_df = self.__components_df[0:0]
+        self.__interfaces_df = self.__interfaces_df[0:0]
 
     def mute_steady_state(self):
-        self.__steady_muted = True
+        self._interface_muted = True
 
     def mute_transient_state(self):
         pass

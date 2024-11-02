@@ -10,20 +10,22 @@ from ..utilities.units import *
 from ..state.State import *
 
 class TwoPhaseTank(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, initial_liquid_temerature: UnitValue, fluid_in: str, fluid_out: str, name: str="Tank"):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, initial_liquid_temerature: UnitValue, gas: str, liquid: str, volume: UnitValue, name: str="Tank"):
       
-        super().__init__(parent_system, diameter_in, fluid_in, name)
+        super().__init__(parent_system, diameter_in, gas, name)
         self.diameter_in = diameter_in.convert_base_metric()
         self.diameter_out = diameter_out.convert_base_metric()
-        self.fluid_in = fluid_in
-        self.fluid_out = fluid_out
+        self.gas = gas
+        self.liquid = liquid
+
+
 
         if initial_liquid_temerature.get_dimension != "TEMPERATURE":
             self.liquid_temperature = initial_liquid_temerature.convert_base_metric()
 
     def initialize(self):
-         self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.fluid_in)
-         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.fluid_out, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
+         self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.gas)
+         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.liquid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
 
     def eval(self, new_states: tuple[State, State]|None=None) -> list:
         if new_states is None:

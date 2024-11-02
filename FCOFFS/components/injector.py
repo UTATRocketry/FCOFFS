@@ -15,7 +15,7 @@ from ..utilities.units import *
 
 class Injector(ComponentClass):
     def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, diameter_hole: UnitValue, num_hole: int, fluid: str, name: str='Injector'):
-        if fluid not in ['N2O','CO2']:
+        if fluid not in ['N2O','CO2','N2']:
             raise Exception("Fluid type not supported for injector")
         super().__init__(parent_system, diameter_hole, fluid, name)
         self.diameter_in = diameter_in

@@ -110,7 +110,8 @@ class UnitValue: # add specific heat
                          "DYNAMIC VISCOCITY": {"kg/ms": 1, "g/cms":0.1},
                          "KINEMATIC VISCOCITY": {"m^2/s": 1, "cm^2/s": 0.0001},
                          "MASS FLUX": {"kg/m^2s": 1},
-                         "GAS CONSTANTS": {"m^2/s^2K": 1, "J/kgK": 1, "J/kgc": 1}
+                         "GAS CONSTANTS": {"m^2/s^2K": 1, "J/kgK": 1, "J/kgc": 1}, 
+                         "Molecular Count": {'Mol': 1, "kMol": 1000}
                         }
             }
     
@@ -308,7 +309,9 @@ class UnitValue: # add specific heat
                 continue
             elif unit_str[i] == "k":
                 key = unit_str[i:i+2]
-                i += 1      
+                i += 1 
+            elif unit_str[i] == "M":
+                key = unit_str[i:i+3]     
             else:
                 key = unit_str[i]
 

@@ -13,19 +13,23 @@ from ..utilities.units import *
 
 
 class CriticalOrifice(ComponentClass):
-
+    # Assumes thin plate, shard edged orrifice
     FLUID_CDS = {"N2O":1, "CO2": 1, "C2H6O": 1, "N2": 1}
 
-    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue,  diameter_out: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue,  diameter_out: UnitValue, orrifice_diameter: UnitValue, fluid: str, name: str='critical_orifice', Cd: float|None = None):
         if fluid not in ['N2O','CO2', 'C2H6O', 'N2']:
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)
         self.diameter_out = diameter_out.convert_base_metric()
         self.diameter_in = diameter_in.convert_base_metric()
+        self.orrifice_diameter = orrifice_diameter.convert_base_metric()
+        self.Beta = self.orrifice_diameter/self.diameter_in
         if Cd is None:
             self.Cd = self.FLUID_CDS[fluid]
         else:
             self.Cd = Cd
+        #Note K is the velocity head loss coefficient / pressure loss coefficient
+        self.K = (1-self.Beta**2)/(self.Cd**2*self.Beta**4)
         self.decoupler = True 
 
     def initialize(self):
@@ -47,7 +51,7 @@ class CriticalOrifice(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
             
-        Cp = 0.5 * (Fluid.Cp(self.fluid, state_in.T , state_in.p) + Fluid.Cp(self.fluid, state_out.T , state_out.p) )#why state out??
+        Cp = 0.5 * (Fluid.Cp(self.fluid, state_in.T , state_in.p) + Fluid.Cp(self.fluid, state_out.T , state_out.p) )
         Cv = 0.5 * (Fluid.Cv(self.fluid, state_in.T , state_in.p) + Fluid.Cv(self.fluid, state_out.T , state_out.p) )
 
         gamma = Cp / Cv
@@ -67,8 +71,10 @@ class CriticalOrifice(ComponentClass):
         res1 = (state_out.mdot - state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) / (0.5*(state_out.mdot + (state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) ) )
         
         #from isentropic nozzle flow equations
-        res2 = ( (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) / ( 0.5 * ( (state_in.p/state_out.p) + (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) )
-        
+        #res2 = ( (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) / ( 0.5 * ( (state_in.p/state_out.p) + (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) )
+        res2 = (state_out.p - (state_in.p - 0.5*self.K*state_in.rho*state_in.u**2)) / (0.5*(state_out.p + state_in.p - 0.5*self.K*state_in.rho*state_in.u**2))
+
+
         #output mass flux calculations that follow from isentropic nozzle flow 
         res3 = (state_out.mdot - state_in.p * Mach_final * pi * (self.diameter_out**2)/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ) / ( 0.5 * (state_out.mdot+state_in.p * Mach_final * pi * (self.diameter_out**2)/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ))
         # chnaged above to orrifivce diameter is this what it should be????

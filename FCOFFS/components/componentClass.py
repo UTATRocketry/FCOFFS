@@ -4,7 +4,6 @@ Description
 
 from numpy import pi
 
-from ..systems.steady import SteadySolver
 from ..state.State import *
 from ..interfaces.interface import Interface
 from ..utilities.utilities import *
@@ -15,7 +14,7 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
     # diameter [m]:    diameter of the component at the connections
     # name []:         name of the component, if left blank will receive a label
     #                  of 'COMP #'
-    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, name: str="COMP_AUTO"):
+    def __init__(self, parent_system, diameter: UnitValue, fluid: str, name: str="COMP_AUTO"):
         self.parent_system = parent_system
         self.diameter = diameter
         self.diameter.convert_base_metric()
@@ -72,3 +71,6 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
         res2 = (state_in.u - state_out.u)/state_in.u
         res3 = (state_in.p - state_out.p)/state_in.p
         return [res1, res2, res3]
+
+    def transient(self, dt, state_in, state_out):
+        pass

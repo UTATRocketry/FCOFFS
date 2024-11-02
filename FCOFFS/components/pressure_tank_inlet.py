@@ -8,7 +8,7 @@ from ..state.State import State
 from math import pi
 
 class PressurantTank(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, outlet_diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, volume: UnitValue, name: str="Pressurant Tank") -> None:
+    def __init__(self, parent_system: SteadySolver, outlet_diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, volume: UnitValue, velocity_guess: UnitValue = UnitValue("METRIC", "VELOCITY", "m/s", 5), name: str="Pressurant Tank") -> None:
         super().__init__(parent_system, outlet_diameter, fluid,name)
         #mass is not provided as input as we will calculate it from volume temperature and temperature
 
@@ -24,9 +24,8 @@ class PressurantTank(ComponentClass):
         self.T = temperature
         self.volume = volume
         self.rho = Fluid.density(self.fluid, self.T, self.p)
-        self.u = UnitValue("METRIC", "VELOCITY", "m/s", 5)
-        self.R = Fluid.get_gas_constant(self.fluid)
-        self.mass =  (self.p*self.volume)/(self.R*self.T) # ideal gas law
+        self.u = velocity_guess
+        self.mass = self.rho*self.volume
 
 
     def initialize(self):
@@ -43,8 +42,9 @@ class PressurantTank(ComponentClass):
         res2 = (self.T - state_out.T) / self.T
         return [res1, res2]
     
-    def transient(self, dt: float|int, state: State):
-        self.mass = self.mass + dt*state.area*state.rho*state.u # time march
+    def transient(self, dt: float|int, _: State, state: State):
+        # time march
+        self.mass = self.mass - dt*state.area*state.rho*state.u 
         new_rho = self.mass/self.volume
         Cp = Fluid.Cp(self.fluid, self.T, self.p)
         Cv = Fluid.Cv(self.fluid, self.T, self.p)

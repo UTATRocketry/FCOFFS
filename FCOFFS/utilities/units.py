@@ -231,7 +231,7 @@ class UnitValue: # add specific heat
             raise ValueError("First element of string could not be converted to number, ensure string of the form e.g., '10 kg'")
     
     @classmethod
-    def from_dict(cls, data: dict) -> 'UnitValue':
+    def unit_from_dict(cls, data: dict) -> 'UnitValue':
         """
         Create a UnitValue object from a dictionary.
         
@@ -311,7 +311,8 @@ class UnitValue: # add specific heat
                 key = unit_str[i:i+2]
                 i += 1 
             elif unit_str[i] == "M":
-                key = unit_str[i:i+3]     
+                key = unit_str[i:i+3]
+                i += 2     
             else:
                 key = unit_str[i]
 

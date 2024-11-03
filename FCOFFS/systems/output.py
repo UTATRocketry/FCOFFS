@@ -3,6 +3,7 @@ import warnings
 
 from FCOFFS.components.componentClass import ComponentClass
 from FCOFFS.interfaces.interface import Interface
+from FCOFFS.utilities.units import UnitValue
 
 class OutputHandler:
     def __init__(self, objects: list, is_transient: bool, filename: str):
@@ -15,10 +16,10 @@ class OutputHandler:
         self.__objects = objects
         self.__probes = []
 
-        self.__full_df = pd.DataFrame({"Time": [], "Object": [], "Rho": [], "Pressure": [], "Velocity": [], "Temperature": [], "Mass Flow Rate": [], "Mass": [], "Dynamic Pressure": []})
-        self.__interfaces_df = pd.DataFrame({"Time": [], "Interface": [], "Rho": [], "Pressure": [], "Velocity": [], "Temperature": [], "Mass Flow Rate": [], "Dynamic Pressure": []})
+        self.__full_df = pd.DataFrame({"Time": [], "Object": [], "Density (kg/m^3)": [], "Pressure (kg/ms^2)": [], "Velocity (m/s)": [], "Temperature (K)": [], "Mass Flow Rate (kg/s)": [], "Mass (kg)": [], "Dynamic Pressure (kg/ms^2)": []})
+        self.__interfaces_df = pd.DataFrame({"Time": [], "Interface": [], "Density (kg/m^3)": [], "Pressure (kg/ms^2)": [], "Velocity (m/s)": [], "Temperature (K)": [], "Mass Flow Rate (kg/s)": [], "Dynamic Pressure (kg/ms^2)": []})
         if is_transient is True:
-            self.__components_df = pd.DataFrame({"Time": [], "Component": [], "Mass": [], "Pressure": [], "Rho": [], "Temperature": []})
+            self.__components_df = pd.DataFrame({"Time": [], "Component": [], "Mass (kg)": [], "Pressure (kg/ms^2)": [], "Density (kg/m^3)": [], "Temperature (K)": []})
         
     def _run(self, dt: float):
         if self.__active is False:
@@ -47,12 +48,44 @@ class OutputHandler:
     def __add_to_log(self): 
         for obj in self.__objects:
             if isinstance(obj, ComponentClass):
-                self.__full_df = pd.concat([self.__full_df, pd.DataFrame({"Time": [self.__time], "Object": [obj.name], "Rho": [getattr(obj, "rho", 'N/A')], "Pressure": [getattr(obj, "p", 'N/A')], "Velocity": [getattr(obj, "u", 'N/A')], "Temperature": [getattr(obj, "T", 'N/A')], "Mass Flow Rate": [getattr(obj, "mdot", 'N/A')], "Mass": [getattr(obj, "mass", 'N/A')], "Dynamic Pressure": [getattr(obj, "q", 'N/A')]})], ignore_index=True)
+                self.__full_df = pd.concat([self.__full_df, pd.DataFrame({"Time": [self.__time], 
+                                                                          "Object": [obj.name], 
+                                                                          "Density (kg/m^3)": [obj.rho.value if isinstance(getattr(obj, "rho", 'N/A'), UnitValue) else "N/A"], 
+                                                                          "Pressure (kg/ms^2)": [obj.p.value if isinstance(getattr(obj, "p", 'N/A'), UnitValue) else "N/A"], 
+                                                                          "Velocity (m/s)": [obj.u.value if isinstance(getattr(obj, "u", 'N/A'), UnitValue) else "N/A"], 
+                                                                          "Temperature (K)": [obj.T.value if isinstance(getattr(obj, "T", 'N/A'), UnitValue) else "N/A"], 
+                                                                          "Mass Flow Rate (kg/s)": [obj.mdot.value if isinstance(getattr(obj, "mdot", 'N/A'), UnitValue) else "N/A"], 
+                                                                          "Mass (kg)": [obj.mass.value if isinstance(getattr(obj, "mass", 'N/A'), UnitValue) else "N/A"], 
+                                                                          "Dynamic Pressure (kg/ms^2)": [obj.q.value if isinstance(getattr(obj, "q", 'N/A'), UnitValue) else "N/A"]})], 
+                                                                          ignore_index=True)
                 if self.__is_transient is True:
-                    self.__components_df = pd.concat([self.__components_df, pd.DataFrame({"Time": [self.__time], "Component": [obj.name], "Mass": [getattr(obj, "mass", 'N/A')], "Pressure": [getattr(obj, "p", 'N/A')], "Rho": [getattr(obj, "rho", 'N/A')], "Temperature": [getattr(obj, "T", 'N/A')]})], ignore_index=True)
+                    self.__components_df = pd.concat([self.__components_df, pd.DataFrame({"Time": [self.__time], 
+                                                                                          "Component": [obj.name], 
+                                                                                          "Mass (kg)": [obj.mass.value if isinstance(getattr(obj, "mass", 'N/A'), UnitValue) else "N/A"], 
+                                                                                          "Pressure (kg/ms^2)": [obj.p.value if isinstance(getattr(obj, "p", 'N/A'), UnitValue) else "N/A"], 
+                                                                                          "Density (kg/m^3)": [obj.rho.value if isinstance(getattr(obj, "rho", 'N/A'), UnitValue) else "N/A"], 
+                                                                                          "Temperature (K)": [obj.T.value if isinstance(getattr(obj, "T", 'N/A'), UnitValue) else "N/A"]})], 
+                                                                                          ignore_index=True)
             if isinstance(obj, Interface):
-                self.__full_df = pd.concat([self.__full_df, pd.DataFrame({"Time": [self.__time], "Object": [obj.name], "Rho": [obj.state.rho], "Pressure": [obj.state.p], "Velocity": [obj.state.u], "Temperature": [obj.state.T], "Mass Flow Rate": [obj.state.mdot], "Mass": [getattr(obj, "mass", 'N/A')], "Dynamic Pressure": [obj.state.q]})], ignore_index=True)
-                self.__interfaces_df = pd.concat([self.__interfaces_df, pd.DataFrame({"Time": [self.__time], "Interface": [obj.name], "Rho": [obj.state.rho], "Pressure": [obj.state.p], "Velocity": [obj.state.u], "Temperature": [obj.state.T], "Mass Flow Rate": [obj.state.mdot], "Dynamic Pressure": [obj.state.q]})], ignore_index=True)
+                self.__full_df = pd.concat([self.__full_df, pd.DataFrame({"Time": [self.__time], 
+                                                                          "Object": [obj.name], 
+                                                                          "Density (kg/m^3)": [obj.state.rho.value], 
+                                                                          "Pressure (kg/ms^2)": [obj.state.p.value], 
+                                                                          "Velocity (m/s)": [obj.state.u.value], 
+                                                                          "Temperature (K)": [obj.state.T.value], 
+                                                                          "Mass Flow Rate (kg/s)": [obj.state.mdot.value], 
+                                                                          "Mass (kg)": [obj.mass.value if isinstance(getattr(obj.state, "mass", 'N/A'), UnitValue) else "N/A"], 
+                                                                          "Dynamic Pressure (kg/ms^2)": [obj.state.q.value]})], 
+                                                                          ignore_index=True)
+                self.__interfaces_df = pd.concat([self.__interfaces_df, pd.DataFrame({"Time": [self.__time], 
+                                                                                      "Interface": [obj.name], 
+                                                                                      "Density (kg/m^3)": [obj.state.rho.value], 
+                                                                                      "Pressure (kg/ms^2)": [obj.state.p.value], 
+                                                                                      "Velocity (m/s)": [obj.state.u.value], 
+                                                                                      "Temperature (K)": [obj.state.T.value], 
+                                                                                      "Mass Flow Rate (kg/s)": [obj.state.mdot.value], 
+                                                                                      "Dynamic Pressure (kg/ms^2)": [obj.state.q.value]})], 
+                                                                                      ignore_index=True)
 
     def __print_converged_state(self):
         header = f"{'Name':<12} {'Rho':<20} {'Velocity':<20} {'Pressure':<20} {'Temp':<15} {'Mdot':<20} {'Area':<20} {'Fluid':<10}"
@@ -126,7 +159,7 @@ class OutputHandler:
         self.__print_converged_state()
 
     def add_probes(self, items: tuple|list[tuple]):
-        corresponding = {"p": "Pressure", "rho": "Rho", "u": "Velocity", "T": "Temperature", "mdot": "Mass Flow Rate", "mass": "Mass", "q": "Dynamic Pressure"}
+        corresponding = {"p": "Pressure (kg/ms^2)", "rho": "Density (kg/m^3)", "u": "Velocity (m/s)", "T": "Temperature (K)", "mdot": "Mass Flow Rate (kg/s)", "mass": "Mass (kg)", "q": "Dynamic Pressure (kg/ms^2)"}
         if isinstance(items[0], tuple) or isinstance(items[0], list):
             for item in items:
                 if self.__check_object_exists(item) is False:

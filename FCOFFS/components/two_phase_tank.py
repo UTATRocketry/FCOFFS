@@ -10,15 +10,15 @@ from ..utilities.units import *
 from ..state.State import *
 
 class TwoPhaseTank(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, initial_liquid_temerature: UnitValue, gas: str, liquid: str, volume: UnitValue, name: str="Tank"):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, initial_liquid_temerature: UnitValue, gas: str, liquid: str, initial_liquid_mass: UnitValue, volume: UnitValue, name: str="Tank"):
       
         super().__init__(parent_system, diameter_in, gas, name)
         self.diameter_in = diameter_in.convert_base_metric()
         self.diameter_out = diameter_out.convert_base_metric()
         self.gas = gas
         self.liquid = liquid
-
-
+        self.volume = volume
+        self.liquid_mass = initial_liquid_mass 
 
         if initial_liquid_temerature.get_dimension != "TEMPERATURE":
             self.liquid_temperature = initial_liquid_temerature.convert_base_metric()
@@ -41,8 +41,13 @@ class TwoPhaseTank(ComponentClass):
 
         return [res1, res2, res3]
     
-    def transient(self, dt:float, state:State):
+    def transient(self, dt:float, state_in: State, state_out: State):
+        self.liquid_mass -= dt*state_out.area*state_out.rho*state_out.u
+        new_liquid_volume = self.liquid_mass*state_out.rho
+        new_gas_volume = self.volume - new_liquid_volume
+        
         pass
+
 
 
 

@@ -60,12 +60,10 @@ class Pipe(ComponentClass):
         # print(state_in.u)
         Mach_in = state_in.u / c_s
 
-        if Mach_in < 0.3: #check state # ensure no abrupt discountiinuity 
+        if Fluid.phase(self.fluid, state_in.T, state_in.p) == "liquid" or Mach_in < 0.3:
             compressible = False
         else:
             compressible = True
-        #compressible = False
-
 
         # find friction factor
         Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)

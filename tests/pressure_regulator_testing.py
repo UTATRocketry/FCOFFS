@@ -1,6 +1,4 @@
 
-import os
-
 from FCOFFS.utilities.units import *
 from FCOFFS.components import *
 from FCOFFS.interfaces.interface import *

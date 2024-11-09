@@ -5,7 +5,6 @@ from FCOFFS.interfaces.interface import *
 from FCOFFS.systems.steady import *
 
 
-
 PS = SteadySolver(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psi", 15)) 
 
 #can be dynamically initialized now

@@ -36,7 +36,9 @@ class Chamber(ComponentClass): # eventually have N inlets
     
     def transient(self, dt:float, state_in: State, state_out: State):
         # time march
-        self.mass = self.mass - dt*state_out.area*state_out.rho*state_out.u + dt*state_in.area*state_in.rho*state_in.u 
+        mdot_in = state_in.area*state_in.rho*state_in.u
+        mdot_out = state_out.area*state_out.rho*state_out.u
+        self.mass = self.mass - dt*mdot_out + dt*mdot_in
         new_rho = self.mass/self.volume
         # add iterative computation of cp, cv
         Cp = Fluid.Cp(self.fluid, self.T, self.p)

@@ -2,7 +2,7 @@
 Description
 '''
 
-from CoolProp.CoolProp import PropsSI
+from CoolProp.CoolProp import PropsSI, PhaseSI
 #from ..utilities.units import UnitValue
 from FCOFFS.utilities.units import UnitValue
 from scipy.constants import R
@@ -42,11 +42,11 @@ class Fluid:
     def phase(fluid: str, T: UnitValue|None = None, p: UnitValue|None = None, rho: UnitValue|None = None) -> str:
         indexes = {0.0: "liquid", 2.0: "supercritical gas", 5.0: 'gas', 6.0: "mixed (liquid + vapour)"}
         if T != None and p != None: 
-            phase_index = PropsSI("Phase", "P", p.value, "T", T.value, fluid)
+            phase_index = PhaseSI("Phase", "P", p.value, "T", T.value, fluid)
         elif T != None and rho != None: 
-            phase_index = PropsSI("Phase", "D", rho.value, "T", T.value, fluid)
+            phase_index = PhaseSI("Phase", "D", rho.value, "T", T.value, fluid)
         elif rho != None and p != None: 
-            phase_index = PropsSI("Phase", "P", p.value, "D", rho.value, fluid)
+            phase_index = PhaseSI("Phase", "P", p.value, "D", rho.value, fluid)
         
         return indexes[phase_index]
 

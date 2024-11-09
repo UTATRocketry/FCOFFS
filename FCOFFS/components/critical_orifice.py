@@ -1,8 +1,9 @@
 '''
 Description
 '''
-
+import numpy as np
 from numpy import sqrt, pi
+from scipy.interpolate import interp1d
 import warnings
 
 from ..systems.steady import SteadySolver
@@ -32,6 +33,9 @@ class CriticalOrifice(ComponentClass):
         self.K = (1-self.Beta**2)/(self.Cd**2*self.Beta**4)
         self.decoupler = True 
 
+        vals = np.array([[0, 1], [0.5, 1], [0.6, 0.9], [0.7, 0.65], [0.8, 0.46], [0.9, 0.33], [0.95, 0.23], [0.98, 0.14], [0.99, 0.1], [1, 0]])
+        self.interp = interp1d(vals[:, 0], vals[:, 1], 'linear')
+
     def initialize(self):
             if self.parent_system.outlet_BC != 'PRESSURE':
                 warnings.warn("Outlet BC not well posed. ")
@@ -51,8 +55,8 @@ class CriticalOrifice(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
             
-        Cp = 0.5 * (Fluid.Cp(self.fluid, state_in.T , state_in.p) + Fluid.Cp(self.fluid, state_out.T , state_out.p) )
-        Cv = 0.5 * (Fluid.Cv(self.fluid, state_in.T , state_in.p) + Fluid.Cv(self.fluid, state_out.T , state_out.p) )
+        Cp = Fluid.Cp(self.fluid, state_in.T , state_in.p)
+        Cv = Fluid.Cv(self.fluid, state_in.T , state_in.p) 
 
         gamma = Cp / Cv
         R_gas = Fluid.get_gas_constant(self.fluid)
@@ -68,15 +72,35 @@ class CriticalOrifice(ComponentClass):
         
                 
         #from mass continuity 
-        res1 = (state_out.mdot - state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) / (0.5*(state_out.mdot + (state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) ) )
+        # res1 = (state_out.mdot - state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) / (0.5*(state_out.mdot + (state_in.rho*(pi*self.diameter_in**2/4)*state_in.u) ) )
         
         #from isentropic nozzle flow equations
         #res2 = ( (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) / ( 0.5 * ( (state_in.p/state_out.p) + (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) )
-        res2 = (state_out.p - (state_in.p - 0.5*self.K*state_in.rho*state_in.u**2)) / (0.5*(state_out.p + state_in.p - 0.5*self.K*state_in.rho*state_in.u**2))
+        # res2 = (state_out.p - (state_in.p - 0.5*self.K*state_in.rho*state_in.u**2)) / (0.5*(state_out.p + state_in.p - 0.5*self.K*state_in.rho*state_in.u**2))
+        mdot_in = state_in.u*state_in.rho*state_in.area
+        mdot_out = state_out.rho*state_out.u*state_out.area
+        res1 = (mdot_in - mdot_out) / (0.5 * (mdot_in + mdot_out))
+        
+        A_orifice = pi * self.orrifice_diameter**2/4
+        
+       
+        # calculate percentage of upstream pressure vs downstream pressure and 
+        
+        P_ratio = state_out.p/state_in.p
+        NC_CF =  self.interp(P_ratio)
+        
+        #non_critical choked flow rate correction factor = NC_CF
+
+        # mdot_choked = (state_in.p * A_orifice * state_in.u * (1 + ((gamma-1)/2) * (Mach_final**2-Mach_initial**2))**(-gamma/(gamma-1)))/ (R_gas*state_out.T) 
+        mdot_choked = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/2*(gamma-1)) * state_in.p * sqrt(gamma/(R_gas*state_in.T)) * A_orifice
+        
+        res2 = (mdot_out - mdot_choked)/(0.5*(mdot_out + mdot_choked))
+        
+        res3 = (state_in.T - state_out.T) / (0.5 * (state_in.T + state_out.T) ) # should be enthalpy so fix this 
 
 
         #output mass flux calculations that follow from isentropic nozzle flow 
-        res3 = (state_out.mdot - state_in.p * Mach_final * pi * (self.diameter_out**2)/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ) / ( 0.5 * (state_out.mdot+state_in.p * Mach_final * pi * (self.diameter_out**2)/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ))
+        # res3 = (state_out.mdot - state_in.p * Mach_final * pi * (self.diameter_out**2)/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ) / ( 0.5 * (state_out.mdot+state_in.p * Mach_final * pi * (self.diameter_out**2)/4 * sqrt(gamma/(state_in.T*R_gas)) * (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2) )**( (gamma+1) / (2*(1-gamma)) ) ))
         # chnaged above to orrifivce diameter is this what it should be????
         # verify what the optimal two state variable are to input for CoolProps equation of state calculations-->temperature and density
         return [res1, res2, res3]

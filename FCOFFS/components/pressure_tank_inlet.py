@@ -44,7 +44,8 @@ class PressurantTank(ComponentClass):
     
     def transient(self, dt: float|int, _: State, state: State):
         # time march
-        self.mass = self.mass - dt*state.area*state.rho*state.u 
+        mdot = state.area*state.rho*state.u
+        self.mass = self.mass - dt*mdot
         new_rho = self.mass/self.volume
         Cp = Fluid.Cp(self.fluid, self.T, self.p)
         Cv = Fluid.Cv(self.fluid, self.T, self.p)

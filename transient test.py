@@ -36,9 +36,9 @@ orifice.set_connection(interface1, interface2)
 out.set_connection(upstream=interface2)
 
 TS.initialize([inlet, orifice, out])
-TS.Output.add_probes([("Pressurant Tank", "mass"), ("Pressurant Tank", "p"), ("Pressurant Tank", "rho"), ("Chamber", "mass"), ("Chamber", "p")])
+TS.Output.add_probes([(inlet, "mass"), (inlet, "p"), (inlet, "rho"), ("Chamber", "mass"), ("Chamber", "p")])
 #TS.Output.mute_steady_state()
-TS.solve(15, 0.1)                                                                                                               
+TS.solve(1, 0.1)                                                                                                               
 
 #TS.initialize([inlet, p, chamb, p2, out]) #store copy of original components so it actually re initializes
 #TS.solve(0.2, 0.1)

@@ -22,6 +22,11 @@ class OutputHandler:
             self.__components_df = pd.DataFrame({"Time": [], "Component": [], "Mass (kg)": [], "Pressure (kg/ms^2)": [], "Density (kg/m^3)": [], "Temperature (K)": []})
         
     def _run(self, dt: float):
+        if self.__iter_counter == 0:
+            probe_dict = {"Time": []}
+            for probe in self.__probes:
+                 probe_dict[probe[2]] = []
+            self.__probes_df = pd.DataFrame(probe_dict)
         if self.__active is False:
             return
         self.__add_to_log()
@@ -86,6 +91,10 @@ class OutputHandler:
                                                                                       "Mass Flow Rate (kg/s)": [obj.state.mdot.value], 
                                                                                       "Dynamic Pressure (kg/ms^2)": [obj.state.q.value]})], 
                                                                                       ignore_index=True)
+        probe_dict = {"Time": [self.__time]}
+        for probe in self.__probes:
+            probe_dict[probe[2]] = [getattr(probe[0], probe[1])]
+        self.__probes_df = pd.concat([self.__probes_df, pd.DataFrame(probe_dict)], ignore_index=True)
 
     def __print_converged_state(self):
         header = f"{'Name':<12} {'Rho':<20} {'Velocity':<20} {'Pressure':<20} {'Temp':<15} {'Mdot':<20} {'Area':<20} {'Fluid':<10}"
@@ -104,37 +113,46 @@ class OutputHandler:
         #return output_string # maybe needed in future
     
     def __transient_results(self):
-       #USe saved datframe for this
-        result = [[]]
-        for _ in range(len(self.__probes)):
-            result += [[]]
-        prev_time = -1 
-        for _, row in self.__full_df.iterrows():
-            if prev_time < row["Time"]:
-                result[0].append(row["Time"])
-                prev_time = result[0][-1]
-            for ind2, probe in enumerate(self.__probes):
-                if row["Object"] == probe[0]:
-                    result[ind2 + 1].append(row[probe[1]])
+       #Use saved datframe for this
+        # result = [[]]
+        # for _ in range(len(self.__probes)):
+        #     result += [[]]
+        # prev_time = -1 
+        # for _, row in self.__probes_df.iterrows():
+        #     if prev_time < row["Time"]:
+        #         result[0].append(row["Time"])
+        #         prev_time = result[0][-1]
+        #     for ind2, probe in enumerate(self.__probes):
+        #         if row["Object"] == probe[0]:
+        #             result[ind2 + 1].append(row[probe[1]])
 
-        col_dict = {"Time" : result[0]}
-        for ind, probe in enumerate(self.__probes):
-            col_dict[probe[0] + ' ' + probe[1]] = result[ind + 1]
-        transient_df = pd.DataFrame(col_dict)  
-        transient_df.to_csv(f"{self.__filename} Probes.csv", index=False) 
-        del transient_df       
+        # col_dict = {"Time" : result[0]}
+        # for ind, probe in enumerate(self.__probes):
+        #     col_dict[probe[0] + ' ' + probe[1]] = result[ind + 1]
+        # transient_df = pd.DataFrame(col_dict)  
+        # transient_df.to_csv(f"{self.__filename} Probes.csv", index=False) 
+        # del transient_df       
+        self.__probes_df.to_csv(f"{self.__filename} Probes.csv", index=False)
 
         header = f"{'Time':<10}"
         for probe in self.__probes:
-            header += f" {(probe[0] + ' ' + probe[1]):<25}"
+            header += f" {(probe[2]):<25}"
         output_string = header + "\n" + "-" * len(header) + "\n"
-        for column in range(len(result[0])):
-            for row in range(len(result)):
-                if row == 0:
-                    output_string += f"{str(round(result[row][column], 6)):<10} "
-                else:
-                    output_string += f"{str(round(result[row][column], 6)):<25} " 
+        # for column in range(len(result[0])):
+        #     for row in range(len(result)):
+        #         if row == 0:
+        #             output_string += f"{str(round(result[row][column], 6)):<10} "
+        #         else:
+        #             output_string += f"{str(round(result[row][column], 6)):<25} " 
+        #     output_string += "\n"
+
+        for _, row in self.__probes_df.iterrows():
+            output_string += f"{str(round(row['Time'], 6)):<10} "
+            for probe in self.__probes:
+                output_string += f"{str(round(row[probe[2]].value, 6)):<25} "
             output_string += "\n"
+
+                
 
         print("\n" + output_string + "\n")
         #return output_string maybe for future need
@@ -158,19 +176,24 @@ class OutputHandler:
     def print_state(self):
         self.__print_converged_state()
 
-    def add_probes(self, items: tuple|list[tuple]):
-        corresponding = {"p": "Pressure (kg/ms^2)", "rho": "Density (kg/m^3)", "u": "Velocity (m/s)", "T": "Temperature (K)", "mdot": "Mass Flow Rate (kg/s)", "mass": "Mass (kg)", "q": "Dynamic Pressure (kg/ms^2)"}
+    def add_probes(self, items: tuple[ComponentClass, ]|list[tuple]):
+        # make probes be of (item, "atribute name ")
+        #corresponding = {"p": "Pressure (kg/ms^2)", "rho": "Density (kg/m^3)", "u": "Velocity (m/s)", "T": "Temperature (K)", "mdot": "Mass Flow Rate (kg/s)", "mass": "Mass (kg)", "q": "Dynamic Pressure (kg/ms^2)"}
         if isinstance(items[0], tuple) or isinstance(items[0], list):
             for item in items:
                 if self.__check_object_exists(item) is False:
                     warnings.warn(f"Object and or object attribute {item} does not exist! Skipping this probe.")
                     continue
-                self.__probes.append([item[0], corresponding[item[1]]])
+                if isinstance(item[0], ComponentClass):
+                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).get_dimension} ({getattr(item[0], item[1]).get_unit})"]
+                elif isinstance(item[0], Interface):
+                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).get_dimension} ({getattr(item[0], item[1]).get_unit})"]
+                self.__probes.append(probe)
         else:
             if self.__check_object_exists(items) is False:
                     warnings.warn(f"Object and or object attribute {items} does not exist! Skipping this probe.")
             else:
-                self.__probes.append([items[0], corresponding[items[1]]])
+                self.__probes.append(item)
 
     def remove_probe(self, item: tuple):
         for ind in range(len(self.__probes)):
@@ -180,7 +203,7 @@ class OutputHandler:
                 
     def __check_object_exists(self, item):
         for obj in self.__objects:
-            if obj.name == item[0]:
+            if obj == item[0]:
                 if isinstance(obj, ComponentClass) and getattr(obj, item[1], 'N/A') != "N/A":
                     return True
                 elif isinstance(obj, Interface) and getattr(obj.state, item[1], 'N/A') != "N/A":

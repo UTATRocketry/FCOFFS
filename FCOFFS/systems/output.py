@@ -160,12 +160,13 @@ class OutputHandler:
     def __save_log(self):
         self.__full_df.to_csv(f"{self.__filename} Full Log.csv", index=False)
         self.__interfaces_df.to_csv(f"{self.__filename} Interface Log.csv", index=False)
+        self.__full_df = self.__full_df[0:0]
+        self.__interfaces_df = self.__interfaces_df[0:0]
         if self.__is_transient is True:
             self.__components_df.to_csv(f"{self.__filename} Component Log.csv", index=False)
+            self.__components_df = self.__components_df[0:0]
         print("LOGS SAVED\n")
-        self.__full_df = self.__full_df[0:0]
-        self.__components_df = self.__components_df[0:0]
-        self.__interfaces_df = self.__interfaces_df[0:0]
+        
 
     def mute_steady_state(self):
         self._interface_muted = True

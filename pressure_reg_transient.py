@@ -8,7 +8,7 @@ from FCOFFS.systems.transient import *
 TS = TransientSolver(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psi", 15)) 
 
 interface1 = Interface("INTER1")
-interface2 = Interface("INTER2")
+interface2 = Interface("INTER2") 
 interface3 = Interface("INTER3")
 interface4 = Interface("INTER4")
 
@@ -22,7 +22,8 @@ regulator.set_connection(interface1, interface2)
 orifice.set_connection(interface2, interface3)
 outlet.set_connection(upstream=interface3)
 
-TS.initialize([Nitorgen_Tank, regulator, orifice, outlet])
+
+TS.initialize([Nitorgen_Tank, regulator, orifice, outlet]) 
 TS.Output.add_probes([(Nitorgen_Tank, "mass"), (Nitorgen_Tank, "p"), (Nitorgen_Tank, "rho"), (Nitorgen_Tank, "T")]) 
 #TS.Output.mute_steady_state()
 TS.solve(1, 0.1)        

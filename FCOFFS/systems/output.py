@@ -93,7 +93,10 @@ class OutputHandler:
                                                                                       ignore_index=True)
         probe_dict = {"Time": [self.__time]}
         for probe in self.__probes:
-            probe_dict[probe[2]] = [getattr(probe[0], probe[1])]
+            if isinstance(probe[0], Interface):
+                probe_dict[probe[2]] = [getattr(probe[0].state, probe[1]).value]
+            elif isinstance(probe[0], ComponentClass):
+                probe_dict[probe[2]] = [getattr(probe[0], probe[1]).value]
         self.__probes_df = pd.concat([self.__probes_df, pd.DataFrame(probe_dict)], ignore_index=True)
 
     def __print_converged_state(self):
@@ -149,7 +152,7 @@ class OutputHandler:
         for _, row in self.__probes_df.iterrows():
             output_string += f"{str(round(row['Time'], 6)):<10} "
             for probe in self.__probes:
-                output_string += f"{str(round(row[probe[2]].value, 6)):<25} "
+                output_string += f"{str(round(row[probe[2]], 6)):<25} "
             output_string += "\n"
 
                 
@@ -186,9 +189,9 @@ class OutputHandler:
                     warnings.warn(f"Object and or object attribute {item} does not exist! Skipping this probe.")
                     continue
                 if isinstance(item[0], ComponentClass):
-                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).get_dimension} ({getattr(item[0], item[1]).get_unit})"]
+                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).get_dimension} ({getattr(item[0], item[1]).get_unit})"] 
                 elif isinstance(item[0], Interface):
-                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).get_dimension} ({getattr(item[0], item[1]).get_unit})"]
+                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0].state, item[1]).get_dimension} ({getattr(item[0].state, item[1]).get_unit})"]
                 self.__probes.append(probe)
         else:
             if self.__check_object_exists(items) is False:

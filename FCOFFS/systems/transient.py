@@ -13,7 +13,7 @@ from .output import OutputHandler
 class TransientSolver(System):
     def __init__(self, name: str = "Transient State Solver", ref_T: UnitValue = UnitValue("METRIC", "TEMPERATURE", "K", 293.15), ref_p: UnitValue = UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5)):
         super().__init__(name, ref_T, ref_p)
-        self.quasi_steady_solver = SteadySolver("Transient Qausi Intemediate", ref_T, ref_p)
+        self.quasi_steady_solver = SteadySolver("Transient Quasi Intemediate", ref_T, ref_p)
         self.dt = 0.1
 
     def initialize(self, components: list):
@@ -28,7 +28,7 @@ class TransientSolver(System):
 
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 
-        #self.quasi_steady_solver.Output.deactivate()
+        self.quasi_steady_solver.Output.deactivate()
         self.objects = self.quasi_steady_solver.objects
         self.inlet_BC_type =  self.quasi_steady_solver.inlet_BC
         self.outlet_BC_type = self.quasi_steady_solver.outlet_BC
@@ -53,7 +53,7 @@ class TransientSolver(System):
         t = 0
         while t <= self.simulation_time:
             # initialize the steady state solver
-            self.quasi_steady_solver.solve() # False
+            self.quasi_steady_solver.solve() # False 
             self.Output._run(dt)
             self.time_marching()
             t += dt

@@ -55,10 +55,10 @@ class CriticalOrifice(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
             
-        Cp = Fluid.Cp(self.fluid, state_in.T , state_in.p)
-        Cv = Fluid.Cv(self.fluid, state_in.T , state_in.p) 
+        Cp_in = Fluid.Cp(self.fluid, state_in.T , state_in.p)
+        Cv_in = Fluid.Cv(self.fluid, state_in.T , state_in.p) 
 
-        gamma = Cp / Cv
+        gamma = Cp_in / Cv_in
         R_gas = Fluid.get_gas_constant(self.fluid)
         
         try:
@@ -66,8 +66,8 @@ class CriticalOrifice(ComponentClass):
         except Exception:
             c_s = sqrt(gamma*R_gas*state_out.T)
             
-        Mach_initial = state_in.u / c_s
-        Mach_final = state_out.u / c_s   
+        #Mach_initial = state_in.u / c_s
+        #Mach_final = state_out.u / c_s   
         #something very wrong is going on as im getting negative velocity and mdot
         
                 
@@ -95,8 +95,15 @@ class CriticalOrifice(ComponentClass):
         mdot_choked = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/2*(gamma-1)) * state_in.p * sqrt(gamma/(R_gas*state_in.T)) * A_orifice
         
         res2 = (mdot_out - mdot_choked)/(0.5*(mdot_out + mdot_choked))
-        
-        res3 = (state_in.T - state_out.T) / (0.5 * (state_in.T + state_out.T) ) # should be enthalpy so fix this 
+
+        h_1 = 0.5 * state_in.u**2 + Cp_in * state_in.T + state_in.p/state_in.rho             
+       
+        CP_out = Fluid.Cp(self.fluid, state_out.T , state_out.p)
+        h_2 = 0.5 * state_out.u**2 + CP_out * state_out.T + state_out.p / state_out.rho
+       
+        # res3 = (state_in.T - state_out.T) / (0.5 * (state_in.T + state_out.T) ) # should be enthalpy so fix this 
+
+        res3 = (h_2 - h_1) / (0.5 * (h_2 + h_1) ) # conservation of enthalpy 
 
 
         #output mass flux calculations that follow from isentropic nozzle flow 

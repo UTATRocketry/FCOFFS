@@ -1,0 +1,4 @@
+Time,Component,Mass (kg),Pressure (kg/ms^2),Density (kg/m^3),Temperature (K),Converged Residual
+0.0,pressure_inlet,N/A,6894760.0,78.84925902760968,295.7,3.912448312247044e-13
+0.0,Pressure_Regulator,N/A,N/A,N/A,N/A,3.912448312247044e-13
+0.0,pressure_outlet,N/A,3792118.0,43.83411043601667,N/A,3.912448312247044e-13

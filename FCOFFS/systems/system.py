@@ -3,6 +3,7 @@ Description
 '''
 
 from ..utilities.units import UnitValue
+from .output import OutputHandler
 
 # made this for functions and things that are comon accross both solving system classes
 
@@ -17,17 +18,10 @@ class System:
             self.ref_p = ref_p
             self.ref_p.convert_base_metric()
             self.ref_T.convert_base_metric()
-            
+            self.Output = OutputHandler(self.name)
 
     def __repr__(self):
         return str(self.objects)
-
-    def show_tree(self):
-        for i in range(len(self.objects)-1):
-            print(self.objects[i].name)
-            print(' | ')
-        print(self.objects[-1].name)
-        print()
 
     def solve(self):
         print("")

@@ -26,4 +26,7 @@ outlet.set_connection(upstream=interface2)
 '''
 
 PS.initialize([inlet,regulator,outlet])
+
+PS.Output
+
 PS.solve()

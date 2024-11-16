@@ -37,8 +37,10 @@ out.set_connection(upstream=interface2)
 
 TS.initialize([inlet, orifice, out])
 TS.Output.add_probes([(inlet, "mass"), (inlet, "p"), (inlet, "rho"), (interface1, "T"), (interface2, "T")])
-#TS.Output.mute_steady_state()
-TS.solve(5.5, 0.1)                                                                                                               
+TS.Output.toggle_steady_state_output()
+#TS.Output.toggle_convergence_output()
+#TS.Output.show_config()
+TS.solve(0.5, 0.1)                                                                                                               
 
 #TS.initialize([inlet, p, chamb, p2, out]) #store copy of original components so it actually re initializes
 #TS.solve(0.2, 0.1)

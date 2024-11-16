@@ -7,7 +7,6 @@ from scipy.optimize import root
 from .system import System
 from ..utilities.utilities import rms
 from ..utilities.units import UnitValue
-from .output import OutputHandler
 
 # Nomenclature:
 
@@ -30,7 +29,8 @@ class SteadySolver(System):
         for component in components[:-1]:
                 self.objects += [component, component.interface_out]
         self.objects.append(components[-1])
-        self.Output = OutputHandler(self.objects, False, self.name)
+
+        self.Output.initialize(self.objects)
 
         self.inlet_BC = components[0].BC_type
         self.outlet_BC = components[-1].BC_type
@@ -54,7 +54,7 @@ class SteadySolver(System):
         self.update_w()
 
 
-    def solve(self, verbose: bool=True, queue=None):
+    def solve(self):
         self.update_w()
         def func(x):
             self.set_w(x)
@@ -62,23 +62,13 @@ class SteadySolver(System):
             for component in self.components:
                 component.update()
                 res += component.eval()
-            if verbose is True:
-                print("Residual = "+str(rms(res)))
-            if queue is not None:
-                queue.put(rms(res))
-            #self.output(True)
-            #print(res)
+            if self.Output.residual_queue is not None:
+                self.Output.residual_queue.put(rms(res))
             return res
 
         sol = root(func, self.w).x #method='lm'
         self.Output._run(0)
         self.Output._finish()
 
-        #if verbose is True:
-            #print(sol)
-            #print("CONVERGED STATE")
-        #res = []
-        # for component in self.components:
-        #     res += component.eval()
-        # print(res)
+        
         

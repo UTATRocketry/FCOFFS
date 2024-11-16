@@ -28,12 +28,14 @@ class TransientSolver(System):
 
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 
-        self.quasi_steady_solver.Output.deactivate()
+        self.quasi_steady_solver.Output.toggle_active()
+        
         self.objects = self.quasi_steady_solver.objects
-        self.inlet_BC_type =  self.quasi_steady_solver.inlet_BC
+        self.inlet_BC_type = self.quasi_steady_solver.inlet_BC
         self.outlet_BC_type = self.quasi_steady_solver.outlet_BC
-        self.Output = OutputHandler(self.objects, True, self.name)
 
+        self.Output.initialize(self.objects)
+        self.quasi_steady_solver.Output.residual_queue = self.Output.residual_queue
 
     def time_marching(self):
         for component in self.components:

@@ -29,7 +29,7 @@ class TransientSolver(System):
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 
         self.quasi_steady_solver.Output.toggle_active()
-        
+
         self.objects = self.quasi_steady_solver.objects
         self.inlet_BC_type = self.quasi_steady_solver.inlet_BC
         self.outlet_BC_type = self.quasi_steady_solver.outlet_BC
@@ -50,7 +50,7 @@ class TransientSolver(System):
 
     def solve(self, simulation_time: float, dt: float = 0.1):
         #solve system 
-        self.dt = dt
+        self.dt = UnitValue.create_unit("s", dt)
         self.simulation_time = simulation_time
         t = 0
         while t <= self.simulation_time:

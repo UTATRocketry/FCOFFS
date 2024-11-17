@@ -192,6 +192,7 @@ class OutputHandler:
                 if isinstance(item[0], ComponentClass):
                     probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).get_dimension} ({getattr(item[0], item[1]).get_unit})"] 
                 elif isinstance(item[0], Interface):
+                    print(getattr(item[0].state, item[1]).get_dimension)
                     probe = [item[0], item[1], f"{item[0].name} {getattr(item[0].state, item[1]).get_dimension} ({getattr(item[0].state, item[1]).get_unit})"]
                 self.__probes.append(probe)
         else:

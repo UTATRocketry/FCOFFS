@@ -351,6 +351,13 @@ class UnitValue: # add specific heat
             units = {}
             self.__process_unit(self.__unit, units, 1)
             self.__process_unit(m.__unit, units, 1)
+
+            empty_units = []
+            for unit, count in units.items():
+                if count == 0:
+                    empty_units.append(unit)
+            for unit in empty_units:
+                units.pop(unit)
             
             for dimension, units_dict in UnitValue.UNITS["METRIC"].items():
                     temp = {}
@@ -397,6 +404,13 @@ class UnitValue: # add specific heat
             self.__process_unit(self.__unit, units, 1)
             self.__process_unit(d.__unit, units, -1)
 
+            empty_units = []
+            for unit, count in units.items():
+                if count == 0:
+                    empty_units.append(unit)
+            for unit in empty_units:
+                units.pop(unit)
+
             for dimension, units_dict in UnitValue.UNITS["METRIC"].items():
                     temp = {}
                     self.__process_unit(list(units_dict)[0], temp, 1)
@@ -438,6 +452,13 @@ class UnitValue: # add specific heat
             units = {}
             self.__process_unit(self.__unit, units, -1)
             self.__process_unit(d.__unit, units, 1)
+
+            empty_units = []
+            for unit, count in units.items():
+                if count == 0:
+                    empty_units.append(unit)
+            for unit in empty_units:
+                units.pop(unit)
 
             for dimension, units_dict in UnitValue.UNITS["METRIC"].items():
                     temp = {}

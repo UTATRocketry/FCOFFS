@@ -66,8 +66,21 @@ class SteadySolver(System):
                 self.Output.residual_queue.put(rms(res))
                 #print(rms(res))
             return res
-
-        sol = root(func, self.w).x #method='lm'
+        
+        try:
+            sol = root(func, self.w).x #method='lm'
+        except Exception as e:
+            print("----------- STEADY STATE FAILED TO CONVERGE -----------")
+            print("----------- RESIDUALS -----------")
+            residuals = []
+            while self.Output.residual_queue.empty() is False:
+                residuals.append(self.Output.residual_queue.get())
+            for i in reversed(range(len(residuals))):
+                print(f"Residual = {residuals[i]}")
+            print("----------- LAST STATE -----------")
+            self.Output.print_state()
+            print("----------- ERROR RAISED -----------")
+            raise e
         self.Output._run(0)
         self.Output._finish()
 

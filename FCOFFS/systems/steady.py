@@ -64,6 +64,7 @@ class SteadySolver(System):
                 res += component.eval()
             if self.Output.residual_queue is not None:
                 self.Output.residual_queue.put(rms(res))
+                #print(rms(res))
             return res
 
         sol = root(func, self.w).x #method='lm'

@@ -33,8 +33,8 @@ class CriticalOrifice(ComponentClass):
         self.K = (1-self.Beta**2)/(self.Cd**2*self.Beta**4)
         self.decoupler = True 
 
-        vals = np.array([[0, 1], [0.5, 1], [0.6, 0.9], [0.7, 0.65], [0.8, 0.46], [0.9, 0.33], [0.95, 0.23], [0.98, 0.14], [0.99, 0.1], [1, 0]])
-        self.interp = interp1d(vals[:, 0], vals[:, 1], 'linear')
+        vals = np.array([[0, 1], [0.5, 1], [0.6, 0.9], [0.7, 0.65], [0.8, 0.46], [0.9, 0.33], [0.95, 0.23], [0.98, 0.14], [0.99, 0.1], [1, 0], [100, 0]])
+        self.interp = interp1d(vals[:, 0], vals[:, 1], 'cubic') #changed to cubic form linear maybe qudratic good to.
 
     def initialize(self):
             if self.parent_system.outlet_BC != 'PRESSURE':
@@ -101,7 +101,7 @@ class CriticalOrifice(ComponentClass):
         CP_out = Fluid.Cp(self.fluid, state_out.T , state_out.p)
         h_2 = 0.5 * state_out.u**2 + CP_out * state_out.T + state_out.p / state_out.rho
        
-        # res3 = (state_in.T - state_out.T) / (0.5 * (state_in.T + state_out.T) ) # should be enthalpy so fix this 
+        #res3 = (state_in.T - state_out.T) / (0.5 * (state_in.T + state_out.T) ) # should be enthalpy so fix this 
 
         res3 = (h_2 - h_1) / (0.5 * (h_2 + h_1) ) # conservation of enthalpy 
 

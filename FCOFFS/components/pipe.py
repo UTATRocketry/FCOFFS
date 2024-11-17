@@ -60,7 +60,8 @@ class Pipe(ComponentClass):
         # print(state_in.u)
         Mach_in = state_in.u / c_s
 
-        if Mach_in < 0.3: #Fluid.phase(self.fluid, state_in.T, state_in.p) == "liquid" or 
+        state = Fluid.phase(self.fluid, state_in.T, state_in.p) 
+        if Mach_in < 0.3 or state == "liquid" or state == "supercritical liquid":
             compressible = False
         else:
             compressible = True

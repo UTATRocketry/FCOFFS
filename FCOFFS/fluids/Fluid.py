@@ -40,15 +40,15 @@ class Fluid:
         return UnitValue("METRIC", "VELOCITY", "m/s", c_s)
     
     def phase(fluid: str, T: UnitValue|None = None, p: UnitValue|None = None, rho: UnitValue|None = None) -> str:
-        indexes = {0.0: "liquid", 2.0: "supercritical gas", 5.0: 'gas', 6.0: "mixed (liquid + vapour)"}
+        #indexes = {0.0: "liquid", 2.0: "supercritical gas", 5.0: 'gas', 6.0: "mixed (liquid + vapour)", 1.0: "supercritical", 3.0: "supercritical liquid", 4.0: "critical point", 7.0: "unkown phase", 8.0: "not imposed"}
         if T != None and p != None: 
-            phase_index = PhaseSI("Phase", "P", p.value, "T", T.value, fluid)
+            phase = PhaseSI("P", p.value, "T", T.value, fluid)
         elif T != None and rho != None: 
-            phase_index = PhaseSI("Phase", "D", rho.value, "T", T.value, fluid)
+            phase = PhaseSI("D", rho.value, "T", T.value, fluid)
         elif rho != None and p != None: 
-            phase_index = PhaseSI("Phase", "P", p.value, "D", rho.value, fluid)
+            phase = PhaseSI("P", p.value, "D", rho.value, fluid)
         
-        return indexes[phase_index]
+        return phase
 
     def dynamic_viscosity(fluid: str, rho: UnitValue=None, T: UnitValue=None, p: UnitValue=None) -> UnitValue: # Eventuatly we want to calculate this 
         if fluid=="N2O": # get better values

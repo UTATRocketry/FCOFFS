@@ -24,16 +24,17 @@ class TransientSolver(System):
                 if component.decoupler == True:
                     raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
 
-        self.components = components
+        self.components = components.copy() # ensures doesnt affect originail values of componet
 
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 
-        self.quasi_steady_solver.Output.toggle_active()
+        self.quasi_steady_solver.Output.toggle_active() 
 
         self.objects = self.quasi_steady_solver.objects
         self.inlet_BC_type = self.quasi_steady_solver.inlet_BC
         self.outlet_BC_type = self.quasi_steady_solver.outlet_BC
 
+        # setup queue for the residuals
         self.Output.initialize(self.objects)
         self.quasi_steady_solver.Output.residual_queue = self.Output.residual_queue
 

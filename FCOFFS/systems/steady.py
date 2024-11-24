@@ -19,10 +19,15 @@ class SteadySolver(System):
         # Sytem Vlaidation Checks
         if len(components) < 1:
             raise IndexError('No component found. ')
-        if components[0].BC_type != "PRESSURE":
-            for component in components:
-                if component.decoupler == True:
-                    raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+        try:
+            if components[0].BC_type != "PRESSURE":
+                for component in components:
+                    if component.decoupler == True:
+                        raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+            self.inlet_BC = components[0].BC_type
+            self.outlet_BC = components[-1].BC_type
+        except:
+            raise ValueError("System does not start/end with an inlet or outlet. Please chck your components and the order you put them in. ")
 
         self.components = components
         self.objects = []
@@ -32,8 +37,6 @@ class SteadySolver(System):
 
         self.Output.initialize(self.objects)
 
-        self.inlet_BC = components[0].BC_type
-        self.outlet_BC = components[-1].BC_type
         for component in components:
             component.initialize()
 
@@ -64,7 +67,7 @@ class SteadySolver(System):
                 res += component.eval()
             if self.Output.residual_queue is not None:
                 self.Output.residual_queue.put(rms(res))
-                #print(rms(res))
+            self.Output._run(0)
             return res
         
         try:
@@ -81,7 +84,6 @@ class SteadySolver(System):
             self.Output.print_state()
             print("----------- ERROR RAISED -----------")
             raise e
-        self.Output._run(0)
         self.Output._finish()
 
         

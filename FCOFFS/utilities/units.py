@@ -1,4 +1,9 @@
 '''
+This pyhton module was created by Brody Howard and is published as an official pyhton package on pypy.org under "UnitValues",
+It has been coppied here for ease of use and manipulation for specific needs. 
+'''
+
+'''
 This module allows you to easly store numbers with units and easily convert the units and value of the numbers.
 The two supported systems currently are Imperial and Metric. 
 Typically used units are supported and more can be added upon request or in your instance.
@@ -865,7 +870,9 @@ class UnitValue: # add specific heat
             Exception: If the unit is not recognized or conversion is not possible.
         """
         u = UnitValue.SPELLING_MAP.get(unit)
-        if u: unit  = u
+        if u: unit = u
+
+        if unit == self.get_unit: return self
 
         cache_key = (self.__system, self.__dimension, self.__unit, unit)
         if cache_key in self._conversion_cache:

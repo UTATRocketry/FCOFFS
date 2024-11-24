@@ -24,7 +24,7 @@ class ComponentClass: # we should consider adding a varibale to hold area so we 
         self.decoupler = False
         self.interface_in = None
         self.interface_out = None
-
+        
     def __str__(self):
         return self.name
 

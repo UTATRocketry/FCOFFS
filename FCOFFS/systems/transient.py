@@ -24,7 +24,7 @@ class TransientSolver(System):
                 if component.decoupler == True:
                     raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
 
-        self.components = components.copy() # ensures doesnt affect originail values of componet
+        self.components = components #.copy() # ensures doesnt affect originail values of componet
 
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 

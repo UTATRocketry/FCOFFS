@@ -79,7 +79,7 @@ class CriticalOrifice(ComponentClass):
         # res2 = (state_out.p - (state_in.p - 0.5*self.K*state_in.rho*state_in.u**2)) / (0.5*(state_out.p + state_in.p - 0.5*self.K*state_in.rho*state_in.u**2))
         mdot_in = state_in.u*state_in.rho*state_in.area
         mdot_out = state_out.rho*state_out.u*state_out.area
-        res1 = (mdot_in - mdot_out) / (0.5 * (mdot_in + mdot_out))
+        res1 = (mdot_out - mdot_in) / (0.5 * (mdot_in + mdot_out))
         
         A_orifice = pi * self.orrifice_diameter**2/4
         

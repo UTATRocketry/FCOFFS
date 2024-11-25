@@ -16,7 +16,7 @@ interface4 = Interface("INTER4")
 
 
 #inlet = mass_flow_inlet.MassFlowInlet(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("kg/s", 0.0248), UnitValue.create_unit("K" 250))
-inlet = pressure_tank_inlet.PressurantTank(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("psi", 500), UnitValue.create_unit("C", 20), UnitValue.create_unit("m^3", 0.1), UnitValue.create_unit("m/s", 100))
+inlet = pressure_tank_inlet.PressurantTank(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("psi", 420), UnitValue.create_unit("C", 20), UnitValue.create_unit("m^3", 0.1), UnitValue.create_unit("m/s", 100))
 #inlet = pressure_inlet.PressureInlet(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("psi", 350), UnitValue.create_unit("C", 20),  UnitValue.create_unit("m/s", 10))
 p = pipe.Pipe(TS.quasi_steady_solver, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("m", 0.75)) 
 #orifice = critical_orifice.CriticalOrifice(TS.quasi_steady_solver, UnitValue.create_unit("in",0.25), UnitValue.create_unit("in",0.25), UnitValue.create_unit("in", 0.01), "N2", Cd=0.86)
@@ -41,9 +41,9 @@ TS.initialize([inlet, p, chamb, p2, out])
 TS.Output.add_probes([(inlet, "p"), (interface2, "mdot"), (inlet, "mass"), (chamb, "p"), (chamb, "mass")]) #
 TS.Output.toggle_steady_state_output()
 TS.Output.toggle_convergence_output()
-#TS.Output.set_ouput_unit("psi")
+TS.Output.set_ouput_unit("psi")
 #TS.Output.show_config()
-TS.solve(50, 0.5)                                                                                                               
+TS.solve(60, 1)                                                                                                               
 
 #TS.initialize([inlet, p, chamb, p2, out]) #store copy of original components so it actually re initializes
 #TS.solve(0.2, 0.1)

@@ -12,9 +12,9 @@ PS = SteadySolver(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psig", 0))
 interface1 = Interface("INTER1")
 interface2 = Interface("INTER2")
 
-inlet = pressure_inlet.PressureInlet(PS, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("psig", 1550), UnitValue.create_unit("K", 250), UnitValue.create_unit("m/s", 4), "pressure_inlet")
+inlet = pressure_inlet.PressureInlet(PS, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("psig", 100), UnitValue.create_unit("K", 250), UnitValue.create_unit("m/s", 100), "pressure_inlet")
 #p = pipe.Pipe(PS, UnitValue.create_unit('in', 0.25), "N2", UnitValue.create_unit('in', 25))
-orifice = critical_orifice.CriticalOrifice(PS, UnitValue.create_unit("in",0.25), UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.01), "N2", Cd=0.86)
+orifice = critical_orifice.CriticalOrifice(PS, UnitValue.create_unit("in",0.25), UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.001), "N2", Cd=0.86)
 outlet = pressure_outlet.PressureOutlet(PS, UnitValue.create_unit("in",0.25), "N2", UnitValue.create_unit("psig", 0), "pressure_outlet")
 
 inlet.set_connection(downstream=interface1)
@@ -27,5 +27,6 @@ outlet.set_connection(upstream=interface2)
 '''
 
 PS.initialize([inlet,orifice,outlet])
+PS.Output.toggle_steady_state_output()
 
 PS.solve()

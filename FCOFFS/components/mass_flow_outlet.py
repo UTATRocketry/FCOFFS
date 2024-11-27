@@ -23,6 +23,7 @@ class MassFlowOutlet(ComponentClass):
 
     def initialize(self):
         self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, p=self.p, rho=self.rho, u=self.interface_in.state.u, Override=True)
+        self.interface_in.state.mdot = self.mdot
 
     def eval(self, new_states: tuple[State, State]|None=None)->list:
         if new_states is None:

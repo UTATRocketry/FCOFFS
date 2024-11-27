@@ -1,1 +1,9 @@
+#Ignore bit compiled files
 FCOFFS/__pycache__
+*.pyc
+
+#Ignore logs and images
+*.log
+*.jpg
+*.png
+

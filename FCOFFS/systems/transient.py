@@ -13,7 +13,7 @@ from .output import OutputHandler
 class TransientSolver(System):
     def __init__(self, name: str = "Transient State Solver", ref_T: UnitValue = UnitValue("METRIC", "TEMPERATURE", "K", 293.15), ref_p: UnitValue = UnitValue("METRIC", "PRESSURE", "Pa", 1.01e5)):
         super().__init__(name, ref_T, ref_p)
-        self.quasi_steady_solver = SteadySolver("Transient Qausi Intemediate", ref_T, ref_p)
+        self.quasi_steady_solver = SteadySolver("Transient Quasi Intemediate", ref_T, ref_p)
         self.dt = 0.1
 
     def initialize(self, components: list):
@@ -24,16 +24,19 @@ class TransientSolver(System):
                 if component.decoupler == True:
                     raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
 
-        self.components = components
+        self.components = components #.copy() # ensures doesnt affect originail values of componet
 
         # initialize the steady state solver
         self.quasi_steady_solver.initialize(self.components) 
-        self.quasi_steady_solver.Output.deactivate()
-        self.objects = self.quasi_steady_solver.objects
-        self.inlet_BC_type =  self.quasi_steady_solver.inlet_BC
-        self.outlet_BC_type = self.quasi_steady_solver.outlet_BC
-        self.Output = OutputHandler(self.objects, True, self.name)
+        self.quasi_steady_solver.Output.toggle_active() 
 
+        self.objects = self.quasi_steady_solver.objects
+        self.inlet_BC_type = self.quasi_steady_solver.inlet_BC
+        self.outlet_BC_type = self.quasi_steady_solver.outlet_BC
+
+        # setup queue for the residuals
+        self.Output.initialize(self.objects)
+        self.quasi_steady_solver.Output.residual_queue = self.Output.residual_queue
 
     def time_marching(self):
         for component in self.components:
@@ -48,12 +51,12 @@ class TransientSolver(System):
 
     def solve(self, simulation_time: float, dt: float = 0.1):
         #solve system 
-        self.dt = dt
+        self.dt = UnitValue.create_unit("s", dt)
         self.simulation_time = simulation_time
         t = 0
         while t <= self.simulation_time:
             # initialize the steady state solver
-            self.quasi_steady_solver.solve() # False
+            self.quasi_steady_solver.solve() # False 
             self.Output._run(dt)
             self.time_marching()
             t += dt

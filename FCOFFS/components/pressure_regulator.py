@@ -1,4 +1,6 @@
 
+import numpy as np
+
 from ..systems.steady import SteadySolver
 from FCOFFS.state.State import State
 from FCOFFS.utilities.units import UnitValue
@@ -13,6 +15,11 @@ class PressureRegulator(ComponentClass):
         self.set_pressure = set_pressure.convert_base_metric()
         self.flow_curve = ComponentCurve(flow_curve_filename, False, method)
 
+    def initialize(self):
+        self.interface_in.initialize(parent_system=self.parent_system, area=np.pi*self.diameter**2/4, fluid=self.fluid)
+        # added factor for pressure decrease across regulator !!!!!!
+        self.interface_out.initialize(parent_system=self.parent_system, area=np.pi*self.diameter**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.set_pressure)
+
     def eval(self, new_states: tuple[State, State] | None = None) -> list:
         if new_states is None:
             state_in = self.interface_in.state
@@ -22,10 +29,12 @@ class PressureRegulator(ComponentClass):
             state_out = new_states[1]
 
         curve_res = self.flow_curve([self.set_pressure, state_in.p, state_in.u * state_in.area])
-        res1 = (curve_res - state_out.p) / state_out.p 
+        if np.isnan(curve_res.value):
+            raise Exception("Pressure regulator interpolation outside of bounds. ")
+        res1 = (curve_res - state_out.p) / (0.5*(state_out.p + curve_res))
         # (curve(p, p, Q) - state_out.p) / state_out.p
         
-        res2 = (state_out.mdot - state_in.mdot) / state_in.mdot
+        res2 = (state_out.mdot - state_in.mdot) / (0.5*(state_in.mdot + state_out.mdot))
 
         # get cp at inlet and outlet state
         cp_in = Fluid.Cp(self.fluid, state_in.T, state_in.p)

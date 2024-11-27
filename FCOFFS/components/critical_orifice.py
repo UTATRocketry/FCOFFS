@@ -33,8 +33,8 @@ class CriticalOrifice(ComponentClass):
         self.K = (1-self.Beta**2)/(self.Cd**2*self.Beta**4)
         self.decoupler = True 
 
-        vals = np.array([[0, 1], [0.5, 1], [0.6, 0.9], [0.7, 0.65], [0.8, 0.46], [0.9, 0.33], [0.95, 0.23], [0.98, 0.14], [0.99, 0.1], [1, 0]])
-        self.interp = interp1d(vals[:, 0], vals[:, 1], 'linear')
+        vals = np.array([[0, 1], [0.5, 1], [0.6, 0.9], [0.7, 0.65], [0.8, 0.46], [0.9, 0.33], [0.95, 0.23], [0.98, 0.14], [0.99, 0.1], [1, 0], [100, 0]])
+        self.interp = interp1d(vals[:, 0], vals[:, 1], 'cubic') #changed to cubic form linear maybe qudratic good to.
 
     def initialize(self):
             if self.parent_system.outlet_BC != 'PRESSURE':
@@ -55,10 +55,10 @@ class CriticalOrifice(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
             
-        Cp = Fluid.Cp(self.fluid, state_in.T , state_in.p)
-        Cv = Fluid.Cv(self.fluid, state_in.T , state_in.p) 
+        Cp_in = Fluid.Cp(self.fluid, state_in.T , state_in.p)
+        Cv_in = Fluid.Cv(self.fluid, state_in.T , state_in.p) 
 
-        gamma = Cp / Cv
+        gamma = Cp_in / Cv_in
         R_gas = Fluid.get_gas_constant(self.fluid)
         
         try:
@@ -66,8 +66,8 @@ class CriticalOrifice(ComponentClass):
         except Exception:
             c_s = sqrt(gamma*R_gas*state_out.T)
             
-        Mach_initial = state_in.u / c_s
-        Mach_final = state_out.u / c_s   
+        #Mach_initial = state_in.u / c_s
+        #Mach_final = state_out.u / c_s   
         #something very wrong is going on as im getting negative velocity and mdot
         
                 
@@ -79,7 +79,7 @@ class CriticalOrifice(ComponentClass):
         # res2 = (state_out.p - (state_in.p - 0.5*self.K*state_in.rho*state_in.u**2)) / (0.5*(state_out.p + state_in.p - 0.5*self.K*state_in.rho*state_in.u**2))
         mdot_in = state_in.u*state_in.rho*state_in.area
         mdot_out = state_out.rho*state_out.u*state_out.area
-        res1 = (mdot_in - mdot_out) / (0.5 * (mdot_in + mdot_out))
+        res1 = (mdot_out - mdot_in) / (0.5 * (mdot_in + mdot_out))
         
         A_orifice = pi * self.orrifice_diameter**2/4
         
@@ -95,8 +95,15 @@ class CriticalOrifice(ComponentClass):
         mdot_choked = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/2*(gamma-1)) * state_in.p * sqrt(gamma/(R_gas*state_in.T)) * A_orifice
         
         res2 = (mdot_out - mdot_choked)/(0.5*(mdot_out + mdot_choked))
-        
-        res3 = (state_in.T - state_out.T) / (0.5 * (state_in.T + state_out.T) ) # should be enthalpy so fix this 
+
+        h_1 = 0.5 * state_in.u**2 + Cp_in * state_in.T + state_in.p/state_in.rho             
+       
+        CP_out = Fluid.Cp(self.fluid, state_out.T , state_out.p)
+        h_2 = 0.5 * state_out.u**2 + CP_out * state_out.T + state_out.p / state_out.rho
+       
+        #res3 = (state_in.T - state_out.T) / (0.5 * (state_in.T + state_out.T) ) # should be enthalpy so fix this 
+
+        res3 = (h_2 - h_1) / (0.5 * (h_2 + h_1) ) # conservation of enthalpy 
 
 
         #output mass flux calculations that follow from isentropic nozzle flow 

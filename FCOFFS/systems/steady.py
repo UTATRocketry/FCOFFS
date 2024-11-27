@@ -7,7 +7,6 @@ from scipy.optimize import root
 from .system import System
 from ..utilities.utilities import rms
 from ..utilities.units import UnitValue
-from .output import OutputHandler
 
 # Nomenclature:
 
@@ -20,20 +19,24 @@ class SteadySolver(System):
         # Sytem Vlaidation Checks
         if len(components) < 1:
             raise IndexError('No component found. ')
-        if components[0].BC_type != "PRESSURE":
-            for component in components:
-                if component.decoupler == True:
-                    raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+        try:
+            if components[0].BC_type != "PRESSURE":
+                for component in components:
+                    if component.decoupler == True:
+                        raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+            self.inlet_BC = components[0].BC_type
+            self.outlet_BC = components[-1].BC_type
+        except:
+            raise ValueError("System does not start/end with an inlet or outlet. Please chck your components and the order you put them in. ")
 
         self.components = components
         self.objects = []
         for component in components[:-1]:
                 self.objects += [component, component.interface_out]
         self.objects.append(components[-1])
-        self.Output = OutputHandler(self.objects, False, self.name)
 
-        self.inlet_BC = components[0].BC_type
-        self.outlet_BC = components[-1].BC_type
+        self.Output.initialize(self.objects)
+
         for component in components:
             component.initialize()
 
@@ -54,7 +57,7 @@ class SteadySolver(System):
         self.update_w()
 
 
-    def solve(self, verbose: bool=True, queue=None):
+    def solve(self):
         self.update_w()
         def func(x):
             self.set_w(x)
@@ -62,23 +65,26 @@ class SteadySolver(System):
             for component in self.components:
                 component.update()
                 res += component.eval()
-            if verbose is True:
-                print("Residual = "+str(rms(res)))
-            if queue is not None:
-                queue.put(rms(res))
-            #self.output(True)
-            #print(res)
+            if self.Output.residual_queue is not None:
+                self.Output.residual_queue.put(rms(res))
+            self.Output._run(0)
             return res
-
-        sol = root(func, self.w).x #method='lm'
-        self.Output._run(0)
+        
+        try:
+            sol = root(func, self.w).x #method='lm'
+        except Exception as e:
+            print("----------- STEADY STATE FAILED TO CONVERGE -----------")
+            print("----------- RESIDUALS -----------")
+            residuals = []
+            while self.Output.residual_queue.empty() is False:
+                residuals.append(self.Output.residual_queue.get())
+            for i in reversed(range(len(residuals))):
+                print(f"Residual = {residuals[i]}")
+            print("----------- LAST STATE -----------")
+            self.Output.print_state()
+            print("----------- ERROR RAISED -----------")
+            raise e
         self.Output._finish()
 
-        #if verbose is True:
-            #print(sol)
-            #print("CONVERGED STATE")
-        #res = []
-        # for component in self.components:
-        #     res += component.eval()
-        # print(res)
+        
         

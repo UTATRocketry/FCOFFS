@@ -39,5 +39,4 @@ outlet.set_connection(upstream=interface5)
 '''
 
 PS.initialize([inlet,pipe1,bend1,pipe2,injectr,outlet])
-PS.show_tree()
-PS.solve(True)
+PS.solve()

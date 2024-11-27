@@ -16,6 +16,9 @@ class State:
         self.rho = rho           # primitive property; density
         self.u = u               # primitive property; velocity
         self.p = p               # primitive property; pressure
+        self.mdot = UnitValue.create_unit("kg/s")
+        self.q = UnitValue.create_unit("Pa")
+        self.T = UnitValue.create_unit("K")
 
     def __repr__(self) -> str:
         return "area = " + str(self.area) + "\nfluid = " + str(self) + "\nrho = " + str(self.rho) + "\nu = " + str(self.u) + "\np = " + str(self.p) + "\n"

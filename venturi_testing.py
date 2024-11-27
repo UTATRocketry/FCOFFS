@@ -31,5 +31,7 @@ outlet.set_connection(upstream=interface2)
 PS.initialize([inlet,venturi,outlet])
 
 PS.Output.show_tree()
+PS.Output.toggle_steady_state_output()
+PS.Output.toggle_convergence_output()
 PS.solve()
 

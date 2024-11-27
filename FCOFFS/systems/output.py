@@ -296,6 +296,7 @@ class OutputHandler:
         output += f"Interface Log Active: {self._interfaces_log_muted}\n"
         output += f"Component Log Active: {self._components_log_muted}\n"
         output += f"Probe Log Active: {self._probes_log_muted}\n"
+        output += f"Probe Plotting Active: {self._probe_plotting_muted}\n"
         output +="-----------------------------------------------------\n"
         print(output)
 

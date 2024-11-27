@@ -9,8 +9,8 @@ from math import pi
 from scipy.constants import R
 
 class Chamber(ComponentClass): # eventually have N inlets
-    def __init__(self, parent_system: SteadySolver, outlet_diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, volume: UnitValue, name: str="Chamber") -> None:
-        super().__init__(parent_system, outlet_diameter, fluid, name)
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, volume: UnitValue, name: str="Chamber") -> None:
+        super().__init__(parent_system, diameter, fluid, name)
         self.p = pressure.convert_base_metric()
         self.T = temperature.convert_base_metric()
         self.volume = volume.convert_base_metric()

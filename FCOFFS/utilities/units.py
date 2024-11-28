@@ -57,7 +57,7 @@ class _gauge_conversion():
     __rtruediv__ = __truediv__
 
 
-class UnitValue: # add specific heat
+class UnitValue: 
     """
     Represents a value with dimension/units.
 

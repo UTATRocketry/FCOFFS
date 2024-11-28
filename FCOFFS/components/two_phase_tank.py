@@ -43,7 +43,7 @@ class TwoPhaseTank(ComponentClass):
     
     def transient(self, dt:float, state_in: State, state_out: State):
         self.liquid_mass -= dt*state_out.area*state_out.rho*state_out.u
-        new_liquid_volume = self.liquid_mass*state_out.rho
+        new_liquid_volume = self.liquid_mass/state_out.rho
         new_gas_volume = self.volume - new_liquid_volume
         
         pass

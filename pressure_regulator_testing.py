@@ -19,9 +19,7 @@ interface5 = Interface("INTER5")
 interface6 = Interface("INTER6")
 interface7 = Interface("INTER7")
 
-# note initial velocity guess really matters for pressure regulator convergence!!!!!
 inlet = pressure_tank_inlet.PressurantTank(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("psi", 4000), UnitValue.create_unit("C", 20), UnitValue.create_unit("L", 1.5), UnitValue.create_unit("m/s", 5))
-#inlet = pressure_inlet.PressureInlet(PS, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("psi", 3000), UnitValue.create_unit("K", 295.7), UnitValue.create_unit("m/s", 5), "pressure_inlet")
 p = pipe.Pipe(TS.quasi_steady_solver, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("m", 0.3), name="Pipe 1") #3657
 regulator = pressure_regulator.PressureRegulator(TS.quasi_steady_solver,  UnitValue.create_unit("in",0.25), "N2", os.path.join(os.getcwd(), "DOCS", "Components", "Pressure Regulator", "Regulator Curves", "KPF.csv"), UnitValue.create_unit("psi", 1000))
 p2 = pipe.Pipe(TS.quasi_steady_solver, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("m", 0.35), name="Pipe 2")
@@ -39,18 +37,13 @@ p3.set_connection(interface5, interface6)
 orrifice.set_connection(interface6, interface7)
 outlet.set_connection(upstream=interface7)
 
-#TS.quasi_steady_solver
-
 TS.initialize([inlet, p, regulator, p2, chamb, p3, orrifice, outlet])
-#TS.initialize([inlet, p, regulator, p2, outlet])
 
 TS.Output.toggle_steady_state_output()
 TS.Output.toggle_convergence_output()
-TS.Output.add_probes(((inlet, "p"), (inlet, "T"), (interface3, "p"), (chamb, "p"), (chamb, "T"), (interface7, "u"), (interface6, "u")))
+TS.Output.add_probes(((interface4, "mdot"), (interface5, "mdot")))
 TS.Output.set_ouput_unit("psi")
-
 #TS.Output.show_tree()
+TS.Output.toggle_transient_ouput()
 
-TS.solve(32.5, 0.05)
-
-#TS.solve(1.5, 0.1)
+TS.solve(15, 0.01)

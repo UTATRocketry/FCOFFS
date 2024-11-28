@@ -8,8 +8,8 @@ from ..state.State import State
 from math import pi
 
 class PressurantTank(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, outlet_diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, volume: UnitValue, velocity_guess: UnitValue = UnitValue("METRIC", "VELOCITY", "m/s", 5), name: str="Pressurant Tank") -> None:
-        super().__init__(parent_system, outlet_diameter, fluid,name)
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, volume: UnitValue, velocity_guess: UnitValue = UnitValue("METRIC", "VELOCITY", "m/s", 5), name: str="Pressurant Tank") -> None:
+        super().__init__(parent_system, diameter, fluid,name)
         #mass is not provided as input as we will calculate it from volume temperature and temperature
 
         if pressure.get_dimension != "PRESSURE" or temperature.get_dimension != "TEMPERATURE" or volume.get_dimension != "VOLUME":

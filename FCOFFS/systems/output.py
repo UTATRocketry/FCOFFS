@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import warnings
 from queue import LifoQueue
+import timeit as timer
 
 from FCOFFS.components.componentClass import ComponentClass
 from FCOFFS.interfaces.interface import Interface
@@ -53,6 +54,7 @@ class OutputHandler:
             return
         
         if self.__iter_counter == 0:
+            self.__start_time = timer.default_timer()
             probe_dict = {"Time": []}
             for probe in self.__probes:
                  probe_dict[probe[2]] = []
@@ -82,6 +84,8 @@ class OutputHandler:
     def _finish(self):
         if self.__active is False:
             return
+        self.__end_time = timer.default_timer()
+        print(f"Program Runtime: {self.__end_time - self.__start_time} s")
         self.__save_logs()
         if self._interface_muted is True:
             self.print_state()
@@ -296,6 +300,7 @@ class OutputHandler:
         output += f"Interface Log Active: {self._interfaces_log_muted}\n"
         output += f"Component Log Active: {self._components_log_muted}\n"
         output += f"Probe Log Active: {self._probes_log_muted}\n"
+        output += f"Probe Plotting Active: {self._probe_plotting_muted}\n"
         output +="-----------------------------------------------------\n"
         print(output)
 

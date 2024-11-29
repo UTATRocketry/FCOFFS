@@ -19,9 +19,9 @@ interface5 = Interface("INTER5")
 
 
 inlet = pressure_inlet.PressureInlet(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="Inlet", pressure=UnitValue("IMPERIAL", "PRESSURE", "psi", 780), temperature=UnitValue("METRIC", "TEMPERATURE", "K", 295), velocity_guess=UnitValue.create_unit("m/s", 10))
-pipe1 = pipe.Pipe(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="PIPE1", length=UnitValue("IMPERIAL", "DISTANCE", "in", 72), height_delta=UnitValue("METRIC", "DISTANCE", "m", 1.2))
-bend1 = pipe.Pipe(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="BEND1", length=UnitValue("IMPERIAL", "DISTANCE", "in", 2))
-pipe2 = pipe.Pipe(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="PIPE2", length=UnitValue("IMPERIAL", "DISTANCE", "in", 72))
+pipe1 = pipe.Pipe(PS, diameter_in=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), diameter_out=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="PIPE1", length=UnitValue("IMPERIAL", "DISTANCE", "in", 72), height_delta=UnitValue("METRIC", "DISTANCE", "m", 1.2))
+bend1 = pipe.Pipe(PS, diameter_in=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), diameter_out=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="BEND1", length=UnitValue("IMPERIAL", "DISTANCE", "in", 2))
+pipe2 = pipe.Pipe(PS, diameter_in=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), diameter_out=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="PIPE2", length=UnitValue("IMPERIAL", "DISTANCE", "in", 72))
 injectr = injector.Injector(PS, diameter_in=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), diameter_out=UnitValue("IMPERIAL", "DISTANCE", "in", 4), 
                     diameter_hole=UnitValue("IMPERIAL", "DISTANCE", "in", 0.04), num_hole=60, fluid="N2O")
 outlet = pressure_outlet.PressureOutlet(PS, diameter=UnitValue("IMPERIAL", "DISTANCE", "in", 0.8), fluid="N2O", name="Outlet", pressure=UnitValue("IMPERIAL", "PRESSURE", "psi", 315))

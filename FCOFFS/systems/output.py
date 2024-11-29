@@ -172,18 +172,22 @@ class OutputHandler:
         print()
     
     def __transient_results(self):
-
+        spacings = []
         header = f"{'Time':<10}"
         for probe in self.__probes:
             if isinstance(probe[0], ComponentClass):
-                unit = self.__Output_Unit[getattr(probe[0], probe[1]).get_dimension]
+                dim = getattr(probe[0], probe[1]).get_dimension
+                unit = self.__Output_Unit[dim]
             elif isinstance(probe[0], Interface):
-                unit = self.__Output_Unit[getattr(probe[0].state, probe[1]).get_dimension]
-            header += f"{(probe[0].name + '(' + unit + ')'):<25}"
-        output_string = header + "\n" + "-" * len(header) + "\n"
+                dim = getattr(probe[0].state, probe[1]).get_dimension
+                unit = self.__Output_Unit[dim]
+            title = f"{probe[0].name} {dim} ({unit})"
+            header += f"{title:<{len(title) + 3}}"
+            spacings.append(len(title) + 3)
+        output_string = header + "\n" + "-" * (len(header)+5) + "\n"
         for _, row in self.__probes_df.iterrows():
             output_string += f"{str(round(row['Time'], 6)):<10} "
-            for probe in self.__probes:
+            for i, probe in enumerate(self.__probes):
                 if isinstance(probe[0], ComponentClass):
                     unit = self.__Output_Unit[getattr(probe[0], probe[1]).get_dimension]
                     dim = getattr(probe[0], probe[1]).get_dimension
@@ -194,7 +198,7 @@ class OutputHandler:
                     base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0].state, probe[1]).get_dimension].keys())[0]
                 temp = UnitValue("METRIC", dim, base_unit, row[probe[2]])
                 temp.to(unit)
-                output_string += f"{str(round(temp.value, 6)):<25} "
+                output_string += f"{str(round(temp.value, 6)):<{spacings[i]}}"
             output_string += "\n"
 
         print("\n" + output_string + "\n")

@@ -24,6 +24,6 @@ SS.Output.toggle_steady_state_output()
 #TS.Output.show_config()
 
 SS.Output.set_ouput_unit("psi")
-SS.Output.add_probes(((interface1, "p"), (interface2, "p")))
+#SS.Output.add_probes(((interface1, "p"), (interface2, "p")))
 
 SS.solve()                       

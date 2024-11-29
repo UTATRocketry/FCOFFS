@@ -35,15 +35,15 @@ class TwoPhaseTank(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1] 
 
-        res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / 1/2(state_in.mdot / state_in.rho + state_out.mdot / state_out.rho)
-        res2 = (state_in.p - state_out.p) / 1/2 (state_in.p + state_out.p)
+        res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / (0.5 * (state_in.mdot / state_in.rho + state_out.mdot / state_out.rho) )
+        res2 = (state_in.p - state_out.p) / (0.5 * (state_in.p + state_out.p) )
         res3 = (state_out.T - self.liquid_temperature) / self.liquid_temperature
 
         return [res1, res2, res3]
     
     def transient(self, dt:float, state_in: State, state_out: State):
         self.liquid_mass -= dt*state_out.area*state_out.rho*state_out.u
-        new_liquid_volume = self.liquid_mass*state_out.rho
+        new_liquid_volume = self.liquid_mass/state_out.rho
         new_gas_volume = self.volume - new_liquid_volume
         
         pass

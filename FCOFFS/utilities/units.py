@@ -928,3 +928,18 @@ class UnitValue:
     def get_system(self) -> str:
         return self.__system
 
+if __name__ == "__main__":
+    p1 = UnitValue.create_unit("psig", 0)
+    p2 = UnitValue.create_unit("psi", 14.696)
+
+    p3 = UnitValue.create_unit("psig", 850)
+    p4 = UnitValue.create_unit("psi", 14.696+850)
+
+    print(p1.convert_base_metric())
+    print(p2.convert_base_metric())
+    print(p3.convert_base_metric())
+    print(p4.convert_base_metric())
+    print(p1+p4)
+
+
+

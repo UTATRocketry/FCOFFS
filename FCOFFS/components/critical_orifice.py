@@ -73,7 +73,7 @@ class CriticalOrifice(ComponentClass):
         res1 = (state_out.mdot - state_in.mdot) / (0.5 * (state_out.mdot + state_in.mdot)) 
        
 
-        critical_ratio = (2/(gamma+1))**(gamma/(gamma-1)) # critial pressure ratio
+        #critical_ratio = (2/(gamma+1))**(gamma/(gamma-1)) # critial pressure ratio
         P_ratio = state_out.p/state_in.p   # calculate percentage of upstream pressure vs downstream pressure and
          
         A_orifice = pi * self.orrifice_diameter**2/4

@@ -70,7 +70,7 @@ class SteadySolver(System):
                 #print(res)
             self.Output._run(0)
             return res
-        
+
         try:
             sol = root(func, self.w).x #method='lm'
         except Exception as e:
@@ -87,5 +87,4 @@ class SteadySolver(System):
             raise e
         self.Output._finish()
 
-        
-        
+

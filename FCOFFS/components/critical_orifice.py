@@ -32,7 +32,7 @@ class CriticalOrifice(ComponentClass):
             self.Cd = Cd
     
         vals = np.array([[0, 1], [0.5, 1], [0.6, 0.9], [0.7, 0.65], [0.8, 0.46], [0.9, 0.33], [0.95, 0.23], [0.98, 0.14], [0.99, 0.1], [1, 0], [100, 0]])
-        self.interp = interp1d(vals[:, 0], vals[:, 1], 'cubic') #changed to cubic form linear maybe qudratic good to.
+        self.interp = interp1d(vals[:, 0], vals[:, 1]) #changed to cubic form linear maybe qudratic good to.
 
     def initialize(self):
             if self.parent_system.outlet_BC != 'PRESSURE':
@@ -76,13 +76,9 @@ class CriticalOrifice(ComponentClass):
         P_ratio = state_out.p/state_in.p   # calculate percentage of upstream pressure vs downstream pressure and
          
         A_orifice = pi * self.orrifice_diameter**2/4
-        if P_ratio < critical_ratio:
-            NC_CF =  self.interp(P_ratio) #non_critical choked flow rate correction factor = NC_CF
-            mdot_choked = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/2*(gamma-1)) * state_in.p * sqrt(gamma/(R_gas*state_in.T)) * A_orifice
-            res2 = (state_out.mdot - mdot_choked)/(0.5*(state_out.mdot + mdot_choked))
-        else:
-            mdot_not_choked = self.Cd * A_orifice * (((2*gamma*state_in.p*state_in.rho)/(gamma-1))*(((state_out.p/state_in.p)**(2/gamma))-((state_out.p/state_in.p)**((gamma+1)/gamma))))**0.5
-            res2 = (state_out.mdot - mdot_not_choked)/(0.5*(state_out.mdot + mdot_not_choked))
+        NC_CF =  self.interp(P_ratio) #non_critical choked flow rate correction factor = NC_CF
+        mdot = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/2*(gamma-1)) * state_in.p * sqrt(gamma/(R_gas*state_in.T)) * A_orifice
+        res2 = (state_out.mdot - mdot)/(0.5*(state_out.mdot + mdot))
 
         h_1 = 0.5 * state_in.u**2 + Cp_in * state_in.T + state_in.p/state_in.rho             
         CP_out = Fluid.Cp(self.fluid, state_out.T , state_out.p)

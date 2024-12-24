@@ -7,7 +7,7 @@ from FCOFFS.systems.transient import *
 
 
 
-TS = TransientSolver(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psig", 0)) 
+TS = TransientSolver(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psig", 0))
 
 #can be dynamically initialized now
 interface1 = Interface("INTER1")
@@ -16,7 +16,7 @@ interface3 = Interface("INTER3")
 interface4 = Interface("INTER4")
 
 
-inlet = pressure_tank_inlet.PressurantTank(TS.quasi_steady_solver, UnitValue.create_unit("in", 0.152), "N2", UnitValue.create_unit("psi", 5), UnitValue.create_unit("C", 15), UnitValue.create_unit("m^3", 0.1), UnitValue.create_unit("m/s", 20))
+inlet = pressure_tank_inlet.PressurantTank(TS.quasi_steady_solver, UnitValue.create_unit("in", 0.152), "N2", UnitValue.create_unit("psig", 5), UnitValue.create_unit("C", 15), UnitValue.create_unit("m^3", 0.1), UnitValue.create_unit("m/s", 20))
 #inlet = pressure_inlet.PressureInlet(PS, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("psi", 800), UnitValue.create_unit("C", 5), UnitValue.create_unit("m/s", 10), "pressure_inlet")
 p = pipe.Pipe(TS.quasi_steady_solver, UnitValue.create_unit('in', 0.152), UnitValue.create_unit('in', 0.152), "N2", UnitValue.create_unit('ft', 2))
 orifice = critical_orifice.CriticalOrifice(TS.quasi_steady_solver, UnitValue.create_unit("in",0.152), UnitValue.create_unit("in", 0.152), UnitValue.create_unit("in", 0.01), "N2", Cd=0.86)
@@ -36,4 +36,4 @@ outlet.set_connection(upstream=interface4)
 TS.initialize([inlet, p, orifice, p2, outlet])
 #TS.Output.toggle_steady_state_output()
 
-TS.solve(1, 0.05)
+TS.solve(0.1, 0.005)

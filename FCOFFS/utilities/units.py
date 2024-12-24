@@ -522,6 +522,8 @@ class UnitValue:
         """
         Raises UnitValue object to the power of a float or interger.
         """
+        if self.value < 0 and p < 1.0 and not p < -1:
+            raise ValueError("Trying to take root of a a negative number")
         if isinstance(p, (int, float)):
             if p == 1:
                 return self

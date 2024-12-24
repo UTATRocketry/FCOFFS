@@ -41,9 +41,9 @@ TS.initialize([inlet, p, regulator, p2, chamb, p3, orrifice, outlet])
 
 TS.Output.toggle_steady_state_output()
 TS.Output.toggle_convergence_output()
-TS.Output.add_probes(((chamb, "p"), (interface5, "mdot")))
+TS.Output.add_probes(((chamb, "p"), (interface5, "mdot"), (interface2, "T"), (interface3, "T")))
 TS.Output.set_ouput_unit("psi")
 TS.Output.show_tree()
 TS.Output.toggle_transient_ouput()
 
-TS.solve(2, 0.01)
+TS.solve(0.5, 0.01)

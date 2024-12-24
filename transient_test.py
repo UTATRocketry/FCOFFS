@@ -33,7 +33,7 @@ TS.Output.toggle_steady_state_output()
 TS.Output.toggle_convergence_output()
 TS.Output.set_ouput_unit("psi")
 TS.Output.show_config()
-TS.solve(20, 0.05)                                                                                                               
+TS.solve(0.5, 0.05)                                                                                                               
 
 
 

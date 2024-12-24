@@ -32,13 +32,13 @@ class CriticalOrifice(ComponentClass):
             self.Cd = Cd
     
         vals = np.array([[0, 1], [0.5, 1], [0.6, 0.9], [0.7, 0.65], [0.8, 0.46], [0.9, 0.33], [0.95, 0.23], [0.98, 0.14], [0.99, 0.1], [1, 0], [100, 0]])
-        self.interp = interp1d(vals[:, 0], vals[:, 1], 'cubic') #changed to cubic form linear maybe qudratic good to.
+        self.interp = interp1d(vals[:, 0], vals[:, 1], 'linear') # keep linear as others dont properly represent the underlying curve
 
     def initialize(self):
             if self.parent_system.outlet_BC != 'PRESSURE':
                 warnings.warn("Outlet BC not well posed. ")
             self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.fluid)
-            self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u*1.5, p=self.interface_in.state.p*0.5) # intial guess corection factors
+            self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p) # intial guess corection factors
             # we will assume that component adjacent to orifice has inlet diameter matching orifice diameter (up to user variability)
 
     def update(self):
@@ -69,7 +69,8 @@ class CriticalOrifice(ComponentClass):
         #res2 = ( (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) / ( 0.5 * ( (state_in.p/state_out.p) + (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) ) )
         # res2 = (state_out.p - (state_in.p - 0.5*self.K*state_in.rho*state_in.u**2)) / (0.5*(state_out.p + state_in.p - 0.5*self.K*state_in.rho*state_in.u**2))
         
-        res1 = (state_out.mdot - state_in.mdot) / (0.5 * (state_out.mdot + state_in.mdot))
+        # this equation has a hard time converging in most cases? is there a independencie challenge maybe?
+        res1 = (state_out.mdot - state_in.mdot) / (0.5 * (state_out.mdot + state_in.mdot)) 
        
 
         critical_ratio = (2/(gamma+1))**(gamma/(gamma-1)) # critial pressure ratio
@@ -81,7 +82,10 @@ class CriticalOrifice(ComponentClass):
             mdot_choked = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/2*(gamma-1)) * state_in.p * sqrt(gamma/(R_gas*state_in.T)) * A_orifice
             res2 = (state_out.mdot - mdot_choked)/(0.5*(state_out.mdot + mdot_choked))
         else:
-            mdot_not_choked = self.Cd * A_orifice * (((2*gamma*state_in.p*state_in.rho)/(gamma-1))*(((state_out.p/state_in.p)**(2/gamma))-((state_out.p/state_in.p)**((gamma+1)/gamma))))**0.5
+            temp1 = ((state_out.p/state_in.p)**(2/gamma))
+            temp2 = ((state_out.p/state_in.p)**((gamma+1)/gamma))
+            temp3 = ((2*gamma*state_in.p*state_in.rho)/(gamma-1))*(temp1-temp2)
+            mdot_not_choked = self.Cd * A_orifice * (temp3)**0.5
             res2 = (state_out.mdot - mdot_not_choked)/(0.5*(state_out.mdot + mdot_not_choked))
 
         h_1 = 0.5 * state_in.u**2 + Cp_in * state_in.T + state_in.p/state_in.rho             
@@ -97,4 +101,6 @@ class CriticalOrifice(ComponentClass):
         return [res1, res2, res3]
 
         
-
+if __name__ == "__main__":
+    orrif = CriticalOrifice(None, UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.05), "N2")
+    

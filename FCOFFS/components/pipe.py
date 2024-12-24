@@ -22,10 +22,8 @@ class Pipe(ComponentClass):
     # epsilon [m]:     roughness of the pipe internal wall, a function of
     #                  material
     # height_delta [m]: Difference in heigh between one end of pipe to another, a decrease in height should be a negative value
-    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out:UnitValue, fluid: str, length: UnitValue, height_delta: UnitValue = UnitValue("METRIC", "DISTANCE", "m", 0), roughness: float|None=None, epsilon: float|None=None, name: str="Pipe"):
-        super().__init__(parent_system, diameter_in, fluid, name)
-        self.diameter_in = diameter_in.convert_base_metric()
-        self.diameter_out = diameter_out.convert_base_metric()
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, length: UnitValue, height_delta: UnitValue = UnitValue("METRIC", "DISTANCE", "m", 0), roughness: float|None=None, epsilon: float|None=None, name: str="Pipe"):
+        super().__init__(parent_system, diameter, fluid, name)
         self.length = length
         self.length.convert_base_metric()
         self.height_diference = height_delta.convert_base_metric()
@@ -34,13 +32,13 @@ class Pipe(ComponentClass):
                 self.epsilon = 0.000025
             else:
                 self.epsilon = epsilon
-            self.roughness = self.epsilon / ((self.diameter_in.value + self.diameter_out.value)/2) # take avaergae of two diameters
+            self.roughness = self.epsilon / self.diameter.value 
         else:
             self.roughness = roughness
 
     def initialize(self):
-        self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.fluid)
-        self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
+        self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
+        self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
 
 
     def update(self):
@@ -74,7 +72,7 @@ class Pipe(ComponentClass):
             compressible = True
 
         # find friction factor
-        Re = u_in * ((self.diameter_in + self.diameter_out)/2) / Fluid.kinematic_viscosity(self.fluid, rho_in)
+        Re = u_in * self.diameter / Fluid.kinematic_viscosity(self.fluid, rho_in)
         def colebrook(f):
             return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
         def haaland(f):
@@ -88,7 +86,7 @@ class Pipe(ComponentClass):
             case False: 
 
                 # update downstream condition
-                PLC = friction_factor * self.length / ((self.diameter_in + self.diameter_out)/2)
+                PLC = friction_factor * self.length / self.diameter
                 dp = PLC * q_in
                 p_out = p_in - dp + state_in.rho*g*self.height_diference # added height factor kg/m^3
                 rho_out = Fluid.density(self.fluid, T_in, p_out)
@@ -116,7 +114,7 @@ class Pipe(ComponentClass):
                 res2 = (Cp*state_in.T - Cp_out*state_out.T) / (0.5 * (Cp*state_in.T + Cp_out*state_out.T))
                 
                 #Momentum conservation # momentum euqstion go to zero
-                res3 = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/((self.diameter_in + self.diameter_out)/2))-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
+                res3 = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/(self.diameter))-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
 
 
         return [res1, res2, res3]

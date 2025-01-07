@@ -9,19 +9,23 @@ from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 from ..state.State import *
 
+densities = {"C2H6O": UnitValue.create_unit("kg/m^3", 789), "CO2": UnitValue.create_unit("kg/m^3", 1101)}
+
 class TwoPhaseTank(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, initial_liquid_temerature: UnitValue, gas: str, liquid: str, initial_liquid_mass: UnitValue, volume: UnitValue, name: str="Tank"):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, gas: str, liquid: str, initial_liquid_mass: UnitValue, initial_liquid_temerature: UnitValue, tank_volume: UnitValue, tank_diameter: UnitValue, name: str="Tank"):
       
         super().__init__(parent_system, diameter_in, gas, name)
         self.diameter_in = diameter_in.convert_base_metric()
         self.diameter_out = diameter_out.convert_base_metric()
         self.gas = gas
         self.liquid = liquid
-        self.volume = volume
+        self.tank_volume = tank_volume
+        self.tank_diameter = tank_diameter
         self.liquid_mass = initial_liquid_mass 
 
-        if initial_liquid_temerature.get_dimension != "TEMPERATURE":
-            self.liquid_temperature = initial_liquid_temerature.convert_base_metric()
+        # V = pi d^2/4 * l
+        self.liquid_height = (self.liquid_mass/densities[self.liquid]) / (np.pi * self.tank_diameter**2/4)
+        self.liquid_temperature = initial_liquid_temerature.convert_base_metric()
 
     def initialize(self):
          self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.gas)
@@ -36,18 +40,21 @@ class TwoPhaseTank(ComponentClass):
             state_out = new_states[1] 
 
         res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / (0.5 * (state_in.mdot / state_in.rho + state_out.mdot / state_out.rho) )
-        res2 = (state_in.p - state_out.p) / (0.5 * (state_in.p + state_out.p) )
+        res2 = ((state_in.p + densities[self.liquid]*UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)*self.liquid_height)- state_out.p) / (0.5 * (state_in.p + state_out.p) )
         res3 = (state_out.T - self.liquid_temperature) / self.liquid_temperature
 
         return [res1, res2, res3]
     
     def transient(self, dt:float, state_in: State, state_out: State):
         self.liquid_mass -= dt*state_out.area*state_out.rho*state_out.u
-        new_liquid_volume = self.liquid_mass/state_out.rho
-        new_gas_volume = self.volume - new_liquid_volume
-        
-        pass
+        if self.liquid_mass <= 0: 
+            raise RuntimeError("Simulation has run for to long and the liquid in the tank has been depleted, \nthe progrsm curently cannot handle a phase chnage throughout the rest of the system thus terminating simulation")
 
+        new_liquid_volume = self.liquid_mass/state_out.rho
+        self.liquid_height = new_liquid_volume / (np.pi * self.tank_diameter**2/4)
+
+
+        
 
 
 

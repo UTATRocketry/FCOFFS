@@ -257,7 +257,6 @@ class OutputHandler:
         if isinstance(items[0], tuple) or isinstance(items[0], list):
             for item in items:
                 if self.__check_object_exists(item) is False:
-                    warnings.warn(f"Object and or object attribute {item} does not exist! Skipping this probe.")
                     continue
                 if isinstance(item[0], ComponentClass):
                     probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).get_dimension} ({getattr(item[0], item[1]).get_unit})"] 
@@ -265,9 +264,7 @@ class OutputHandler:
                     probe = [item[0], item[1], f"{item[0].name} {getattr(item[0].state, item[1]).get_dimension} ({getattr(item[0].state, item[1]).get_unit})"]
                 self.__probes.append(probe)
         else:
-            if self.__check_object_exists(items) is False:
-                    warnings.warn(f"Object and or object attribute {items} does not exist! Skipping this probe.")
-            else:
+            if self.__check_object_exists(items) is True:
                 self.__probes.append(item)
 
     def remove_probe(self, item: tuple):
@@ -278,12 +275,17 @@ class OutputHandler:
         warnings.warn(f"No probe was removed as probe {item} doesn't exist.")
                 
     def __check_object_exists(self, item):
+        for probe in self.__probes:
+            if probe[0] == item[0] and probe[1] == item[1]:
+                warnings.warn(f"Probe {item} already exists, skipping the addition of this probe.")
+                return False
         for obj in self.__objects:
             if obj == item[0]:
                 if isinstance(obj, ComponentClass) and getattr(obj, item[1], 'N/A') != "N/A":
                     return True
                 elif isinstance(obj, Interface) and getattr(obj.state, item[1], 'N/A') != "N/A":
                     return True
+        warnings.warn(f"Object and or object attribute {item} does not exist! Skipping this probe.")
         return False
     
     # add section of fucntions that creates a software log and logs all actions of the software. Would need to be callable outside by other functions

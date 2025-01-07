@@ -79,7 +79,7 @@ class CriticalOrifice(ComponentClass):
         A_orifice = pi * self.orrifice_diameter**2/4
 
         NC_CF =  self.interp(P_ratio) #non_critical choked flow rate correction factor = NC_CF
-        mdot = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/2*(gamma-1)) * state_in.p * sqrt(gamma/(R_gas*state_in.T)) * A_orifice
+        mdot = NC_CF * self.Cd * A_orifice * np.sqrt(gamma*state_in.p*state_in.rho*(2/(gamma + 1))**((gamma+1)/(gamma-1)))
         res2 = (state_out.mdot - mdot)/(0.5*(state_out.mdot + mdot))
 
         h_1 = 0.5 * state_in.u**2 + Cp_in * state_in.T + state_in.p/state_in.rho             

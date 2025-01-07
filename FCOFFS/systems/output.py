@@ -157,7 +157,7 @@ class OutputHandler:
             if obj.type == 'interface':
                 state = obj.state
                 
-                output_string += f"{obj.name:<12} {str(round(getattr(state, 'rho', 'N/A').copy().to(self.__Output_Unit['DENSITY']), 4)):<20} {str(round(getattr(state, 'u', 'N/A').copy().to(self.__Output_Unit['VELOCITY']), 2)):<20} {str(round(getattr(state, 'p', 'N/A').copy().to(self.__Output_Unit['PRESSURE']), 4)):<20} {str(round(getattr(state, 'T', 'N/A').copy().to(self.__Output_Unit['TEMPERATURE']), 4)):<15} {str(round(getattr(state, 'mdot', 'N/A').copy().to(self.__Output_Unit['MASS FLOW RATE']), 4)):<20} {str(round(getattr(state, 'area', 'N/A').copy().to(self.__Output_Unit['AREA']), 8)):<20} {getattr(state, 'fluid', 'N/A'):<10}\n"
+                output_string += f"{obj.name:<12} {str(round(getattr(state, 'rho', 'N/A').copy().to(self.__Output_Unit['DENSITY']), 4)):<20} {str(round(getattr(state, 'u', 'N/A').copy().to(self.__Output_Unit['VELOCITY']), 2)):<20} {str(round(getattr(state, 'p', 'N/A').copy().to(self.__Output_Unit['PRESSURE']), 4)):<20} {str(round(getattr(state, 'T', 'N/A').copy().to(self.__Output_Unit['TEMPERATURE']), 4)):<15} {str(round(getattr(state, 'mdot', 'N/A').copy().to(self.__Output_Unit['MASS FLOW RATE']), 6)):<20} {str(round(getattr(state, 'area', 'N/A').copy().to(self.__Output_Unit['AREA']), 8)):<20} {getattr(state, 'fluid', 'N/A'):<10}\n"
             else:
                 output_string += f"{obj.name:<12}\n"
         output_string = output_string[:-1]

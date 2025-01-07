@@ -34,3 +34,5 @@ def Newtons_Method(f,fprime):
         if step > 1000:
             raise Exception(f"Could not converge on root of function. Last guess was: {x_approx}")
     return x_approx
+
+    

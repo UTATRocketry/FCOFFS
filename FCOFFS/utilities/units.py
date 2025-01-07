@@ -111,12 +111,12 @@ class UnitValue:
                          "ENERGY PER UNIT MASS": {"m^2/s^2": 1},
                          "MASS PER LENGTH": {"kg/m": 1, "kg/cm": 100, "g/cm": 0.1},
                          "MASS PER AREA": {"kg/m^2": 1, "g/cm^2": 10},
-                         "VOLUMETRIC FLOW RATE": {"m^3/s": 1, "cm^3/s": 0.000001},
+                         "VOLUMETRIC FLOW RATE": {"m^3/s": 1, "cm^3/s": 0.000001, "L/min": 1.666666667e-5},
                          "DYNAMIC VISCOCITY": {"kg/ms": 1, "g/cms":0.1},
                          "KINEMATIC VISCOCITY": {"m^2/s": 1, "cm^2/s": 0.0001},
                          "MASS FLUX": {"kg/m^2s": 1},
                          "GAS CONSTANTS": {"m^2/s^2K": 1, "J/kgK": 1, "J/kgc": 1}, 
-                         "Molecular Count": {'Mol': 1, "kMol": 1000}
+                         "MOLECULAR COUNT": {'Mol': 1, "kMol": 1000}
                         }
             }
     

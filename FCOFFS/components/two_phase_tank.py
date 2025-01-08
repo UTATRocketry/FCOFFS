@@ -9,27 +9,60 @@ from ..fluids.Fluid import Fluid
 from ..utilities.units import *
 from ..state.State import *
 
-densities = {"C2H6O": UnitValue.create_unit("kg/m^3", 789), "CO2": UnitValue.create_unit("kg/m^3", 1101)}
+densities = {"C2H6O": UnitValue.create_unit("kg/m^3", 790), "CO2": UnitValue.create_unit("kg/m^3", 1101)}
 
 class TwoPhaseTank(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, gas: str, liquid: str, initial_liquid_mass: UnitValue, initial_liquid_temerature: UnitValue, tank_volume: UnitValue, tank_diameter: UnitValue, name: str="Tank"):
+    def __init__(self, parent_system: SteadySolver, diameter_in: UnitValue, diameter_out: UnitValue, gas: str, liquid: str, initial_liquid_mass: UnitValue, initial_liquid_temperature: UnitValue, dome_height: UnitValue, mid_section_height: UnitValue, name: str="Tank"):
       
         super().__init__(parent_system, diameter_in, gas, name)
         self.diameter_in = diameter_in.convert_base_metric()
         self.diameter_out = diameter_out.convert_base_metric()
         self.gas = gas
         self.liquid = liquid
-        self.tank_volume = tank_volume
-        self.tank_diameter = tank_diameter
+        self.tank_diameter = dome_height*2     
         self.liquid_mass = initial_liquid_mass 
+        self.liquid_temperature = initial_liquid_temperature.convert_base_metric()
+        
+        self.aft_dome_height = dome_height
+        self.forward_dome_height = dome_height
+        self.midsection_height = mid_section_height
+        self.cross_sectional_area =  pi/4 * self.tank_diameter**2 
+        self.forward_dome_volume = 2/3 * pi * (dome_height)**3 
+        self.aft_dome_volume = 2/3 * pi * (dome_height)**3
+        self.mid_section_volume = pi * (self.tank_diameter/2)**2 * mid_section_height 
+        self.tank_volume = self.forward_dome_volume + self.aft_dome_volume + self.mid_section_volume
+        self.height_of_tank = 2 * dome_height + mid_section_height
 
-        # V = pi d^2/4 * l
-        self.liquid_height = (self.liquid_mass/densities[self.liquid]) / (np.pi * self.tank_diameter**2/4)
-        self.liquid_temperature = initial_liquid_temerature.convert_base_metric()
+        self.volume_liquid = self.liquid_mass / densities[self.liquid]
 
+        #calculating remaining fluid height by reverse engineering the remaining fluid volume obtained, in which sectors of the tank
+        if self.volume_liquid > (self.mid_section_volume + self.aft_dome_volume):
+            self.liquid_height = self.height_of_tank - ( (self.tank_volume - self.volume_liquid) / (2/3 * pi) )**(1/3)
+            #forward dome contains some fluid 
+
+        elif self.volume_liquid > self.aft_dome_volume:
+            self.liquid_height = dome_height + (4*(self.volume_liquid - self.aft_dome_volume))/(pi * (self.tank_diameter)**2)
+            #mid section contains some fluid
+
+        elif self.volume_liquid <= self.aft_dome_volume and self.volume_liquid > 0:
+            self.liquid_height = (self.volume_liquid/(2/3 * pi))**(1/3)
+            #fluid remaining only exists in aft dome section 
+
+        elif self.volume_liquid > self.tank_volume:
+            raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
+
+        elif self.volume_liquid == self.tank_volume:
+            self.liquid_height = self.height_of_tank
+
+        else:
+            raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
+
+        
+    
     def initialize(self):
-         self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.gas)
-         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.liquid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
+        self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.gas)
+        self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.liquid, rho=densities[self.liquid], u=self.interface_in.state.u, p=self.interface_in.state.p)
+        self.interface_out.state.T = self.liquid_temperature
 
     def eval(self, new_states: tuple[State, State]|None=None) -> list:
         if new_states is None:
@@ -40,18 +73,47 @@ class TwoPhaseTank(ComponentClass):
             state_out = new_states[1] 
 
         res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / (0.5 * (state_in.mdot / state_in.rho + state_out.mdot / state_out.rho) )
-        res2 = ((state_in.p + densities[self.liquid]*UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)*self.liquid_height)- state_out.p) / (0.5 * (state_in.p + state_out.p) )
-        res3 = (state_out.T - self.liquid_temperature) / self.liquid_temperature
+        rho_int_gas = (state_in.rho * self.interface_in.state.area * state_in.u)/(self.interface_out.state.area * state_out.u)     
+        T_int_gas = state_in.T
+        p_int_gas = Fluid.pressure(self.gas, rho_int_gas, T_int_gas)
+        hydrostatic_loss = densities[self.liquid]*UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)*self.liquid_height
+        outlet_p = p_int_gas - hydrostatic_loss
+        #print(state_in.p)
+        #print(p_int_gas)
+        res2 = (outlet_p - state_out.p) / (0.5 * (outlet_p + state_out.p))
+        res3 = (state_out.T - self.liquid_temperature) / (0.5* (state_out.T + self.liquid_temperature) )
 
         return [res1, res2, res3]
+    
     
     def transient(self, dt:float, state_in: State, state_out: State):
         self.liquid_mass -= dt*state_out.area*state_out.rho*state_out.u
         if self.liquid_mass <= 0: 
             raise RuntimeError("Simulation has run for to long and the liquid in the tank has been depleted, \nthe progrsm curently cannot handle a phase chnage throughout the rest of the system thus terminating simulation")
 
-        new_liquid_volume = self.liquid_mass/state_out.rho
-        self.liquid_height = new_liquid_volume / (np.pi * self.tank_diameter**2/4)
+        self.volume_liquid = self.liquid_mass/densities[self.liquid]
+
+        if self.volume_liquid > (self.mid_section_volume + self.aft_dome_volume):
+            self.liquid_height = self.height_of_tank - ( (self.tank_volume - self.volume_liquid) / (2/3 * pi) )**(1/3)
+            #forward dome contains some fluid 
+
+        elif self.volume_liquid > self.aft_dome_volume:
+            self.liquid_height = self.aft_dome_height + (4*(self.volume_liquid - self.aft_dome_volume))/(pi * (self.tank_diameter)**2)
+            #mid section contains some fluid
+
+        elif self.volume_liquid <= self.aft_dome_volume and self.volume_liquid > 0:
+            self.liquid_height = (self.volume_liquid/(2/3 * pi))**(1/3)
+            #fluid remaining only exists in aft dome section 
+
+        elif self.volume_liquid > self.tank_volume:
+            raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
+
+        elif self.volume_liquid == self.tank_volume:
+            self.liquid_height = self.height_of_tank
+
+        else:
+            raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
+    
 
 
         

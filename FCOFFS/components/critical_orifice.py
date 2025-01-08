@@ -57,7 +57,7 @@ class CriticalOrifice(ComponentClass):
         Cv_in = Fluid.Cv(self.fluid, state_in.T , state_in.p) 
 
         gamma = Cp_in / Cv_in
-        R_gas = Fluid.get_gas_constant(self.fluid)
+        #R_gas = Fluid.get_gas_constant(self.fluid)
         
         
 

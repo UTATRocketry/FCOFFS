@@ -20,6 +20,9 @@ The main features of the output handler are:
    - Show the system tree in the terminal
 
 ## Ouput Handler Customization
-When it comes to cstomizing /configuring the output handler you must do it through the solver object. TO access any output commands you must use solverobject.ouput
+When it comes to customizing/configuring the output handler you must do it through the solver object. To access any output commands you must use **solverobject.output** to access the output handler commands. 
 
-A very important key command to know is showing the current output handler configurations. 
+A key command to know is showing the current output handler configurations. To use this command you must call **.ouput.showconfig()**, this results in the following output in the terminal:
+![image](https://github.com/user-attachments/assets/af166a7f-d32b-4fb7-b435-f090178e1603)
+
+

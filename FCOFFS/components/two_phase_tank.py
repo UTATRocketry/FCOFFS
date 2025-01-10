@@ -21,6 +21,7 @@ class TwoPhaseTank(ComponentClass):
         self.liquid = liquid
         self.tank_diameter = dome_height*2     
         self.liquid_mass = initial_liquid_mass 
+        #self.gass_mass = 
         self.liquid_temperature = initial_liquid_temperature.convert_base_metric()
         
         self.aft_dome_height = dome_height
@@ -34,7 +35,7 @@ class TwoPhaseTank(ComponentClass):
         self.height_of_tank = 2 * dome_height + mid_section_height
 
         self.volume_liquid = self.liquid_mass / densities[self.liquid]
-
+        print(self.tank_volume, self.volume_liquid)
         #calculating remaining fluid height by reverse engineering the remaining fluid volume obtained, in which sectors of the tank
         if self.volume_liquid > (self.mid_section_volume + self.aft_dome_volume):
             self.liquid_height = self.height_of_tank - ( (self.tank_volume - self.volume_liquid) / (2/3 * pi) )**(1/3)
@@ -73,13 +74,12 @@ class TwoPhaseTank(ComponentClass):
             state_out = new_states[1] 
 
         res1 = (state_in.mdot / state_in.rho - state_out.mdot / state_out.rho) / (0.5 * (state_in.mdot / state_in.rho + state_out.mdot / state_out.rho) )
-        rho_int_gas = (state_in.rho * self.interface_in.state.area * state_in.u)/(self.interface_out.state.area * state_out.u)     
-        T_int_gas = state_in.T
-        p_int_gas = Fluid.pressure(self.gas, rho_int_gas, T_int_gas)
+        # rho_int_gas = (state_in.rho * self.interface_in.state.area * state_in.u)/(self.interface_out.state.area * state_out.u)     
+        # T_int_gas = state_in.T
+        # p_int_gas = Fluid.pressure(self.gas, rho_int_gas, T_int_gas)
         hydrostatic_loss = densities[self.liquid]*UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)*self.liquid_height
-        outlet_p = p_int_gas - hydrostatic_loss
-        #print(state_in.p)
-        #print(p_int_gas)
+        outlet_p = state_in.p + hydrostatic_loss
+        
         res2 = (outlet_p - state_out.p) / (0.5 * (outlet_p + state_out.p))
         res3 = (state_out.T - self.liquid_temperature) / (0.5* (state_out.T + self.liquid_temperature) )
 
@@ -88,8 +88,14 @@ class TwoPhaseTank(ComponentClass):
     
     def transient(self, dt:float, state_in: State, state_out: State):
         self.liquid_mass -= dt*state_out.area*state_out.rho*state_out.u
+        
+        #self.gass_mass += dt*state_in.area*state_in.rho*state_in.u
+
+
+
+
         if self.liquid_mass <= 0: 
-            raise RuntimeError("Simulation has run for to long and the liquid in the tank has been depleted, \nthe progrsm curently cannot handle a phase chnage throughout the rest of the system thus terminating simulation")
+            raise RuntimeError("Simulation has run for too long and the liquid in the tank has been depleted, \nthe program curently cannot handle a phase chnage throughout the rest of the system thus terminating simulation")
 
         self.volume_liquid = self.liquid_mass/densities[self.liquid]
 
@@ -113,6 +119,13 @@ class TwoPhaseTank(ComponentClass):
 
         else:
             raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
+        
+
+        ## Make the height calculaton its own funciton 
+
+    def compute_liquid_height(self) -> UnitValue:
+        '''Complete this function '''
+
     
 
 

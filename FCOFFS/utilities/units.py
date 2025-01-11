@@ -111,7 +111,7 @@ class UnitValue:
                          "ENERGY PER UNIT MASS": {"m^2/s^2": 1},
                          "MASS PER LENGTH": {"kg/m": 1, "kg/cm": 100, "g/cm": 0.1},
                          "MASS PER AREA": {"kg/m^2": 1, "g/cm^2": 10},
-                         "VOLUMETRIC FLOW RATE": {"m^3/s": 1, "cm^3/s": 0.000001, "L/min": 1.666666667e-5},
+                         "VOLUMETRIC FLOW RATE": {"m^3/s": 1, "cm^3/s": 0.000001, "L/min": .001/60},
                          "DYNAMIC VISCOCITY": {"kg/ms": 1, "g/cms":0.1},
                          "KINEMATIC VISCOCITY": {"m^2/s": 1, "cm^2/s": 0.0001},
                          "MASS FLUX": {"kg/m^2s": 1},
@@ -790,6 +790,7 @@ class UnitValue:
             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
 
     def copy(self)  -> 'UnitValue':
+        '''Returns copy of the unit that can be used without changing the original unit'''
         return UnitValue(self.__system, self.__dimension, self.__unit, self.value)
     
     def __temperature_handler(self, old_unit: str, new_unit: str): # add Rankine
@@ -915,6 +916,27 @@ class UnitValue:
             'unit': self.__unit,
             'value': self.value
         }
+    
+    def SLPM(self, temperature: 'UnitValue', pressure: 'UnitValue') -> 'UnitValue':
+        if self.__dimension != "VOLUMETRIC FLOW RATE":
+            raise ValueError("Value can not be converted to Standard Litres Per Minute as it is not a flow rate.")
+        elif temperature.__dimension != "TEMPERATURE":
+            raise ValueError("Provided temperature argument is not actually a temperature please check units")
+        elif pressure.__dimension != "PRESSURE":
+            raise ValueError("Provided pressure argument is not actually a pressure please check units")
+
+        standard_temp = UnitValue("METRIC", "TEMPERATURE", "K", 273.15)
+        standard_pressure = UnitValue("IMPERIAL", "PRESSURE", "psi", 14.504)
+
+        if self.__unit == "SLPM":
+            val = self * (temperature/standard_temp) * (standard_pressure/pressure)
+            res = UnitValue("METRIC", "VOLUMETRIC FLOW RATE", "L/min", val.value)
+        else:
+            val = self.to("L/min") * (standard_temp/temperature) * (pressure/standard_pressure)
+            res = UnitValue(None, None, "SLPM", val.value)
+            res.__dimension = "VOLUMETRIC FLOW RATE"
+        return res
+    
 
     @property
     def get_unit(self) -> str:
@@ -929,17 +951,26 @@ class UnitValue:
         return self.__system
 
 if __name__ == "__main__":
-    p1 = UnitValue.create_unit("psig", 0)
-    p2 = UnitValue.create_unit("psi", 14.696)
+    # p1 = UnitValue.create_unit("psig", 0)
+    # p2 = UnitValue.create_unit("psi", 14.696)
 
-    p3 = UnitValue.create_unit("psig", 850)
-    p4 = UnitValue.create_unit("psi", 14.696+850)
+    # p3 = UnitValue.create_unit("psig", 850)
+    # p4 = UnitValue.create_unit("psi", 14.696+850)
 
-    print(p1.convert_base_metric())
-    print(p2.convert_base_metric())
-    print(p3.convert_base_metric())
-    print(p4.convert_base_metric())
-    print(p1+p4)
+    # print(p1.convert_base_metric())
+    # print(p2.convert_base_metric())
+    # print(p3.convert_base_metric())
+    # print(p4.convert_base_metric())
+    # print(p1+p4)
+    flow = UnitValue.create_unit("m^3/s", 1.008e-3)
+    temp = UnitValue.create_unit("C", -10)
+    pressure = UnitValue.create_unit("psi", 750)
 
+    slpm = flow.SLPM(temp, pressure)
 
+    SCFM = slpm / 28.31
+
+    print(flow, slpm, SCFM.value, "SCFM")
+
+    # to get scfm divide by 28.31
 

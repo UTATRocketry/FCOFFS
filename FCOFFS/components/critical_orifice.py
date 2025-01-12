@@ -17,7 +17,7 @@ class CriticalOrifice(ComponentClass):
             raise Exception("Fluid type not supported")
         super().__init__(parent_system, diameter_in, fluid, name)
         self.orifice_diameter = orifice_diameter
-        self.diameter_in = diameter_in
+        self.diameter_in = diameter_in 
         self.decoupler = True 
         self.Cd = Cd
 
@@ -39,12 +39,26 @@ class CriticalOrifice(ComponentClass):
         else:
             state_in = new_states[0]
             state_out = new_states[1]
-
+            
+        c_s = Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)
+        Mach_initial = state_in.u / c_s
+        Mach_final = state_out.u / c_s   
+              
+        Cp = Fluid.Cp(self.fluid, state_out.T , state_out.p)
+        Cv = Fluid.Cv(self.fluid, state_out.T , state_out.p)
+        gamma = Cp / Cv
+        
+        #from mass continuity 
         res1 = (state_out.mdot - state_in.rho*self.diameter_in*state_in.u) / state_out.mdot
-        res2 = (state_out.v - Fluid.local_speed_sound(self.fluid, state_out.T, state_out.rho)) / Fluid.local_speed_sound(self.fluid, state_out.T , state_out.rho)
-        res3 = (state_out.mdot - 0.532 * pi * self.diameter_in**2/4 * state_in.p * sqrt(1/state_in.T)) / state_out.mdot
-        #0.532 applies for air only, should be revised for other gases
-        # verify what the optimal two state variable are to input for CoolProps equation of state calculations
+        
+        #from isentropic nozzle flow equations
+        res2 = (state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)) / 0.5 * ((state_in.p/state_out.p) - (1 + ((gamma-1)/2) * (Mach_final**2 - Mach_initial**2))**(gamma/(gamma-1)))
+        
+        #mass flux calculations that follow from isentropic nozzle flow 
+        res3 = (state_out.mdot - 0.544 * pi * self.diameter_in**2/4 * state_in.p * sqrt(1/state_in.T)) / state_out.mdot
+        #0.532 applies for air only, should be revised for other gases. 
+        
+        # verify what the optimal two state variable are to input for CoolProps equation of state calculations-->temperature and density
         return [res1, res2, res3]
 
         

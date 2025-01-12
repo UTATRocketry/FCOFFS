@@ -77,6 +77,8 @@ class CriticalOrifice(ComponentClass):
         P_ratio = state_out.p/state_in.p   # calculate percentage of upstream pressure vs downstream pressure and
          
         A_orifice = pi * self.orrifice_diameter**2/4
+        #Beta = self.orrifice_diameter / self.diameter_in
+        #epsilon = 1 - (0.351 + 0.256*Beta**4 + 0.93*Beta**8)*(1-(state_in.p/state_out.p)**gamma)
 
         NC_CF =  self.interp(P_ratio) #non_critical choked flow rate correction factor = NC_CF
         mdot = NC_CF * self.Cd * A_orifice * np.sqrt(gamma*state_in.p*state_in.rho*(2/(gamma + 1))**((gamma+1)/(gamma-1)))
@@ -97,4 +99,5 @@ class CriticalOrifice(ComponentClass):
         
 if __name__ == "__main__":
     orrif = CriticalOrifice(None, UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.05), "N2")
+    
     

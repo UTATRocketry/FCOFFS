@@ -918,7 +918,7 @@ class UnitValue:
         }
     
     def SLPM(self, temperature: 'UnitValue', pressure: 'UnitValue') -> 'UnitValue':
-        if self.__dimension != "VOLUMETRIC FLOW RATE":
+        if self.__dimension != "VOLUMETRIC FLOW RATE" and self.__unit != "SLPM":
             raise ValueError("Value can not be converted to Standard Litres Per Minute as it is not a flow rate.")
         elif temperature.__dimension != "TEMPERATURE":
             raise ValueError("Provided temperature argument is not actually a temperature please check units")
@@ -962,15 +962,25 @@ if __name__ == "__main__":
     # print(p3.convert_base_metric())
     # print(p4.convert_base_metric())
     # print(p1+p4)
-    flow = UnitValue.create_unit("m^3/s", 1.008e-3)
-    temp = UnitValue.create_unit("C", -10)
-    pressure = UnitValue.create_unit("psi", 750)
+    pressure = UnitValue.create_unit("psi", 800)
+    p2 = UnitValue.create_unit("psig", 0)
+    temp = UnitValue.create_unit("C", -5)
 
-    slpm = flow.SLPM(temp, pressure)
+    SCFM = 45
+    slpm = UnitValue(None, None, "SLPM", SCFM*28.31)
+    slpm.__dimension = "VOLUMETRIC FLOW RATE"
+    flow = slpm.SLPM(temp, pressure)
+   
+    density = UnitValue.create_unit("kg/m^3", 70)
+    cd = 0.86
+    gamma = 1.528
+    
+    mdot = flow*density
 
-    SCFM = slpm / 28.31
+    orrifice_area = mdot / (cd * np.sqrt(gamma*pressure*density*(2/(gamma + 1))**((gamma+1)/(gamma-1)))) #
+    
+    diameter = np.sqrt(orrifice_area*4/np.pi)
 
-    print(flow, slpm, SCFM.value, "SCFM")
-
-    # to get scfm divide by 28.31
-
+    print(diameter.to("in"))
+    #0.001872
+    #0.001673

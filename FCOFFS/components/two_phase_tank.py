@@ -1,7 +1,7 @@
 '''
 Description
 '''
-from numpy import pi
+from numpy import pi, sqrt
 
 from ..components.componentClass import ComponentClass
 from ..systems.steady import SteadySolver
@@ -33,27 +33,34 @@ class TwoPhaseTank(ComponentClass):
         self.mid_section_volume = pi * (self.tank_diameter/2)**2 * mid_section_height 
         self.tank_volume = self.forward_dome_volume + self.aft_dome_volume + self.mid_section_volume
         self.height_of_tank = 2 * dome_height + mid_section_height
+        region_remaining_liquid = ["forward", "mid", "aft", "full"]
+        
 
         self.volume_liquid = self.liquid_mass / densities[self.liquid]
         print(self.tank_volume, self.volume_liquid)
-        #calculating remaining fluid height by reverse engineering the remaining fluid volume obtained, in which sectors of the tank
+        #calculating remaining liquid height by reverse engineering the remaining liquid volume obtained, in which sectors of the tank
         if self.volume_liquid > (self.mid_section_volume + self.aft_dome_volume):
             self.liquid_height = self.height_of_tank - ( (self.tank_volume - self.volume_liquid) / (2/3 * pi) )**(1/3)
-            #forward dome contains some fluid 
+            #forward dome contains some liquid
+            self.remaining_liquid_region = region_remaining_liquid[0]
 
         elif self.volume_liquid > self.aft_dome_volume:
             self.liquid_height = dome_height + (4*(self.volume_liquid - self.aft_dome_volume))/(pi * (self.tank_diameter)**2)
-            #mid section contains some fluid
+            #mid section contains some liquid
+            self.remaining_liquid_region = region_remaining_liquid[1]
 
         elif self.volume_liquid <= self.aft_dome_volume and self.volume_liquid > 0:
             self.liquid_height = (self.volume_liquid/(2/3 * pi))**(1/3)
-            #fluid remaining only exists in aft dome section 
+            #liquid remaining only exists in aft dome section
+            self.remaining_liquid_region = region_remaining_liquid[2] 
 
         elif self.volume_liquid > self.tank_volume:
             raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
 
         elif self.volume_liquid == self.tank_volume:
             self.liquid_height = self.height_of_tank
+            #liquid occupies complete tank
+            self.remaining_liquid_region = region_remaining_liquid[3] 
 
         else:
             raise ValueError("Invalid calcultation of remaining fluid volume in tank, revise remaining mass data")
@@ -80,7 +87,15 @@ class TwoPhaseTank(ComponentClass):
         hydrostatic_loss = densities[self.liquid]*UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)*self.liquid_height
         outlet_p = state_in.p + hydrostatic_loss
         
+        total_inlet_pressure = state_in.p + 0.5*state_in.rho*state_in.u**2
+        Area_interface_region = self.compute_Area_Interface_Region(self)
+        u_gas_int = state_out.u * state_out.area/Area_interface_region
+        T_int = state_in.T
+         
         res2 = (outlet_p - state_out.p) / (0.5 * (outlet_p + state_out.p))
+        
+        
+        
         res3 = (state_out.T - self.liquid_temperature) / (0.5* (state_out.T + self.liquid_temperature) )
 
         return [res1, res2, res3]
@@ -123,13 +138,68 @@ class TwoPhaseTank(ComponentClass):
 
         ## Make the height calculaton its own funciton 
 
-    def compute_liquid_height(self) -> UnitValue:
+    def compute_Area_Interface_Region(self) -> UnitValue:
         '''Complete this function '''
+        if self.remaining_liquid_region == "forward":
+            region_liquid_height = self.liquid_height - self.midsection_height - self.aft_dome_height
+            interface_radius = sqrt(self.forward_dome_height**2 - region_liquid_height**2)
+            Area_of_interface = pi * interface_radius**2
+            
+        elif self.remaining_liquid_region == "mid":
+            Area_of_interface = pi/4 * self.tank_diameter**2
+            
+        elif self.remaining_liquid_region == "aft":
+            region_gas_height = self.aft_dome_height - self.liquid_height
+            interface_radius = sqrt(self.forward_dome_height**2 - region_gas_height**2)
+            Area_of_interface = pi * interface_radius**2
+            
+        elif self.remaining_liquid_region == "full":
+            raise ValueError("Liquid occupies complete volume of two-phase tank, no interface region exists with gas")     
+        else:
+            raise ValueError("Invalid calcultation of region with remaining liquid, could not compute area of interface region")
 
-    
-
+        return Area_of_interface
+        
+    def compute_interface_gas_density(tolerance, self,new_states: tuple[State, State]|None=None) -> UnitValue:
+        if new_states is None:
+            state_in = self.interface_in.state
+            state_out = self.interface_out.state
+        else:
+            state_in = new_states[0]
+            state_out = new_states[1] 
+           
+        step = 0 
+        # initial_guess
+        P_int_prev = state_in.p
+        total_inlet_pressure = state_in.p + 0.5*state_in.rho*state_in.u**2
+        rho_int
+        while abs(f(self, P_int_prev, total_inlet_pressure, rho_int ) - P_int_prev) > tolerance:
+            P_int = 
+            step += 1
+        
+        
 
         
+        
+        
+        #redefining old function in the form of x = f(x)
+
+
+    def f(self, P_int, P_in_total, rho_int , u_int, state_in_T):
+        rho_int = Fluid.density(self.gas, state_in_T , P_int)
+        return P_in_total - 0.5*rho_int*u_int**2
+
+    def relaxation(f):
+        tolerance = 1e-6
+        guess = 200
+        step = 0 #keeps track of number of iterations
+        while abs(f(guess) - guess) > tolerance:
+            guess = f(guess) #successive approximation step
+            step += 1
+        root = round(guess,3)
+        return root , step
+
+
 
 
 

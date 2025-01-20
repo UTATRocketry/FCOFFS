@@ -11,7 +11,7 @@ class PressureOutlet(ComponentClass):
     def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, pressure: UnitValue, name: str="Pressure Outlet") -> None:
         super().__init__(parent_system, diameter, fluid,name)
 
-        if pressure.get_dimension != "PRESSURE":
+        if pressure.dimension != "PRESSURE":
             raise Exception("Entered invalid pressure")
         
         pressure.convert_base_metric()

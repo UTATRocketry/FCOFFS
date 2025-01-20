@@ -106,11 +106,10 @@ class TwoPhaseTank(ComponentClass):
         
         #self.gass_mass += dt*state_in.area*state_in.rho*state_in.u
 
-
-
-
         if self.liquid_mass <= 0: 
             raise RuntimeError("Simulation has run for too long and the liquid in the tank has been depleted, \nthe program curently cannot handle a phase chnage throughout the rest of the system thus terminating simulation")
+
+        ## Make the height calculaton its own funciton 
 
         self.volume_liquid = self.liquid_mass/densities[self.liquid]
 
@@ -172,10 +171,10 @@ class TwoPhaseTank(ComponentClass):
         # initial_guess
         P_int_prev = state_in.p
         total_inlet_pressure = state_in.p + 0.5*state_in.rho*state_in.u**2
-        rho_int
-        while abs(f(self, P_int_prev, total_inlet_pressure, rho_int ) - P_int_prev) > tolerance:
-            P_int = 
-            step += 1
+        # rho_int
+        # while abs(f(self, P_int_prev, total_inlet_pressure, rho_int ) - P_int_prev) > tolerance:
+        #     P_int = 
+        #     step += 1
         
         
 

@@ -12,7 +12,7 @@ class PressurantTank(ComponentClass):
         super().__init__(parent_system, diameter, fluid,name)
         #mass is not provided as input as we will calculate it from volume temperature and temperature
 
-        if pressure.get_dimension != "PRESSURE" or temperature.get_dimension != "TEMPERATURE" or volume.get_dimension != "VOLUME":
+        if pressure.dimension != "PRESSURE" or temperature.dimension != "TEMPERATURE" or volume.dimension != "VOLUME":
             raise Exception("Entered invalid pressure and temperature")
         
         pressure.convert_base_metric()

@@ -11,7 +11,7 @@ class MassFlowOutlet(ComponentClass):
     def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, mass_flow: UnitValue, name: str="Mass Flow Outlet") -> None:
         super().__init__(parent_system, diameter, fluid,name)
 
-        if mass_flow.get_dimension != "MASS FLOW RATE":
+        if mass_flow.dimension != "MASS FLOW RATE":
             raise Exception("Entered invalid pressure")
         
         mass_flow.convert_base_metric()

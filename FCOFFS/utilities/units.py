@@ -1,6 +1,6 @@
 '''
 This pyhton module was created by Brody Howard and is published as an official pyhton package on pypy.org under "UnitValues",
-It has been coppied here for ease of use and manipulation for specific needs. 
+It has been copied here for ease of use and manipulation for specific needs. If you wish to dowload it yourself to your local machine run pip install Unitvalues
 '''
 
 '''
@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 
 
-class _gauge_conversion():
+class _gauge_pressure():
     '''
     This class is used for specifc units which can have guage versus absolute values and facilatest the conversion of these values to absolute or back to gauge. 
     Mainly useful for pressure. Do not use outside of this file 
@@ -57,6 +57,51 @@ class _gauge_conversion():
     __rtruediv__ = __truediv__
 
 
+class metric_temperature():
+    def __init__(self, unit_conversion_to_SI) -> None:
+        self.__to_SI = unit_conversion_to_SI
+    
+    def __mul__(self, m) -> int|float:
+        return m + self.__to_SI
+    
+    __rmul__ = __mul__
+
+    def __truediv__(self, d):
+        return d - self.__to_SI
+    
+    __rtruediv__ = __truediv__
+
+class farenheit():
+    def __init__(self) -> None:
+        pass
+  
+    def __mul__(self, m) -> int|float:
+        kelvin = ((m - 32) * (5/9)) + 273.15
+        return kelvin
+    
+    __rmul__ = __mul__
+
+    def __truediv__(self, d):
+        val = ((d - 273.15) / (5/9)) + 32
+        return val
+    
+    __rtruediv__ = __truediv__
+
+class rankine():
+    def __init__(self) -> None:
+        pass
+    
+    def __mul__(self, m) -> int|float:
+        return m *(5/9)
+    
+    __rmul__ = __mul__
+
+    def __truediv__(self, d):
+        return d * 1.8
+    
+    __rtruediv__ = __truediv__
+
+
 class UnitValue: 
     """
     Represents a value with dimension/units.
@@ -69,13 +114,13 @@ class UnitValue:
     """ 
     UNITS = {"IMPERIAL": {
                            "DISTANCE": {"in": 0.0254, "mi": 1609.34, "yd": 0.9144, "ft": 0.3048}, 
-                           "PRESSURE": {"psi": 6894.76, "psig": _gauge_conversion(6894.76, 14.696), "psf": 47.8803}, 
+                           "PRESSURE": {"psi": 6894.76, "psig": _gauge_pressure(6894.76, 14.696), "psf": 47.8803}, 
                            "MASS": {"lb": 0.453592, "ton": 907.1847, "slug": 14.59390, "st": 6.35029, "oz": 0.0283495}, 
                            "VELOCITY": {"ft/s": 0.3048, "mi/s": 1609.34, "mph": 0.44704, "in/s": 0.0254}, 
                            "DENSITY": {"lb/in^3": 27679.9, "lb/ft^3": 16.0185, "lb/yd^3": 0.593276},
                            "VOLUME": {"gal": 0.00378541, "yd^3": 0.764555, "ft^3": 0.0283168, "in^3": 0.0000163871}, 
                            "AREA": {"in^2": 0.00064516, "mi^2": 2590000, "yd^2": 0.836127, "ft^2": 0.092903},
-                           "TEMPERATURE": {"f": None, "R":None},
+                           "TEMPERATURE": {"f": farenheit(), "R": rankine()},
                            "MASS FLOW RATE": {"lb/s": 0.453592, "ton/s": 907.1847, "st/s": 6.35029, "oz": 0.0283495, "lb/min": 0.00755987},
                            "ENERGY": {"BTU": 1055.05585, "ftlb": 1.35582, "kcal": 4184, "cal": 4.184},
                            "TIME": {"s": 1, "h": 3600, "min": 60, "ms": 0.001},
@@ -86,7 +131,7 @@ class UnitValue:
                            "ENERGY PER UNIT MASS": {"ft^2/s^2": 0.09290304}, 
                            "MASS PER UNIT LENGTH": {"lb/ft": 1.48816, "oz/in": 1.11612},
                            "MASS PER AREA": {"lb/ft^2": 4.88243},
-                           "VOLUMETRIC FLOW RATE": {"ft^3/s": 0.0283168, "gal/s": 0.00378541, "ft^3/min": 0.000471947},
+                           "VOLUMETRIC FLOW RATE": {"ft^3/s": 0.0283168, "gal/s": 0.00378541, "ft^3/min": 0.000471947, "SCFM": None},
                            "DYNAMIC VISCOCITY": {"lb/fts": 1.488163943568},
                            "KINEMATIC VISCOCITY": {"ft^2/s": 0.092903},
                            "MASS FLUX": {"lb/ft^2s": 4.88243},
@@ -100,7 +145,7 @@ class UnitValue:
                          "DENSITY": {"kg/m^3": 1, "t/m^3": 1000, "g/m^3": 0.001},
                          "VOLUME": {"m^3": 1, "L": 0.001, "cm^3": 0.000001, "mL": 0.000001, "mm^3": 0.000000001},
                          "AREA": {"m^2": 1, "km^2": 1000000, "cm^2": 0.0001, "mm^2": 0.000001},
-                         "TEMPERATURE": {"K": None, "c": None}, 
+                         "TEMPERATURE": {"K": 1, "c": metric_temperature(273.15)}, 
                          "MASS FLOW RATE": {"kg/s": 1, "t/s": 1000, "kg/min": 0.0166667, "g/s": 0.001},
                          "ENERGY": {"kgm^2/s^2": 1, "MJ": 1000000, "kJ": 1000, "Nm": 1, "J": 1, "eV": 1.602177e-19},
                          "TIME": {"s": 1, "h": 3600, "min": 60, "ms": 0.001},
@@ -111,7 +156,7 @@ class UnitValue:
                          "ENERGY PER UNIT MASS": {"m^2/s^2": 1},
                          "MASS PER LENGTH": {"kg/m": 1, "kg/cm": 100, "g/cm": 0.1},
                          "MASS PER AREA": {"kg/m^2": 1, "g/cm^2": 10},
-                         "VOLUMETRIC FLOW RATE": {"m^3/s": 1, "cm^3/s": 0.000001, "L/min": .001/60},
+                         "VOLUMETRIC FLOW RATE": {"m^3/s": 1, "cm^3/s": 0.000001, "L/min": 0.001/60, "SLPM": None},
                          "DYNAMIC VISCOCITY": {"kg/ms": 1, "g/cms":0.1},
                          "KINEMATIC VISCOCITY": {"m^2/s": 1, "cm^2/s": 0.0001},
                          "MASS FLUX": {"kg/m^2s": 1},
@@ -125,7 +170,7 @@ class UnitValue:
     @classmethod
     def add_custom_unit(cls, system: str, dimension:str, unit:str, conversion_factor: float) -> None:
         """
-        Add your own units to the package instance whihc you can then use in conversion and arithmatic. Note there is a small chance new SI/Metric units will mess with unit conversion during arithmatic. 
+        Add your own units to the package instance which you can then use in conversion and arithmatic. Note there is a small chance new SI/Metric units will mess with unit conversion during arithmatic. 
 
         Args:
             system (str): The measurement system ('IMPERIAL' or 'METRIC'). 
@@ -752,7 +797,7 @@ class UnitValue:
         if func is np.concatenate:
             unit_cache = []
             for arr in args[0]:
-                unit_cache += [item.get_unit if isinstance(item, UnitValue) else None for item in arr]
+                unit_cache += [item.unit if isinstance(item, UnitValue) else None for item in arr]
                 for i in range(len(arr)):
                     arr[i] = arr[i].value if isinstance(arr[i], UnitValue) else arr[i]
             new_array = np.concatenate(args[0], **kwargs)
@@ -788,59 +833,8 @@ class UnitValue:
             self.__unit = unit
         else:
             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
-
-    def copy(self)  -> 'UnitValue':
-        '''Returns copy of the unit that can be used without changing the original unit'''
-        return UnitValue(self.__system, self.__dimension, self.__unit, self.value)
     
-    def __temperature_handler(self, old_unit: str, new_unit: str): # add Rankine
-        if new_unit == "K":
-            if old_unit == "c":
-                self.value += 273.15
-            elif old_unit == "f":
-                self.value = (self.value - 32) * (5/9) + 273.15
-            elif old_unit == "R":
-                self.value *= 5/9
-        elif new_unit == "c":
-            if old_unit == "K":
-                self.value -= 273.15
-            elif old_unit == "f":
-                self.value = (self.value - 32) * (5/9)
-            elif old_unit == "R":
-                self.value = (self.value - 491.67) * (5/9)
-        elif new_unit == "f":
-            if old_unit == "K":
-                self.value = ((self.value -273.15) / (5/9)) + 32
-            elif old_unit == "c":
-                self.value = (self.value / (5/9)) + 32 
-            elif old_unit == "R":
-                self.value -= 459.67
-        elif new_unit == "R":
-            if old_unit == "c":
-                self.value = self.value * (9/5) + 491.67
-            elif old_unit == "f":
-                self.value += 459.67
-            elif old_unit == "K":
-                self.value *= 1.8
-        
-    def __convert_temp(self, change_system: bool, unit: str=""):
-        if change_system:
-            self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
-            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
-                self.__temperature_handler(self.__unit, unit)
-                self.__unit = unit
-            else:
-                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
-        elif unit:
-            if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
-                self.__temperature_handler(self.__unit, unit)
-                self.__unit = unit
-            else:
-                raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
-        else:
-            raise Exception("No conversion performed as change_system was false and unit was empty")
-
-    def convert_base_metric(self) -> 'UnitValue':
+    def convert_base_metric(self, **kwargs) -> 'UnitValue':
         """
         Convert the current value to it's base SI/Metric unit.
         
@@ -849,17 +843,71 @@ class UnitValue:
         """
         if self.__system is None:
             return
-        elif self.__dimension != "TEMPERATURE":
-            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit] 
-            self.__system = "METRIC"
-            self.__unit = list(UnitValue.UNITS[self.__system][self.__dimension].keys())[0]
-        else:
-            self.__temperature_handler(self.__unit, "K")
-            self.__system = "METRIC"
-            self.__unit = "K"
+        
+        if self.__unit == "SCFM" or self.__unit == "SLPM":
+            return self.__standard_flowrate_handler("m^3/s", kwargs["temperature"], kwargs["pressure"])
+
+        self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit]
+        self.__system = "METRIC"
+        self.__unit = list(UnitValue.UNITS[self.__system][self.__dimension].keys())[0]
         return self
     
-    def to(self, unit:str) -> 'UnitValue':
+    def __standard_flowrate_handler(self, unit:str, temperature: 'UnitValue', pressure: 'UnitValue') -> 'UnitValue':
+        '''Handles the standard flow rate conversions which involve knwoing orher properties opf the fluid'''
+        std_temp = UnitValue("METRIC", "TEMPERATURE", "K", 273.15)
+        std_pressure = UnitValue("IMPERIAL", "PRESSURE", "psi", 14.504)
+        if self.__unit == "SLPM":
+            if unit == "SCFM":
+                self.value /= 28.316847
+                self.__dimension = "IMPERIAL"
+                self.__unit = "SCFM"
+                return self
+            
+            self.value = (self.value * (temperature/std_temp) * (std_pressure/pressure)) / 60000 # converted to base metric
+            other_system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
+            if unit in UnitValue.UNITS[self.__system][self.__dimension]:
+                self.value /= UnitValue.UNITS[self.__system][self.__dimension][unit]
+            elif unit in UnitValue.UNITS[other_system][self.__dimension]:
+                self.value /= UnitValue.UNITS[other_system][self.__dimension][unit]
+                self.__system = other_system
+            else:
+                raise TypeError(f"Cannot convert unit of dimension {self.__dimension} to {unit}")
+            self.__unit = unit
+
+        elif self.__unit == "SCFM":
+            if unit == "SLPM":
+                self.value *= 28.316847
+                self.__dimension = "METRIC"
+                self.__unit = "SLPM"
+                return self
+            
+            self.value = ((self.value*28.316847) * (temperature/std_temp) * (std_pressure/pressure)) / 60000 # converted to base metric
+            other_system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
+            if unit in UnitValue.UNITS[self.__system][self.__dimension]:
+                self.value /= UnitValue.UNITS[self.__system][self.__dimension][unit]
+            elif unit in UnitValue.UNITS[other_system][self.__dimension]:
+                self.value /= UnitValue.UNITS[other_system][self.__dimension][unit]
+                self.__system = other_system
+            else:
+                raise TypeError(f"Cannot convert unit of dimension {self.__dimension} to {unit}")
+            self.__unit = unit
+        
+        else:
+            self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit]
+            if unit == "SLPM":
+                self.value = (self.value * 60000) * (std_temp/temperature) * (pressure/std_pressure)
+                self.__system = "METRIC"
+                self.__unit = "SLPM"
+            
+            elif unit == "SCFM":
+                self.value = ((self.value * 60000) * (std_temp/temperature) * (pressure/std_pressure)) / 28.316847
+                self.__system = "IMPERIAL"
+                self.__unit = "SCFM"
+
+        return self
+
+    
+    def to(self, unit:str, **kwargs) -> 'UnitValue':
         """
         Convert the current value to a new unit.
 
@@ -875,23 +923,19 @@ class UnitValue:
         u = UnitValue.SPELLING_MAP.get(unit)
         if u: unit = u
 
-        if unit == self.get_unit: return self
+        if unit == self.unit: return self
 
         cache_key = (self.__system, self.__dimension, self.__unit, unit)
         if cache_key in self._conversion_cache:
             cached_value = self._conversion_cache[cache_key]
             return UnitValue(self.__system, self.__dimension, unit, cached_value)
+        
+        if unit == "SCFM" or unit == "SLPM" or self.__unit == "SCFM" or self.__unit == "SLPM":
+            return self.__standard_flowrate_handler(unit, kwargs["temperature"], kwargs["pressure"])
 
         other_system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
         if self.__system is None:
             raise Exception(f"Invalid unit {self.__unit}: this unit is not currently supported by the module")
-        elif self.__dimension == "TEMPERATURE":
-            if unit in UnitValue.UNITS[self.__system][self.__dimension]:
-                self.__convert_temp(False, unit)
-            elif unit in UnitValue.UNITS[other_system][self.__dimension]:
-                self.__convert_temp(True, unit) 
-            else:
-                raise TypeError(f"Cannot convert unit of dimension {self.__dimension} to {unit}")
         else:
             if unit in UnitValue.UNITS[self.__system][self.__dimension]:
                 self.__convert_unit(unit)
@@ -902,6 +946,10 @@ class UnitValue:
         
         self._conversion_cache[cache_key] = self.value
         return self
+    
+    def copy(self)  -> 'UnitValue':
+        '''Returns copy of the unit that can be used without changing the original unit'''
+        return UnitValue(self.__system, self.__dimension, self.__unit, self.value)
 
     def to_dict(self) -> dict:
         """
@@ -916,71 +964,140 @@ class UnitValue:
             'unit': self.__unit,
             'value': self.value
         }
-    
-    def SLPM(self, temperature: 'UnitValue', pressure: 'UnitValue') -> 'UnitValue':
-        if self.__dimension != "VOLUMETRIC FLOW RATE" and self.__unit != "SLPM":
-            raise ValueError("Value can not be converted to Standard Litres Per Minute as it is not a flow rate.")
-        elif temperature.__dimension != "TEMPERATURE":
-            raise ValueError("Provided temperature argument is not actually a temperature please check units")
-        elif pressure.__dimension != "PRESSURE":
-            raise ValueError("Provided pressure argument is not actually a pressure please check units")
-
-        standard_temp = UnitValue("METRIC", "TEMPERATURE", "K", 273.15)
-        standard_pressure = UnitValue("IMPERIAL", "PRESSURE", "psi", 14.504)
-
-        if self.__unit == "SLPM":
-            val = self * (temperature/standard_temp) * (standard_pressure/pressure)
-            res = UnitValue("METRIC", "VOLUMETRIC FLOW RATE", "L/min", val.value)
-        else:
-            val = self.to("L/min") * (standard_temp/temperature) * (pressure/standard_pressure)
-            res = UnitValue(None, None, "SLPM", val.value)
-            res.__dimension = "VOLUMETRIC FLOW RATE"
-        return res
-    
 
     @property
-    def get_unit(self) -> str:
+    def unit(self) -> str:
         return self.__unit
 
     @property
-    def get_dimension(self) -> str:
+    def dimension(self) -> str:
         return self.__dimension
 
     @property
-    def get_system(self) -> str:
+    def system(self) -> str:
         return self.__system
 
 if __name__ == "__main__":
-    # p1 = UnitValue.create_unit("psig", 0)
-    # p2 = UnitValue.create_unit("psi", 14.696)
 
-    # p3 = UnitValue.create_unit("psig", 850)
-    # p4 = UnitValue.create_unit("psi", 14.696+850)
+    temp = UnitValue.create_unit("L/min", 100)
+    print(temp)
+    temp.to("SCFM", temperature=UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250))
+    print(temp)
+    temp.to("ft^3/s", temperature=UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250))
+    print(temp)
+    res = temp.SLPM(UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250)) / 28.31
+    print(res)
+    # print(temp)
+    # temp.to("f")
+    # print(temp)
+    # temp.to("K")
+    # print(temp)
+    # temp.to("R")    
+    # print(temp)
+    # temp.convert_base_metric()
+    # print(temp)
 
-    # print(p1.convert_base_metric())
-    # print(p2.convert_base_metric())
-    # print(p3.convert_base_metric())
-    # print(p4.convert_base_metric())
-    # print(p1+p4)
-    pressure = UnitValue.create_unit("psi", 800)
-    p2 = UnitValue.create_unit("psig", 0)
-    temp = UnitValue.create_unit("C", -5)
+    # p = UnitValue.create_unit("Pa", 192.3558039)
+    # p.to("psi")
+    # print(p)
 
-    SCFM = 45
-    slpm = UnitValue(None, None, "SLPM", SCFM*28.31)
-    slpm.__dimension = "VOLUMETRIC FLOW RATE"
-    flow = slpm.SLPM(temp, pressure)
-   
-    density = UnitValue.create_unit("kg/m^3", 70)
-    cd = 0.86
-    gamma = 1.528
+    # from CoolProp.CoolProp import PropsSI, PhaseSI
+    # # p1 = UnitValue.create_unit("psig", 0)
+    # # p2 = UnitValue.create_unit("psi", 14.696)
+
+    # # p3 = UnitValue.create_unit("psig", 850)
+    # # p4 = UnitValue.create_unit("psi", 14.696+850)
+
+    # # print(p1.convert_base_metric())
+    # # print(p2.convert_base_metric())
+    # # print(p3.convert_base_metric())
+    # # print(p4.convert_base_metric())
+    # # print(p1+p4)
+    # pressure = UnitValue.create_unit("psi", 800)
+    # pressure.convert_base_metric()
+    # #p2 = UnitValue.create_unit("psig", 0)
+    # temp = UnitValue.create_unit("C", -5)
+    # temp.convert_base_metric()
+
+    # diameter = UnitValue.create_unit("in", 0.098)
+    # orrifice_area = (np.pi/4) * diameter**2
+
+    # # SCFM = 44.59
+    # # slpm = UnitValue(None, None, "SLPM", SCFM*28.31)
+    # # slpm.__dimension = "VOLUMETRIC FLOW RATE"
+    # # flow = slpm.SLPM(temp, pressure)
+    # dens = PropsSI('D', 'T', temp.value, 'P', pressure.value, 'N2')
+    # density = UnitValue("METRIC", "DENSITY", "kg/m^3", dens)
+    #   #UnitValue.create_unit("kg/m^3", 70)
+    # cd = 0.86
+    # gamma = 1.4
+
+    # #print(slpm)
+    # #print(flow.to("m^3/s"))
     
-    mdot = flow*density
+    # #mdot = flow*density
 
-    orrifice_area = mdot / (cd * np.sqrt(gamma*pressure*density*(2/(gamma + 1))**((gamma+1)/(gamma-1)))) #
-    
-    diameter = np.sqrt(orrifice_area*4/np.pi)
+    # #orrifice_area = mdot / (cd * np.sqrt(gamma*pressure*density*(2/(gamma + 1))**((gamma+1)/(gamma-1)))) #
+    # mdot = orrifice_area * cd * np.sqrt(gamma*pressure*density*(2/(gamma + 1))**((gamma+1)/(gamma-1)))
+    # print(mdot)
+    # flow = mdot/density
+    # print(flow)
+    # slpm = flow.SLPM(temp, pressure)
+    # scfm = slpm/28.316847
+    # print(slpm)
+    # print(scfm.value, "SCFM")
 
-    print(diameter.to("in"))
-    #0.001872
-    #0.001673
+
+    # #diameter = np.sqrt(orrifice_area*4/np.pi)
+
+    # #print(diameter.to("in"))
+    # #0.001872
+    # #0.001673
+
+
+# def __temperature_handler(self, old_unit: str, new_unit: str): 
+    #     if new_unit == "K":
+    #         if old_unit == "c":
+    #             self.value += 273.15
+    #         elif old_unit == "f":
+    #             self.value = (self.value - 32) * (5/9) + 273.15
+    #         elif old_unit == "R":
+    #             self.value *= 5/9
+    #     elif new_unit == "c":
+    #         if old_unit == "K":
+    #             self.value -= 273.15
+    #         elif old_unit == "f":
+    #             self.value = (self.value - 32) * (5/9)
+    #         elif old_unit == "R":
+    #             self.value = (self.value - 491.67) * (5/9)
+    #     elif new_unit == "f":
+    #         if old_unit == "K":
+    #             self.value = ((self.value -273.15) / (5/9)) + 32
+    #         elif old_unit == "c":
+    #             self.value = (self.value / (5/9)) + 32 
+    #         elif old_unit == "R":
+    #             self.value -= 459.67
+    #     elif new_unit == "R":
+    #         if old_unit == "c":
+    #             self.value = self.value * (9/5) + 491.67
+    #         elif old_unit == "f":
+    #             self.value += 459.67
+    #         elif old_unit == "K":
+    #             self.value *= 1.8
+        
+    # def __convert_temp(self, change_system: bool, unit: str=""):
+    #     if change_system:
+    #         self.__system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
+    #         if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
+    #             self.__temperature_handler(self.__unit, unit)
+    #             self.__unit = unit
+    #         else:
+    #             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
+    #     elif unit:
+    #         if unit in UnitValue.UNITS[self.__system][self.__dimension].keys():
+    #             self.__temperature_handler(self.__unit, unit)
+    #             self.__unit = unit
+    #         else:
+    #             raise Exception(f"Unit {unit} invalid: Unit must be {list(UnitValue.UNITS[self.__system][self.__dimension].keys())} for {self.__system} {self.__dimension}")
+    #     else:
+    #         raise Exception("No conversion performed as change_system was false and unit was empty")

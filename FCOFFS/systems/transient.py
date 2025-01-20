@@ -54,13 +54,19 @@ class TransientSolver(System):
         self.dt = UnitValue.create_unit("s", dt)
         self.simulation_time = simulation_time
         t = 0
-        while t <= self.simulation_time:
-            # initialize the steady state solver
-            self.quasi_steady_solver.solve() # False 
-            self.Output._run(dt)
-            self.time_marching()
-            t += dt
+        try:
+            while t <= self.simulation_time:
+                # initialize the steady state solver
+                self.quasi_steady_solver.solve() # False 
+                self.Output._run(dt)
+                self.time_marching()
+                t += dt
 
-        self.Output._finish()
+            self.Output._finish()
+        except Exception as e:
+            self.Output._finish()
+            print("----------- ERROR RAISED -----------")
+            raise e
+
         # push datafranmes to csv
            

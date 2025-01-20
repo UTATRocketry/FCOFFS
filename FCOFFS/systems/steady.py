@@ -73,6 +73,7 @@ class SteadySolver(System):
 
         try:
             sol = root(func, self.w).x #method='lm'
+            self.Output._finish()
         except Exception as e:
             print("----------- STEADY STATE FAILED TO CONVERGE -----------")
             print("----------- RESIDUALS -----------")
@@ -82,9 +83,9 @@ class SteadySolver(System):
             for i in reversed(range(len(residuals))):
                 print(f"Residual = {residuals[i]}")
             print("----------- LAST STATE -----------")
-            self.Output.print_state()
-            print("----------- ERROR RAISED -----------")
+            self.Output._finish()
+            #print("----------- ERROR RAISED -----------")
             raise e
-        self.Output._finish()
+        
 
 

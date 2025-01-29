@@ -2,7 +2,8 @@
 Description
 '''
 import numpy as np
-import pandas
+#import pandas
+import warnings
 
 from FCOFFS.utilities.units import UnitValue
 from FCOFFS.systems.system import System
@@ -22,7 +23,7 @@ class TransientSolver(System):
         if components[0].BC_type != "PRESSURE":
             for component in components:
                 if component.decoupler == True:
-                    raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+                    warnings.warn("Using a decoupled system wihtout defining the upstrem pressure. ")
 
         self.components = components #.copy() # ensures doesnt affect originail values of componet
 

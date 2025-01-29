@@ -7,6 +7,7 @@ from scipy.optimize import root
 from .system import System
 from ..utilities.utilities import rms
 from ..utilities.units import UnitValue
+import warnings 
 
 # Nomenclature:
 
@@ -23,7 +24,7 @@ class SteadySolver(System):
             if components[0].BC_type != "PRESSURE":
                 for component in components:
                     if component.decoupler == True:
-                        raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+                        warnings.warn("Using a decoupled system wihtout defining the upstrem pressure. ")
             self.inlet_BC = components[0].BC_type
             self.outlet_BC = components[-1].BC_type
         except:

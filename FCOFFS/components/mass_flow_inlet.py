@@ -32,6 +32,7 @@ class MassFlowInlet(ComponentClass):
         else:
             state_out = new_states[1]
 
-        res1 = (self.mass_flow - state_out.mdot) / self.mass_flow
+        norm = self.mass_flow if self.mass_flow > 0 else UnitValue.create_unit("kg/s", 1)
+        res1 = (self.mass_flow - state_out.mdot) / norm
         res2 = (self.T - state_out.T) / self.T
         return [res1, res2]

@@ -845,7 +845,10 @@ class UnitValue:
             return
         
         if self.__unit == "SCFM" or self.__unit == "SLPM":
-            return self.__standard_flowrate_handler("m^3/s", kwargs["temperature"], kwargs["pressure"])
+            try: 
+                return self.__standard_flowrate_handler("m^3/s", kwargs["temperature"], kwargs["pressure"])
+            except Exception as e:
+                raise ValueError(f"Was unable to convert flow rate to standard metric unit. You have ommited the required key word arguments (temperature and pressure) when converting from or to SLPM or SCFM. Occured Error: {e}")
 
         self.value *= UnitValue.UNITS[self.__system][self.__dimension][self.__unit]
         self.__system = "METRIC"
@@ -931,7 +934,10 @@ class UnitValue:
             return UnitValue(self.__system, self.__dimension, unit, cached_value)
         
         if unit == "SCFM" or unit == "SLPM" or self.__unit == "SCFM" or self.__unit == "SLPM":
-            return self.__standard_flowrate_handler(unit, kwargs["temperature"], kwargs["pressure"])
+            try:
+                return self.__standard_flowrate_handler(unit, kwargs["temperature"], kwargs["pressure"])
+            except Exception as e:
+                raise ValueError(f"Was unable to convert flow rate to standard metric unit. You have ommited the required key word arguments (temperature and pressure) when converting from or to SLPM or SCFM. Occured Error: {e}")
 
         other_system = "IMPERIAL" if self.__system == "METRIC" else "METRIC"
         if self.__system is None:

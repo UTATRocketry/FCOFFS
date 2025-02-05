@@ -12,9 +12,9 @@ interface2 = Interface("INTER2")
 interface3 = Interface("INTER3")
 interface4 = Interface("INTER4")
 
-Nitorgen_Tank = pressure_tank_inlet.PressurantTank(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("psi", 3000), UnitValue.create_unit("C", 20), UnitValue.create_unit("L", 1.5), UnitValue.create_unit("m/s", 5))
-regulator = pressure_regulator.PressureRegulator(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", os.path.join(os.getcwd(), "DOCS", "Components", "Pressure Regulator", "Regulator Curves", "KPF.csv"), UnitValue.create_unit("psi", 800))
-orifice = critical_orifice.CriticalOrifice(TS.quasi_steady_solver, UnitValue.create_unit("in",0.25), UnitValue.create_unit("in",0.25), UnitValue.create_unit("in",0.01), "N2", Cd=0.86)
+Nitorgen_Tank = pressure_tank_inlet.PressurantTank(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("psi", 3000), UnitValue.create_unit("C", 20), UnitValue.create_unit("L", 1.5), UnitValue.create_unit("m/s", 10))
+regulator = pressure_regulator.PressureRegulator(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", os.path.join(os.getcwd(), "DOCS", "Components", "Pressure Regulator", "Regulator Curves", "KPF.csv"), UnitValue.create_unit("psi", 700))
+orifice = critical_orifice.CriticalOrifice(TS.quasi_steady_solver, UnitValue.create_unit("in",0.25), UnitValue.create_unit("in",0.25), UnitValue.create_unit("in",0.005), "N2", Cd=0.86)
 outlet = pressure_outlet.PressureOutlet(TS.quasi_steady_solver, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("psig", 0))
 
 Nitorgen_Tank.set_connection(downstream=interface1)

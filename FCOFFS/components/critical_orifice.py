@@ -189,15 +189,14 @@ class CriticalOrifice(ComponentClass):
         A_orifice = pi * self.orrifice_diameter**2/4
         #M = state_in.u/Fluid.local_speed_sound("N2", state_in.T, state_in.rho)
         
-        Stagnation_Correction_Factor = (1 + ((state_in.u**2)/(2*Cp_in*state_in.T)))
+        Stagnation_Correction_Factor = (1 + ((gamma-1)/2)*((state_in.u**2)/(gamma*R_gas*state_in.T)))
         
         stag_pressure = state_in.p * (Stagnation_Correction_Factor **(gamma/(gamma-1)) )
         stag_temp = state_in.T * Stagnation_Correction_Factor
 
         NC_CF =  self.interp(P_ratio) #non_critical choked flow rate correction factor = NC_CF
-
         #mdot = NC_CF * self.Cd * A_orifice * np.sqrt(gamma*state_in.p*state_in.rho*(2/(gamma + 1))**((gamma+1)/(gamma-1)))
-        mdot = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/2*(gamma-1)) * stag_pressure * sqrt(gamma/(R_gas*stag_temp)) * A_orifice
+        mdot = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/(2*(gamma-1))) * stag_pressure * sqrt(gamma/(R_gas*stag_temp)) * A_orifice
         res2 = (state_out.mdot - mdot)/(0.5*(state_out.mdot + mdot))
 
         h_1 = 0.5 * state_in.u**2 + Cp_in * state_in.T + state_in.p/state_in.rho             

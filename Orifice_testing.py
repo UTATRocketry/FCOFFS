@@ -18,7 +18,7 @@ interface4 = Interface("INTER4")
 
 
 
-inlet = pressure_tank_inlet.PressurantTank(SS, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("psig", 500), UnitValue.create_unit("C", 15), UnitValue.create_unit("m^3", 0.1), UnitValue.create_unit("m/s", 10))
+inlet = pressure_tank_inlet.PressurantTank(SS, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("psig", 300), UnitValue.create_unit("C", 15), UnitValue.create_unit("m^3", 0.1), UnitValue.create_unit("m/s", 10))
 #inlet = pressure_inlet.PressureInlet(SS.quasi_steady_solver, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("psi", 800), UnitValue.create_unit("C", 5), UnitValue.create_unit("m/s", 10), "pressure_inlet")
 p = pipe.Pipe(SS, UnitValue.create_unit('in', 0.25), "N2", UnitValue.create_unit('ft', 2))
 orifice = critical_orifice.CriticalOrifice(SS, UnitValue.create_unit("in",0.25), UnitValue.create_unit("in", 0.25), UnitValue.create_unit("in", 0.016), "N2", Cd=0.86)
@@ -29,17 +29,17 @@ outlet = pressure_outlet.PressureOutlet(SS, UnitValue.create_unit("in",0.25), "N
 inlet.set_connection(downstream=interface1)
 p.set_connection(interface1, interface2)
 orifice.set_connection(interface2, interface3)
-#p2.set_connection(interface2, interface3)
-outlet.set_connection(upstream=interface3)
+p2.set_connection(interface3, interface4)
+outlet.set_connection(upstream=interface4)
 
 '''
  inter_face
 '''
-
+SS.Output.toggle_steady_state_output()
 SS.Output.set_ouput_unit("psi")
-SS.initialize([inlet, p, orifice, outlet])
+SS.initialize([inlet, p, orifice, p2, outlet])
 SS.solve()
-#SS.Output.toggle_steady_state_output()
+
 
 # SS.solve(0, 0.1)
 

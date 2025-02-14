@@ -985,14 +985,14 @@ class UnitValue:
 
 if __name__ == "__main__":
 
-    temp = UnitValue.create_unit("L/min", 100)
-    print(temp)
-    temp.to("SCFM", temperature=UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250))
-    print(temp)
-    temp.to("ft^3/s", temperature=UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250))
-    print(temp)
-    res = temp.SLPM(UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250)) / 28.31
-    print(res)
+    # temp = UnitValue.create_unit("L/min", 100)
+    # print(temp)
+    # temp.to("SCFM", temperature=UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250))
+    # print(temp)
+    # temp.to("ft^3/s", temperature=UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250))
+    # print(temp)
+    # res = temp.SLPM(UnitValue.create_unit("K", 280), pressure=UnitValue.create_unit("psi", 250)) / 28.31
+    # print(res)
     # print(temp)
     # temp.to("f")
     # print(temp)
@@ -1007,7 +1007,7 @@ if __name__ == "__main__":
     # p.to("psi")
     # print(p)
 
-    # from CoolProp.CoolProp import PropsSI, PhaseSI
+    from CoolProp.CoolProp import PropsSI, PhaseSI
     # # p1 = UnitValue.create_unit("psig", 0)
     # # p2 = UnitValue.create_unit("psi", 14.696)
 
@@ -1019,39 +1019,37 @@ if __name__ == "__main__":
     # # print(p3.convert_base_metric())
     # # print(p4.convert_base_metric())
     # # print(p1+p4)
-    # pressure = UnitValue.create_unit("psi", 800)
-    # pressure.convert_base_metric()
+    pressure = UnitValue.create_unit("psi", 550)
+    pressure.convert_base_metric()
     # #p2 = UnitValue.create_unit("psig", 0)
-    # temp = UnitValue.create_unit("C", -5)
-    # temp.convert_base_metric()
+    temp = UnitValue.create_unit("C", 0)
+    temp.convert_base_metric()
 
-    # diameter = UnitValue.create_unit("in", 0.098)
-    # orrifice_area = (np.pi/4) * diameter**2
+    diameter = UnitValue.create_unit("in", 0.0635)
+    orrifice_area = (np.pi/4) * diameter**2
 
-    # # SCFM = 44.59
-    # # slpm = UnitValue(None, None, "SLPM", SCFM*28.31)
-    # # slpm.__dimension = "VOLUMETRIC FLOW RATE"
-    # # flow = slpm.SLPM(temp, pressure)
-    # dens = PropsSI('D', 'T', temp.value, 'P', pressure.value, 'N2')
-    # density = UnitValue("METRIC", "DENSITY", "kg/m^3", dens)
-    #   #UnitValue.create_unit("kg/m^3", 70)
-    # cd = 0.86
-    # gamma = 1.4
+    # SCFM = 44.59
+    # slpm = UnitValue(None, None, "SLPM", SCFM*28.31)
+    # slpm.__dimension = "VOLUMETRIC FLOW RATE"
+    # flow = slpm.SLPM(temp, pressure)
+    dens = PropsSI('D', 'T', temp.value, 'P', pressure.value, 'N2')
+    density = UnitValue("METRIC", "DENSITY", "kg/m^3", dens)
+      #UnitValue.create_unit("kg/m^3", 70)
+    cd = 0.86
+    gamma = 1.4
 
-    # #print(slpm)
-    # #print(flow.to("m^3/s"))
+    #print(slpm)
+    #print(flow.to("m^3/s"))
     
-    # #mdot = flow*density
+    #mdot = flow*density
 
-    # #orrifice_area = mdot / (cd * np.sqrt(gamma*pressure*density*(2/(gamma + 1))**((gamma+1)/(gamma-1)))) #
-    # mdot = orrifice_area * cd * np.sqrt(gamma*pressure*density*(2/(gamma + 1))**((gamma+1)/(gamma-1)))
-    # print(mdot)
-    # flow = mdot/density
-    # print(flow)
-    # slpm = flow.SLPM(temp, pressure)
-    # scfm = slpm/28.316847
-    # print(slpm)
-    # print(scfm.value, "SCFM")
+    #orrifice_area = mdot / (cd * np.sqrt(gamma*pressure*density*(2/(gamma + 1))**((gamma+1)/(gamma-1)))) #
+    mdot = orrifice_area * cd * np.sqrt(gamma*pressure*density*(2/(gamma + 1))**((gamma+1)/(gamma-1)))
+    print(mdot)
+    flow = mdot/density
+    print(flow)
+    slpm = flow.to("SCFM", temperature=temp, pressure=pressure)
+    print(slpm)
 
 
     # #diameter = np.sqrt(orrifice_area*4/np.pi)

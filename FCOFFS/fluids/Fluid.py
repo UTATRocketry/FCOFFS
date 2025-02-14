@@ -14,39 +14,39 @@ class Fluid:
     # density [kg/m3]
     # dynamic_viscosity [Pa-s]
     def density(fluid: str, T: UnitValue, p: UnitValue) -> UnitValue:
-        dens = PropsSI('D', 'T', T.value, 'P', p.value, fluid)
+        dens = PropsSI('D', 'T', T.convert_base_metric().value, 'P', p.convert_base_metric().value, fluid)
         return UnitValue("METRIC", "DENSITY", "kg/m^3", dens)
     
     def temp(fluid: str, rho: UnitValue, p: UnitValue) -> UnitValue:
-        t = PropsSI('T', 'D', rho.value, 'P', p.value, fluid)
+        t = PropsSI('T', 'D', rho.convert_base_metric().value, 'P', p.convert_base_metric().value, fluid)
         return UnitValue("METRIC", "TEMPERATURE", "K", t)
 
     def pressure(fluid: str, rho: UnitValue, T: UnitValue) -> UnitValue:
-        p = PropsSI('P', 'D', rho.value, 'T', T.value, fluid)
+        p = PropsSI('P', 'D', rho.convert_base_metric().value, 'T', T.convert_base_metric().value, fluid)
         return UnitValue("METRIC", "PRESSURE", "kg/ms^2", p)
     
     def Cp(fluid: str, T: UnitValue, p: UnitValue) -> UnitValue:
-        cp = PropsSI('C', 'T', T.value, 'P', p.value, fluid)
+        cp = PropsSI('C', 'T', T.convert_base_metric().value, 'P', p.convert_base_metric().value, fluid)
         return UnitValue("METRIC", "GAS CONSTANTS", "m^2/s^2K", cp)
     
     def Cv(fluid: str, T: UnitValue, p: UnitValue) -> UnitValue:
-        cv = PropsSI('O', 'T', T.value, 'P', p.value, fluid)
+        cv = PropsSI('O', 'T', T.convert_base_metric().value, 'P', p.convert_base_metric().value, fluid)
         return UnitValue("METRIC", "GAS CONSTANTS", "m^2/s^2K", cv)
     
     def local_speed_sound(fluid: str, T: UnitValue, rho: UnitValue) -> UnitValue:
         '''For pure and pseudo-pure fluids, two state variables are required to fix the state. The equations of state are based on T
             and ρ as state variables, so T,ρ will always be the fastest inputs. P,T will be a bit slower (3-10 times), WHATTTTTTTTTTTTT'''
-        c_s = PropsSI("A", 'T', T.value , 'D', rho.value, fluid)
+        c_s = PropsSI("A", 'T', T.convert_base_metric().value , 'D', rho.convert_base_metric().value, fluid)
         return UnitValue("METRIC", "VELOCITY", "m/s", c_s)
     
     def phase(fluid: str, T: UnitValue|None = None, p: UnitValue|None = None, rho: UnitValue|None = None) -> str:
         #indexes = {0.0: "liquid", 2.0: "supercritical gas", 5.0: 'gas', 6.0: "mixed (liquid + vapour)", 1.0: "supercritical", 3.0: "supercritical liquid", 4.0: "critical point", 7.0: "unkown phase", 8.0: "not imposed"}
         if T != None and p != None: 
-            phase = PhaseSI("P", p.value, "T", T.value, fluid)
+            phase = PhaseSI("P", p.convert_base_metric().value, "T", T.convert_base_metric().value, fluid)
         elif T != None and rho != None: 
-            phase = PhaseSI("D", rho.value, "T", T.value, fluid)
+            phase = PhaseSI("D", rho.convert_base_metric().value, "T", T.convert_base_metric().value, fluid)
         elif rho != None and p != None: 
-            phase = PhaseSI("P", p.value, "D", rho.value, fluid)
+            phase = PhaseSI("P", p.convert_base_metric().value, "D", rho.convert_base_metric().value, fluid)
         
         return phase
 
@@ -68,7 +68,7 @@ class Fluid:
     def get_gas_constant(fluid: str) -> UnitValue:
         # Gas Constant = Universal Gas Constant / Molecular Weight of Gas
         GasConstant = {"C2H6O": R/50.0 , "N2O" : R/44.013 , "N2" : R/28.02 , "H2O" : R/18.015, "CO2": R/44}
-        return UnitValue.create_unit("m^2/s^2K", GasConstant[fluid])
+        return UnitValue.create_unit("m^2/s^2K", GasConstant[fluid]*1000)
     
 
     def get_molecular_mass(fluid: str) -> UnitValue:

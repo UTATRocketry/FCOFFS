@@ -46,4 +46,4 @@ TS.Output.set_ouput_unit("psi")
 TS.Output.show_tree()
 TS.Output.toggle_transient_ouput()
 
-TS.solve(0.5, 0.05)
+TS.solve(0.1, 0.05)

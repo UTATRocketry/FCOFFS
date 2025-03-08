@@ -93,7 +93,7 @@ class Pipe(ComponentClass):
                 u_out = mdot / rho_out / state_out.area
                 res1 = (rho_out - state_out.rho)/rho_out
                 res2 = (u_out - state_out.u)/u_out
-                res3 = (p_out - state_out.p)/p_out # add delta_h
+                res3 = (p_out - state_out.p)/p_out 
 
             case True:
 

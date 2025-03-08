@@ -40,6 +40,23 @@ orifice_diameter = (4 * A_star_Unit / pi )**0.5
 #Downstream Conditions
 p2 = UnitValue.create_unit("psi", 14.7)
 T2 = UnitValue.create_unit("K", ( (p2/p1)**( (gamma-1)/gamma) ) * T1)
+h_1 = cp_in * T1 + p1/rho_1
+new_T = T2 - 50
+print(f'Starting guess for temperature is {T2}' )
+i = 0
+while abs(T2 - new_T) > 0.000000001:
+    T2 = new_T
+    rho_2 = Fluid.density(fluid, T2, p2.convert_base_metric())
+    cp_out = Fluid.Cp(fluid, T2, p2)
+    new_T = (h_1 - p2 / rho_2) / (cp_out)
+    print(new_T)
+    if i > 100:
+        break
+    i += 1
+    
+
+
+# T2_2_unit = UnitValue.create_unit("K",T2_2 )
 rho_2 = Fluid.density(fluid, T2, p2.convert_base_metric())
 outlet_diameter = UnitValue.create_unit("in", 0.25)
 outlet_area = pi/4 * outlet_diameter**2
@@ -53,3 +70,4 @@ print(A_star)
 print(UnitValue.create_unit("psi", p_o).convert_base_metric(), UnitValue.create_unit("K",T_o).convert_base_metric() )
 print(f'Inlet Mass Flow Rate = {m_dot} ')
 print(the_one_orfice_to_rule_them_all.eval((state_in, state_out)))
+

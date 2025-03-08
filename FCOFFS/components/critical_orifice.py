@@ -199,9 +199,9 @@ class CriticalOrifice(ComponentClass):
         mdot = NC_CF * self.Cd * (2/(gamma+1))**((gamma+1)/(2*(gamma-1))) * stag_pressure * sqrt(gamma/(R_gas*stag_temp)) * A_orifice
         res2 = (state_out.mdot - mdot)/(0.5*(state_out.mdot + mdot))
 
-        h_1 = 0.5 * state_in.u**2 + Cp_in * state_in.T + state_in.p/state_in.rho             
+        h_1 = Cp_in * state_in.T + state_in.p/state_in.rho #  0.5 * state_in.u**2    
         CP_out = Fluid.Cp(self.fluid, state_out.T , state_out.p)
-        h_2 = 0.5 * state_out.u**2 + CP_out * state_out.T + state_out.p / state_out.rho
+        h_2 = CP_out * state_out.T + state_out.p / state_out.rho #+ 0.5 * state_out.u**2 
         res3 = (h_2 - h_1) / (0.5 * (h_2 + h_1) ) # conservation of enthalpy 
         
 

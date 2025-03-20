@@ -18,11 +18,14 @@ class SteadySolver(System):
 
     def initialize(self, components: list):
         # Sytem Vlaidation Checks
+        fluid = components[0].fluid
         if len(components) < 1:
             raise IndexError('No component found. ')
         try:
             if components[0].BC_type != "PRESSURE":
                 for component in components:
+                    if component.fluid != fluid:
+                        warnings.warn("Using system with mutliple fluids, if this was not intended (i.e. two phase tank) please check your component initialization.")
                     if component.decoupler == True:
                         warnings.warn("Using a decoupled system wihtout defining the upstrem pressure. ")
             self.inlet_BC = components[0].BC_type

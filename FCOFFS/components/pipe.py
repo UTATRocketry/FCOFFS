@@ -66,7 +66,7 @@ class Pipe(ComponentClass):
         Mach_in = state_in.u / c_s
 
         state = Fluid.phase(self.fluid, state_in.T, state_in.p) 
-        if Mach_in < 0.3 or state == "liquid" or state == "supercritical liquid":
+        if Mach_in < 0.1 or state == "liquid" or state == "supercritical liquid":
             compressible = False
         else:
             compressible = True
@@ -89,11 +89,11 @@ class Pipe(ComponentClass):
                 PLC = friction_factor * self.length / self.diameter
                 dp = PLC * q_in
                 p_out = p_in - dp + state_in.rho*g*self.height_diference # added height factor kg/m^3
-                rho_out = Fluid.density(self.fluid, T_in, p_out)
-                u_out = mdot / rho_out / state_out.area
-                res1 = (rho_out - state_out.rho)/rho_out
-                res2 = (u_out - state_out.u)/u_out
-                res3 = (p_out - state_out.p)/p_out 
+                # rho_out = Fluid.density(self.fluid, state_out.T, p_out)
+                res1 = (state_in.rho - state_out.rho)/(0.5 * (state_in.rho + state_out.rho))
+                #Add temperature residual
+                res2 = (state_in.u - state_out.u)/(0.5 * (state_in.u + state_out.u))
+                res3 = (p_out - state_out.p)/(0.5 * (p_out + state_out.p)) # add delta_h
 
             case True:
 

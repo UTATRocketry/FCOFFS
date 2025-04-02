@@ -61,7 +61,11 @@ class Pipe(ComponentClass):
         T_in = state_in.T
         g = UnitValue("METRIC", "ACCELERATION", "m/s^2", 9.81)
 
-        c_s = Fluid.local_speed_sound(self.fluid, T = state_in.T, rho=state_in.rho)
+        R = Fluid.get_gas_constant(self.fluid)
+        Cp = Fluid.Cp(self.fluid, state_in.T, state_in.p)
+        Cv = Fluid.Cv(self.fluid, state_in.T, state_in.p)
+        gamma = Cp/Cv
+        c_s = np.sqrt(gamma*R*state_in.T) #Fluid.local_speed_sound(self.fluid, T = state_in.T, rho=state_in.rho)
         # print(state_in.u)
         Mach_in = state_in.u / c_s
 
@@ -79,7 +83,7 @@ class Pipe(ComponentClass):
             return 1/sqrt(f) + 1.8*log10((self.roughness/3.7)**1.11 + 6.9/Re)
         if Re > 2000:
             friction_factor = brentq(colebrook, 0.005, 0.1)
-        else:
+        else:   
             friction_factor = 64 / Re
 
         match compressible:
@@ -102,19 +106,29 @@ class Pipe(ComponentClass):
                 Cp = Fluid.Cp(self.fluid, state_in.T, state_in.p)
                 Cv = Fluid.Cv(self.fluid, state_in.T, state_in.p)
                 gamma = Cp/Cv
-                M_in_sqrd = Mach_in**2
-                M_out = state_out.u/c_s
+                M_out = state_out.u/np.sqrt(gamma*R*state_out.T) #Fluid.local_speed_sound(self.fluid, T = state_out.T, rho=state_out.rho) 
                 
                 #mass conservation
                 res1 = (state_in.mdot - state_out.mdot) / (0.5 * (state_in.mdot + state_out.mdot))
                 #energy conservation # maybe do enthalpy consevrartion  #density is not constant v^2/2 + CP(T) # only do conservation of enthalpy
                 #res2 = (state_in.u**2 - (2*Cp*(state_out.T- state_in.T) + 2*g*self.height_diference + state_out.u**2)) / (0.5*(Cp*(state_out.T + state_in.T) + g*self.height_diference + 0.5*(state_in.u**2 + state_out.u**2)))
-                #enthalpy conservation
-                Cp_out = Fluid.Cp(self.fluid, state_in.T, state_in.p)
-                res2 = (Cp*state_in.T - Cp_out*state_out.T) / (0.5 * (Cp*state_in.T + Cp_out*state_out.T))
+                # enthalpy conservation
+                Cp_out = Fluid.Cp(self.fluid, state_out.T, state_out.p)
                 
-                #Momentum conservation # momentum euqstion go to zero
-                res3 = (M_in_sqrd + (gamma*M_in_sqrd*M_out**2)*((4*fanning_factor*self.length/(self.diameter))-(((gamma+1)/(2*gamma))*log((M_in_sqrd/M_out**2)*((1+((gamma-1)/(2*gamma))*M_out**2)/(1+((gamma-1)/(2*gamma))*M_in_sqrd))))))**0.5 - M_out
+                res2 = ( (Cp*state_in.T + state_in.u**2/2) - (Cp_out*state_out.T + state_out.u**2/2) ) / (0.5 * ( (Cp*state_in.T + state_in.u**2/2) + (Cp_out*state_out.T + state_out.u**2/2) ))
+                
+               
+                #Momentum conservation based off Fanno Line # momentum equation go to zero    
+                term1 = (M_out**2 - Mach_in**2)/(gamma*Mach_in**2*M_out**2)
+                term3 = 4*friction_factor*self.length/self.diameter
+                term2 = (gamma + 1) / (2*gamma)
+                term4 = log( (Mach_in**2/M_out**2) * ((1+((gamma-1)/2)*M_out**2)/(1+((gamma-1)/2)*Mach_in**2)) )
+                
+                res3 = (term1 + term2*term4 - term3) / (0.5 * (term1 + term2*term4 + term3))
+                
+                
+
+
 
 
         return [res1, res2, res3]

@@ -1,10 +1,7 @@
 from FCOFFS.utilities.units import *
-
-from FCOFFS.components import *
+from FCOFFS.components import * 
 from FCOFFS.interfaces.interface import *
-from FCOFFS.systems.transient import *
-
-TS = TransientSolver(ref_p=UnitValue("IMPERIAL", "PRESSURE", "psi", 15)) 
+from FCOFFS.systems.steady import *
 
 interface1 = Interface("INTER1")
 interface2 = Interface("INTER2")
@@ -12,7 +9,7 @@ interface3 = Interface("INTER3")
 interface4 = Interface("INTER4")
 interface5 = Interface("INTER5")
 
-
+SS = SteadySolver(ref_p=UnitValue.create_unit("psi", 700), ref_T=UnitValue.create_unit("C", 20))
 inlet = pressure_tank_inlet.PressurantTank(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("psi", 200), UnitValue.create_unit("C", 20), UnitValue.create_unit("m^3", 0.05), UnitValue.create_unit("m/s", 100))
 p = pipe.Pipe(TS.quasi_steady_solver, UnitValue.create_unit("in", 0.25), "N2", UnitValue.create_unit("m", 1.5)) 
 chamb = chamber.Chamber(TS.quasi_steady_solver, UnitValue.create_unit("inch", 0.25), "N2", UnitValue.create_unit("psi", 150), UnitValue.create_unit("C", 20), UnitValue.create_unit("m^3", 0.05))
@@ -36,7 +33,4 @@ TS.Output.toggle_steady_state_output()
 TS.Output.toggle_convergence_output()
 TS.Output.set_ouput_unit("psi")
 TS.Output.show_config()
-TS.solve(10, 0.5)                                                                                                               
-
-
-
+TS.solve(10, 0.5)                                                                                                              

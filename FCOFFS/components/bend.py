@@ -3,19 +3,18 @@ from scipy.optimize import brentq
 
 from ..systems.steady import SteadySolver
 from ..state.State import *
-from ..components.componentClass import ComponentClass
+from .componentClass import ComponentClass
 from FCOFFS.utilities.component_curve import ComponentCurve
 from ..fluids.Fluid import Fluid
 from FCOFFS.utilities.units import *
 
 
-class Bend(ComponentClass):
-    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, bend_radius: UnitValue, fluid: str, length: UnitValue, height_delta: UnitValue = UnitValue("METRIC", "DISTANCE", "m", 0), roughness: float|None=None, epsilon: float|None=None, name: str="Pipe"):
+class SmoothBend(ComponentClass):
+    '''Ninety Degeree bend'''
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, radius_of_curvature: UnitValue, fluid: str, name: str="SmoothBend"):
         super().__init__(parent_system, diameter, fluid, name)
-        self.length = length
-        self.length.convert_base_metric()
-        self.height_diference = height_delta.convert_base_metric()
-        self.bend_radius = bend_radius.convert_base_metric()
+        
+        self.bend_radius = radius_of_curvature.convert_base_metric()
         self.diameter_to_bend_ratio = 0.5*self.diameter/self.bend_radius
         if roughness == None:
             if epsilon == None:

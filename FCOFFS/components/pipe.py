@@ -125,11 +125,6 @@ class Pipe(ComponentClass):
                 term4 = log( (Mach_in**2/M_out**2) * ((1+((gamma-1)/2)*M_out**2)/(1+((gamma-1)/2)*Mach_in**2)) )
                 
                 res3 = (term1 + term2*term4 - term3) / (0.5 * (term1 + term2*term4 + term3))
-                
-                
-
-
-
 
         return [res1, res2, res3]
   

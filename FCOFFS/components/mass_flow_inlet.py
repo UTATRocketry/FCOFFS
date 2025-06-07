@@ -12,7 +12,7 @@ class MassFlowInlet(ComponentClass):
     def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, mass_flow_rate: UnitValue, temperature: UnitValue, velocity_guess:UnitValue = UnitValue("METRIC", "VELOCITY", "m/s", 500), name: str= "Mass Flow Inlet") -> None:
         super().__init__(parent_system, diameter, fluid,name)
 
-        if mass_flow_rate.get_dimension != "MASS FLOW RATE" or temperature.get_dimension != "TEMPERATURE":
+        if mass_flow_rate.dimension != "MASS FLOW RATE" or temperature.dimension != "TEMPERATURE":
             raise Exception("Entered invalid mass flow rate and/or temperature")
 
         self.BC_type = "MASS FLOW RATE"
@@ -32,6 +32,7 @@ class MassFlowInlet(ComponentClass):
         else:
             state_out = new_states[1]
 
-        res1 = (self.mass_flow - state_out.mdot) / self.mass_flow
+        norm = self.mass_flow if self.mass_flow > 0 else UnitValue.create_unit("kg/s", 1)
+        res1 = (self.mass_flow - state_out.mdot) / norm
         res2 = (self.T - state_out.T) / self.T
         return [res1, res2]

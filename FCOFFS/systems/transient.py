@@ -2,7 +2,8 @@
 Description
 '''
 import numpy as np
-import pandas
+#import pandas
+import warnings
 
 from FCOFFS.utilities.units import UnitValue
 from FCOFFS.systems.system import System
@@ -22,7 +23,7 @@ class TransientSolver(System):
         if components[0].BC_type != "PRESSURE":
             for component in components:
                 if component.decoupler == True:
-                    raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+                    warnings.warn("Using a decoupled system wihtout defining the upstrem pressure. ")
 
         self.components = components #.copy() # ensures doesnt affect originail values of componet
 
@@ -54,13 +55,19 @@ class TransientSolver(System):
         self.dt = UnitValue.create_unit("s", dt)
         self.simulation_time = simulation_time
         t = 0
-        while t <= self.simulation_time:
-            # initialize the steady state solver
-            self.quasi_steady_solver.solve() # False 
-            self.Output._run(dt)
-            self.time_marching()
-            t += dt
+        try:
+            while t <= self.simulation_time:
+                # initialize the steady state solver
+                self.quasi_steady_solver.solve() # False 
+                self.Output._run(dt)
+                self.time_marching()
+                t += dt
 
-        self.Output._finish()
+            self.Output._finish()
+        except Exception as e:
+            self.Output._finish()
+            print("----------- ERROR RAISED -----------")
+            raise e
+
         # push datafranmes to csv
            

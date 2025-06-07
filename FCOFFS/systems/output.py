@@ -30,7 +30,7 @@ class OutputHandler:
         self.__full_df = pd.DataFrame({"Time": [], "Converged Residual": [], "Object": [], "Density (kg/m^3)": [], "Pressure (kg/ms^2)": [], "Velocity (m/s)": [], "Temperature (K)": [], "Mass Flow Rate (kg/s)": [], "Mass (kg)": [], "Dynamic Pressure (kg/ms^2)": []})
         self.__interfaces_df = pd.DataFrame({"Time": [], "Converged Residual": [], "Interface": [], "Density (kg/m^3)": [], "Pressure (kg/ms^2)": [], "Velocity (m/s)": [], "Temperature (K)": [], "Mass Flow Rate (kg/s)": [], "Dynamic Pressure (kg/ms^2)": []})
         self.__components_df = pd.DataFrame({"Time": [], "Converged Residual": [], "Component": [], "Mass (kg)": [], "Pressure (kg/ms^2)": [], "Density (kg/m^3)": [], "Temperature (K)": []})
-        self.__probes_df = None
+        self.__probes_df = pd.DataFrame({"Time": []})
 
         #Ouput units
         self.__Output_Unit = {"DISTANCE": "m", 
@@ -48,25 +48,25 @@ class OutputHandler:
         self.__iter_counter = 0
         self.__time = 0 
         self.__probes = []
+        self.__start_time = timer.default_timer()
 
     def _run(self, dt: float):
         if self.__active is False:
             return
         
         if self.__iter_counter == 0:
-            self.__start_time = timer.default_timer()
             probe_dict = {"Time": []}
             for probe in self.__probes:
                  probe_dict[probe[2]] = []
             self.__probes_df = pd.DataFrame(probe_dict)
 
         self.__residual = self.residual_queue.get()
+        residuals = [self.__residual]
+        while self.residual_queue.empty() is False:
+            residuals.append(self.residual_queue.get())
         if dt > 0:
-            print(f"\nTime Step: {self.__time}, Iteration: {self.__iter_counter}, Convergence Residual: {self.__residual}")
+            print(f"\nTime Step: {self.__time}, Iteration: {self.__iter_counter}, Convergence Residual: {self.__residual}, Steady Iterations: {len(residuals)}")
             if self._convergence_muted is False:
-                residuals = [self.__residual]
-                while self.residual_queue.empty() is False:
-                    residuals.append(self.residual_queue.get())
                 for i in reversed(range(len(residuals))):
                     print(f"Steady Iteration {len(residuals) - i} Residual = {residuals[i]}")
             if self._interface_muted is False:
@@ -87,11 +87,11 @@ class OutputHandler:
         self.__end_time = timer.default_timer()
         print(f"Program Runtime: {self.__end_time - self.__start_time} s")
         self.__save_logs()
-        if self._interface_muted is True:
-            self.print_state()
+        #if self._interface_muted is True:
+        self.print_state()
         if self._transient_muted is False and len(self.__probes) > 0:
             self.__transient_results()
-        if self._probes_log_muted is False and len(self.__probes) > 0:
+        if self._probes_log_muted is False and len(self.__probes) > 0 and self.__iter_counter > 0:
             self.__plot_probes()
         self.__reset_dataframes()
 
@@ -176,10 +176,10 @@ class OutputHandler:
         header = f"{'Time':<10}"
         for probe in self.__probes:
             if isinstance(probe[0], ComponentClass):
-                dim = getattr(probe[0], probe[1]).get_dimension
+                dim = getattr(probe[0], probe[1]).dimension
                 unit = self.__Output_Unit[dim]
             elif isinstance(probe[0], Interface):
-                dim = getattr(probe[0].state, probe[1]).get_dimension
+                dim = getattr(probe[0].state, probe[1]).dimension
                 unit = self.__Output_Unit[dim]
             title = f"{probe[0].name} {dim} ({unit})"
             header += f"{title:<{len(title) + 3}}"
@@ -189,13 +189,13 @@ class OutputHandler:
             output_string += f"{str(round(row['Time'], 6)):<10} "
             for i, probe in enumerate(self.__probes):
                 if isinstance(probe[0], ComponentClass):
-                    unit = self.__Output_Unit[getattr(probe[0], probe[1]).get_dimension]
-                    dim = getattr(probe[0], probe[1]).get_dimension
-                    base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0], probe[1]).get_dimension].keys())[0]
+                    unit = self.__Output_Unit[getattr(probe[0], probe[1]).dimension]
+                    dim = getattr(probe[0], probe[1]).dimension
+                    base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0], probe[1]).dimension].keys())[0]
                 elif isinstance(probe[0], Interface):
-                    unit = self.__Output_Unit[getattr(probe[0].state, probe[1]).get_dimension]
-                    dim = getattr(probe[0].state, probe[1]).get_dimension
-                    base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0].state, probe[1]).get_dimension].keys())[0]
+                    unit = self.__Output_Unit[getattr(probe[0].state, probe[1]).dimension]
+                    dim = getattr(probe[0].state, probe[1]).dimension
+                    base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0].state, probe[1]).dimension].keys())[0]
                 temp = UnitValue("METRIC", dim, base_unit, row[probe[2]])
                 temp.to(unit)
                 output_string += f"{str(round(temp.value, 6)):<{spacings[i]}}"
@@ -209,13 +209,13 @@ class OutputHandler:
         for probe in self.__probes:
             values = self.__probes_df[probe[2]].to_list()
             if isinstance(probe[0], ComponentClass):
-                unit = self.__Output_Unit[getattr(probe[0], probe[1]).get_dimension]
-                dim = getattr(probe[0], probe[1]).get_dimension
-                base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0], probe[1]).get_dimension].keys())[0]
+                unit = self.__Output_Unit[getattr(probe[0], probe[1]).dimension]
+                dim = getattr(probe[0], probe[1]).dimension
+                base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0], probe[1]).dimension].keys())[0]
             elif isinstance(probe[0], Interface):
-                unit = self.__Output_Unit[getattr(probe[0].state, probe[1]).get_dimension]
-                dim = getattr(probe[0].state, probe[1]).get_dimension
-                base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0].state, probe[1]).get_dimension].keys())[0]
+                unit = self.__Output_Unit[getattr(probe[0].state, probe[1]).dimension]
+                dim = getattr(probe[0].state, probe[1]).dimension
+                base_unit = list(UnitValue.UNITS["METRIC"][getattr(probe[0].state, probe[1]).dimension].keys())[0]
             if base_unit != unit:
                 for i in range(len(values)):
                     temp = UnitValue("METRIC", dim, base_unit, values[i])
@@ -249,7 +249,7 @@ class OutputHandler:
         self.__full_df = self.__full_df[0:0]
         self.__interfaces_df = self.__interfaces_df[0:0]
         self.__components_df = self.__components_df[0:0]
-        self.__probes_df = None
+        self.__probes_df = pd.DataFrame({"Time": []})
 
     def add_probes(self, items: tuple[ComponentClass, ]|list[tuple]):
         # make probes be of (item, "atribute name ")
@@ -257,17 +257,14 @@ class OutputHandler:
         if isinstance(items[0], tuple) or isinstance(items[0], list):
             for item in items:
                 if self.__check_object_exists(item) is False:
-                    warnings.warn(f"Object and or object attribute {item} does not exist! Skipping this probe.")
                     continue
                 if isinstance(item[0], ComponentClass):
-                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).get_dimension} ({getattr(item[0], item[1]).get_unit})"] 
+                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0], item[1]).dimension} ({getattr(item[0], item[1]).unit})"] 
                 elif isinstance(item[0], Interface):
-                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0].state, item[1]).get_dimension} ({getattr(item[0].state, item[1]).get_unit})"]
+                    probe = [item[0], item[1], f"{item[0].name} {getattr(item[0].state, item[1]).dimension} ({getattr(item[0].state, item[1]).unit})"]
                 self.__probes.append(probe)
         else:
-            if self.__check_object_exists(items) is False:
-                    warnings.warn(f"Object and or object attribute {items} does not exist! Skipping this probe.")
-            else:
+            if self.__check_object_exists(items) is True:
                 self.__probes.append(item)
 
     def remove_probe(self, item: tuple):
@@ -278,12 +275,17 @@ class OutputHandler:
         warnings.warn(f"No probe was removed as probe {item} doesn't exist.")
                 
     def __check_object_exists(self, item):
+        for probe in self.__probes:
+            if probe[0] == item[0] and probe[1] == item[1]:
+                warnings.warn(f"Probe {item} already exists, skipping the addition of this probe.")
+                return False
         for obj in self.__objects:
             if obj == item[0]:
                 if isinstance(obj, ComponentClass) and getattr(obj, item[1], 'N/A') != "N/A":
                     return True
                 elif isinstance(obj, Interface) and getattr(obj.state, item[1], 'N/A') != "N/A":
                     return True
+        warnings.warn(f"Object and or object attribute {item} does not exist! Skipping this probe.")
         return False
     
     # add section of fucntions that creates a software log and logs all actions of the software. Would need to be callable outside by other functions
@@ -291,8 +293,8 @@ class OutputHandler:
 
     def set_ouput_unit(self, unit):
         temp_unit = UnitValue.create_unit(unit, 0)
-        dimension = temp_unit.get_dimension
-        self.__Output_Unit[dimension] = temp_unit.get_unit
+        dimension = temp_unit.dimension
+        self.__Output_Unit[dimension] = temp_unit.unit
 
     def show_config(self):
         output = "\n\n--------------- OUTPUT CONFIGURATIONS ---------------\n"

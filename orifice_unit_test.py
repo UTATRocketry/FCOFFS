@@ -1,0 +1,73 @@
+# Conducting unit tests on the current residuals for the critical orifice component,
+# to verify the existence of a root for a given initialized system
+
+from FCOFFS.utilities.units import UnitValue
+from FCOFFS.components.critical_orifice import CriticalOrifice
+from FCOFFS.state import State
+from FCOFFS.fluids.Fluid import Fluid
+from numpy import pi
+
+fluid = "N2" 
+
+#Upstream Conditions
+p1 = UnitValue.create_unit("psi", 314.7)
+T1 = UnitValue.create_unit("K", 295)
+#rho_1 = UnitValue.create_unit("kg/m^3", 26.5)
+rho_1 = Fluid.density(fluid, T1, p1.convert_base_metric())
+inlet_diameter = UnitValue.create_unit("in", 0.25)
+inlet_area = pi/4 * inlet_diameter**2
+u_1 = UnitValue.create_unit("m/s", 6)
+m_dot = rho_1*u_1*inlet_area
+
+
+state_in = State.State(inlet_area.convert_base_metric(), fluid, rho_1, u_1, p1.convert_base_metric())
+state_in.update()
+
+#Constants of Flow
+cp_in = Fluid.Cp(fluid, T1, p1)
+cv_in = Fluid.Cv(fluid, T1, p1)
+gamma = cp_in/cv_in
+R_molar = Fluid.get_gas_constant(fluid)
+
+isentropic_coefficient = (1+((gamma-1)/2)*(u_1.value**2/(gamma*296.8*T1.value)))
+p_o = p1.value * (isentropic_coefficient**(gamma/(gamma-1)))
+T_o = T1.value * isentropic_coefficient
+A_star = m_dot.value/(0.86*(2/(gamma+1))**((gamma+1)/(2*(gamma-1)))*p_o*((gamma/(296.8*T_o))**0.5))
+A_star_Unit = UnitValue.create_unit("m^2", A_star) 
+orifice_diameter = (4 * A_star_Unit / pi )**0.5
+
+
+#Downstream Conditions
+p2 = UnitValue.create_unit("psi", 14.7)
+T2 = UnitValue.create_unit("K", ( (p2/p1)**( (gamma-1)/gamma) ) * T1)
+h_1 = cp_in * T1 + p1/rho_1
+new_T = T2 - 50
+print(f'Starting guess for temperature is {T2}' )
+i = 0
+while abs(T2 - new_T) > 0.000000001:
+    T2 = new_T
+    rho_2 = Fluid.density(fluid, T2, p2.convert_base_metric())
+    cp_out = Fluid.Cp(fluid, T2, p2)
+    new_T = (h_1 - p2 / rho_2) / (cp_out)
+    print(new_T)
+    if i > 100:
+        break
+    i += 1
+    
+
+
+# T2_2_unit = UnitValue.create_unit("K",T2_2 )
+rho_2 = Fluid.density(fluid, T2, p2.convert_base_metric())
+outlet_diameter = UnitValue.create_unit("in", 0.25)
+outlet_area = pi/4 * outlet_diameter**2
+u_2 = m_dot / (rho_2*outlet_area)
+
+state_out = State.State(outlet_area.convert_base_metric(), fluid, rho_2, u_2, p2.convert_base_metric())
+state_out.update()
+
+the_one_orfice_to_rule_them_all = CriticalOrifice(None, inlet_diameter, outlet_diameter, orifice_diameter, "N2", Cd=0.86)
+print(A_star)
+print(UnitValue.create_unit("psi", p_o).convert_base_metric(), UnitValue.create_unit("K",T_o).convert_base_metric() )
+print(f'Inlet Mass Flow Rate = {m_dot} ')
+print(the_one_orfice_to_rule_them_all.eval((state_in, state_out)))
+

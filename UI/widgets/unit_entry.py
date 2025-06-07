@@ -32,7 +32,7 @@ class UnitEntry(CTkFrame):
         self.value_ent.delete(0, END)
         if isinstance(value, units.UnitValue):
             self.value_ent.insert(0, value())
-            self.unit_opt.set(value.get_unit)
+            self.unit_opt.set(value.unit)
             self.cur_unit = value
         elif isinstance(value, str):
             self.value_ent.insert(0, value)

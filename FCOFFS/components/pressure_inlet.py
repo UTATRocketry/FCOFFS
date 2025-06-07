@@ -11,7 +11,7 @@ class PressureInlet(ComponentClass):
     def __init__(self, parent_system: SteadySolver, diameter: UnitValue, fluid: str, pressure: UnitValue, temperature: UnitValue, velocity_guess:UnitValue = UnitValue("METRIC", "VELOCITY", "m/s", 5), name: str="Pressure Inlet") -> None:
         super().__init__(parent_system, diameter, fluid,name)
 
-        if pressure.get_dimension != "PRESSURE" or temperature.get_dimension != "TEMPERATURE":
+        if pressure.dimension != "PRESSURE" or temperature.dimension != "TEMPERATURE":
             raise Exception("Entered invalid pressure and temperature")
         
         pressure.convert_base_metric()

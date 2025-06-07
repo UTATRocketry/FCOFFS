@@ -7,6 +7,7 @@ from scipy.optimize import root
 from .system import System
 from ..utilities.utilities import rms
 from ..utilities.units import UnitValue
+import warnings 
 
 # Nomenclature:
 
@@ -17,13 +18,16 @@ class SteadySolver(System):
 
     def initialize(self, components: list):
         # Sytem Vlaidation Checks
+        fluid = components[0].fluid
         if len(components) < 1:
             raise IndexError('No component found. ')
         try:
             if components[0].BC_type != "PRESSURE":
                 for component in components:
+                    if component.fluid != fluid:
+                        warnings.warn("Using system with mutliple fluids, if this was not intended (i.e. two phase tank) please check your component initialization.")
                     if component.decoupler == True:
-                        raise TypeError("Using a decoupled system wihtout defining the upstrem pressure. ")
+                        warnings.warn("Using a decoupled system wihtout defining the upstrem pressure. ")
             self.inlet_BC = components[0].BC_type
             self.outlet_BC = components[-1].BC_type
         except:
@@ -73,6 +77,7 @@ class SteadySolver(System):
 
         try:
             sol = root(func, self.w).x #method='lm'
+            self.Output._finish()
         except Exception as e:
             print("----------- STEADY STATE FAILED TO CONVERGE -----------")
             print("----------- RESIDUALS -----------")
@@ -82,9 +87,9 @@ class SteadySolver(System):
             for i in reversed(range(len(residuals))):
                 print(f"Residual = {residuals[i]}")
             print("----------- LAST STATE -----------")
-            self.Output.print_state()
-            print("----------- ERROR RAISED -----------")
+            self.Output._finish()
+            #print("----------- ERROR RAISED -----------")
             raise e
-        self.Output._finish()
+        
 
 

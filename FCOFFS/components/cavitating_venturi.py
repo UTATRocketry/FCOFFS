@@ -32,7 +32,7 @@ class CavitatingVenturi(ComponentClass):
         if self.parent_system.outlet_BC != 'PRESSURE':
             warnings.warn("Outlet BC not well posed. ")
         self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter_in**2/4, fluid=self.fluid)
-        self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
+        self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter_out**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p*0.79)
 
     def update(self):
         self.interface_in.update()
@@ -46,7 +46,16 @@ class CavitatingVenturi(ComponentClass):
             state_in = new_states[0]
             state_out = new_states[1]
 
-        self.mdot = self.Cd * (pi * self.throat_diameter**2)/4 * sqrt(2 * state_in.rho * state_in.p)
+
+        if state_in.p * 0.8 < state_out.p:
+            warnings.warn("Venrturri is likely not cavitating, do not trust flow rate") 
+            # add linear coefficient to decrease the flow rate 5
+            #k_eff = 
+            #self.mdot = state_out.area*((2*state_in.rho*(state_in.p - state_out.p))/(1+K_eff))**0.5
+            betta = self.throat_diameter/self.diameter_in
+            self.mdot = state_in.rho * ((pi * self.throat_diameter**2)/4) * ((2*(state_in.p - state_out.p))/state_in.rho)**0.5 * self.Cd * (1/(1-betta**4)**0.5)
+        else:
+            self.mdot = self.Cd * (pi * self.throat_diameter**2)/4 * sqrt(2 * state_in.rho * state_in.p)
         
         res1 = (state_in.rho - state_out.rho)/state_out.rho
         res2 = ((pi * self.diameter_in**2)/4 * state_in.u - (pi * self.diameter_out**2)/4 * state_out.u) / ( (pi * self.diameter_in**2)/4 * state_in.u)

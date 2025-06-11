@@ -13,18 +13,27 @@ import warnings
 
 class SmoothBend(ComponentClass):
     '''Ninety Degeree Smooth Bend'''
-    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, radius_of_curvature: UnitValue, fluid: str, name: str="SmoothBend"):
+    def __init__(self, parent_system: SteadySolver, diameter: UnitValue, radius_of_curvature: UnitValue, fluid: str, roughness: float|None=None, epsilon: float|None=None, name: str="SmoothBend"):
         super().__init__(parent_system, diameter, fluid, name)
         
         self.radius_of_curvature = radius_of_curvature.convert_base_metric() # note measured from centerline of the pipe
         self.diameter = diameter.convert_base_metric() 
         self.curvature_ratio = 0.5*self.diameter/self.radius_of_curvature # 2 * radius of curvature = D (diameter of curavture)
 
+        if roughness == None:
+            if epsilon == None:
+                self.epsilon = 0.000025
+            else:
+                self.epsilon = epsilon
+            self.roughness = self.epsilon / self.diameter.value 
+        else:
+            self.roughness = roughness
+
+
     def initialize(self):
         self.interface_in.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid)
         self.interface_out.initialize(parent_system=self.parent_system, area=pi*self.diameter**2/4, fluid=self.fluid, rho=self.interface_in.state.rho, u=self.interface_in.state.u, p=self.interface_in.state.p)
-
-
+        
     def update(self):
         self.interface_in.update()
         self.interface_out.update()
@@ -52,6 +61,7 @@ class SmoothBend(ComponentClass):
         state = Fluid.phase(self.fluid, state_in.T, state_in.p) 
         if Mach_in < 0.1 or state == "liquid" or state == "supercritical liquid":
             compressible = False
+            print("compressible flow")
         else:
             compressible = True
 
@@ -65,18 +75,29 @@ class SmoothBend(ComponentClass):
 
         De = compute_De(Re, self.curvature_ratio)
         
-        if De < 10 or De > 100:
-            # bounds that define curvature of pipe, residuals only apply to Dean numbers outside this range
-            warnings.warn(f"De number {De} is out of normal range of operation. Results may be innacurate. If it is less than 10 it can be modelled as a pipe so consider using a pipe instead. If it is greater 100 then the pressure loss is to high/not visibly computable")
+        # if De < 10 or De > 100:
+        #     # bounds that define curvature of pipe, residuals only apply to Dean numbers outside this range
+        #     warnings.warn(f"De number {De} is out of normal range of operation. Results may be innacurate. If it is less than 10 it can be modelled as a pipe so consider using a pipe instead. If it is greater 100 then the pressure loss is to high/not visibly computable")
+        
+        def colebrook(f):
+            return 1/sqrt(f) + 2*log10(self.roughness/3.7 + 2.51/(Re*sqrt(f)))
+        if Re > 2000:
+            friction_factor = brentq(colebrook, 0.005, 0.1)
+        else:   
+            friction_factor = 64 / Re
+
+        # equivalent_length_ratio = 22.216 * (Re * (self.curvature_ratio)**2)**0.7888 * Re**(-0.71438)
+        equivalent_length_ratio = 22.216 * self.curvature_ratio**1.5776 * Re**0.0744
+        print(equivalent_length_ratio)
         
         # define pressure loss coefficient across smooth bend for laminar, compressible flow through sufficiently small pipe curavture
-        K = 0.7888 * (2 * self.curvature_ratio)**2.2126 * Re**(-0.7438)
+        K = friction_factor * equivalent_length_ratio
             
         match compressible:
             case False: 
                 #incompressible flow
 
-                # calculate pressure differential based off pressure loss coefficient K
+                # calculate pressure differential based off pressure loss coefficient K 
                 dp = K * (0.5 * state_in.rho * state_in.u**2)
                 p_out = p_in - dp 
 
